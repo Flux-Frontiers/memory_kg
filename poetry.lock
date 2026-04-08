@@ -1278,7 +1278,7 @@ version = "0.3.0"
 description = "Shared snapshot infrastructure for KG modules — zero stdlib-only deps."
 optional = false
 python-versions = ">=3.12,<3.14"
-groups = ["kgdeps"]
+groups = ["main", "kgdeps"]
 files = []
 develop = false
 
@@ -4461,4 +4461,4 @@ viz = []
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<3.14"
-content-hash = "702be017511423e21a5221cb3ce87325dd291e11d5e68708a955b9ed57bcd747"
+content-hash = "21f8cad046d7dfad55981038d650bb6af49a0ff357cb97e1aa3e093b54d6db31"
