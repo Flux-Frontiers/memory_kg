@@ -1,0 +1,123 @@
+{
+  "key": "ae719c8b8b4b3395b53157f9a3ab23e8cc6f191a",
+  "branch": "main",
+  "timestamp": "2026-04-08T23:06:29.372330+00:00",
+  "version": "0.7.0",
+  "metrics": {
+    "db_path": "/Users/egs/repos/memory_kg/.dockg/graph.sqlite",
+    "total_nodes": 2145,
+    "total_edges": 13001,
+    "node_counts": {
+      "chunk": 442,
+      "document": 18,
+      "entity": 525,
+      "keyword": 505,
+      "section": 354,
+      "topic": 301
+    },
+    "edge_counts": {
+      "CONTAINS": 796,
+      "CO_OCCURS_WITH": 8520,
+      "HAS_KEYWORD": 1588,
+      "HAS_TOPIC": 441,
+      "MENTIONS_ENTITY": 1437,
+      "NEXT": 67,
+      "REFERENCES": 9,
+      "SIMILAR_TO": 143
+    },
+    "meaningful_nodes": 2127,
+    "coverage_score": 0.8748114630467572,
+    "issues_count": 0,
+    "complexity_median": 15.0
+  },
+  "hotspots": [
+    {
+      "id": "chunk:analysis/doc_kg_analysis_20260308.md:0003",
+      "file_path": "analysis/doc_kg_analysis_20260308.md",
+      "label": "Top Documents By Chunk Count",
+      "references": 0,
+      "semantic_links": 18,
+      "total_links": 18
+    },
+    {
+      "id": "chunk:analysis/doc_kg_analysis_20260308.md:0004",
+      "file_path": "analysis/doc_kg_analysis_20260308.md",
+      "label": "Hot Chunks",
+      "references": 0,
+      "semantic_links": 17,
+      "total_links": 17
+    },
+    {
+      "id": "chunk:CHANGELOG.md:0015",
+      "file_path": "CHANGELOG.md",
+      "label": "Added",
+      "references": 0,
+      "semantic_links": 16,
+      "total_links": 16
+    },
+    {
+      "id": "chunk:analysis/doc_kg_analysis_20260314.md:0003",
+      "file_path": "analysis/doc_kg_analysis_20260314.md",
+      "label": "Top Documents By Chunk Count",
+      "references": 0,
+      "semantic_links": 16,
+      "total_links": 16
+    },
+    {
+      "id": "chunk:README.md:0063",
+      "file_path": "README.md",
+      "label": "Edge types",
+      "references": 0,
+      "semantic_links": 15,
+      "total_links": 16
+    },
+    {
+      "id": "chunk:CHANGELOG.md:0014",
+      "file_path": "CHANGELOG.md",
+      "label": "Changed",
+      "references": 0,
+      "semantic_links": 15,
+      "total_links": 15
+    },
+    {
+      "id": "chunk:README.md:0047",
+      "file_path": "README.md",
+      "label": "CLI Reference",
+      "references": 0,
+      "semantic_links": 15,
+      "total_links": 15
+    },
+    {
+      "id": "chunk:analysis/doc_kg_analysis_20260314.md:0004",
+      "file_path": "analysis/doc_kg_analysis_20260314.md",
+      "label": "Hot Chunks",
+      "references": 0,
+      "semantic_links": 15,
+      "total_links": 15
+    },
+    {
+      "id": "chunk:announcements/GITHUB.md:0026",
+      "file_path": "announcements/GITHUB.md",
+      "label": "Documentation",
+      "references": 4,
+      "semantic_links": 14,
+      "total_links": 18
+    },
+    {
+      "id": "chunk:announcements/GITHUB.md:0020",
+      "file_path": "announcements/GITHUB.md",
+      "label": "Architecture",
+      "references": 0,
+      "semantic_links": 14,
+      "total_links": 15
+    }
+  ],
+  "issues": [],
+  "vs_previous": null,
+  "vs_baseline": {
+    "nodes": 178,
+    "edges": 1312,
+    "coverage_delta": -0.010068262039153453,
+    "issues_delta": 0
+  }
+}

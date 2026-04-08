@@ -61,7 +61,7 @@ class DocGraph:
         enable_topics: bool = True,
         enable_entities: bool = True,
         enable_keywords: bool = True,
-        emit_cooccur: bool = True,
+        emit_cooccur: bool = False,
         cooccur_window: int = 1,
         topic_threshold: float = 0.2,
         topics_file: str | None = None,

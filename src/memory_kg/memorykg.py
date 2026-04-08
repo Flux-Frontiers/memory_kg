@@ -254,7 +254,7 @@ def parse_corpus(
     enable_topics: bool = True,
     enable_entities: bool = True,
     enable_keywords: bool = True,
-    emit_cooccur: bool = True,
+    emit_cooccur: bool = False,
     cooccur_window: int = 1,
     topic_threshold: float = 0.2,
     topics_file: str | None = None,
@@ -284,7 +284,8 @@ def parse_corpus(
     :param enable_topics: Emit topic nodes and HAS_TOPIC edges.
     :param enable_entities: Emit entity nodes and MENTIONS_ENTITY edges.
     :param enable_keywords: Emit keyword nodes and HAS_KEYWORD edges.
-    :param emit_cooccur: Emit CO_OCCURS_WITH edges among extracted semantic nodes.
+    :param emit_cooccur: Emit CO_OCCURS_WITH edges among extracted semantic nodes (default: False;
+                         noisy and dense; use semantic memory layer for assertions instead).
     :param cooccur_window: Reserved for future windowed co-occurrence expansion.
     :param topic_threshold: Topic confidence threshold in [0, 1].
     :param topics_file: Optional topics catalog (JSON/YAML).

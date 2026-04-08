@@ -63,7 +63,7 @@ CREATE INDEX IF NOT EXISTS idx_edges_dst ON edges(dst);
 CREATE INDEX IF NOT EXISTS idx_edges_rel ON edges(rel);
 """
 
-# Default edge types used for graph expansion
+# Default edge types used for graph expansion (document layer only)
 DEFAULT_RELS: tuple[str, ...] = (
     "CONTAINS",
     "NEXT",
@@ -72,7 +72,17 @@ DEFAULT_RELS: tuple[str, ...] = (
     "HAS_TOPIC",
     "MENTIONS_ENTITY",
     "HAS_KEYWORD",
-    "CO_OCCURS_WITH",
+)
+
+# Semantic memory layer edge types (assertions + events)
+MEMORY_RELS: tuple[str, ...] = (
+    "SUPPORTS",       # chunk → assertion
+    "ABOUT",          # assertion → entity (subject)
+    "REFERS_TO",      # assertion → entity (object)
+    "INVOLVES",       # event → entity
+    "DESCRIBES",      # chunk → event
+    "SUPERSEDES",     # assertion → assertion
+    "DERIVED_FROM",   # assertion → event
 )
 
 
