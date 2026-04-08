@@ -1,0 +1,134 @@
+# DocKG - Knowledge Graph Builder for Markdown and Text Documents
+#
+# DocKG builds a semantically searchable knowledge graph from .md and .txt files.
+# It chunks text semantically, embeds the chunks, discovers relations (edges),
+# and supports hybrid graph+vector querying — the same architecture as CodeKG
+# but for natural-language documents instead of Python source code.
+#
+# Author: Eric G. Suchanek, PhD
+# Last Revision: 2026-04-07
+#
+
+[[tool.poetry.source]]
+name = "testpypi"
+url = "https://test.pypi.org/simple/"
+priority = "supplemental"
+
+[build-system]
+requires = ["poetry-core>=2.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "doc-kg"
+version = "0.7.0"
+description = "A tool to build a semantically searchable knowledge graph from markdown and text documents"
+authors = ["Eric G. Suchanek, PhD <suchanek@mac.com>"]
+license = "Elastic-2.0"
+readme = "README.md"
+homepage = "https://github.com/Flux-Frontiers/memory_kg"
+repository = "https://github.com/Flux-Frontiers/memory_kg"
+keywords = ["knowledge-graph", "document-analysis", "markdown", "lancedb", "sqlite", "semantic-search"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+packages = [{ include = "memory_kg", from = "src" }]
+
+[tool.poetry.dependencies]
+python = ">=3.12,<3.14"
+lancedb = ">=0.29.0"
+numpy = ">=1.24.0"
+sentence-transformers = ">=2.7.0"
+pandas = ">=2.0.0"
+rich = ">=13.0.0"
+click = ">=8.1.0"
+pyyaml = ">=6.0.0"
+mcp = ">=1.0.0"
+markdown-it-py = ">=3.0.0"
+einops = "^0.8.2"
+kg-snapshot = { version = ">=0.3.0", source = "testpypi" }
+
+
+[tool.poetry.extras]
+viz = ["streamlit", "pyvis", "plotly"]
+
+[tool.poetry.group.kgdeps]
+optional = true
+
+[tool.poetry.group.kgdeps.dependencies]
+pycode-kg = { git = "https://github.com/Flux-Frontiers/pycode_kg.git" }
+ftree-kg = { git = "https://github.com/Flux-Frontiers/FTree_kg.git" }
+agent-kg = { git = "https://github.com/Flux-Frontiers/agent_kg.git" }
+
+[tool.poetry.group.dev.dependencies]
+pytest = ">=8.0.0"
+pytest-cov = ">=5.0.0"
+ruff = ">=0.4.0"
+mypy = ">=1.10.0"
+pre-commit = "^4.5.1"
+detect-secrets = "^1.5.0"
+pylint = "^4.0.5"
+pdoc = ">=14.0.0"
+
+[tool.poetry.scripts]
+memorykg          = "memory_kg.cli.main:cli"
+memorykg-snapshot = "memory_kg.cli.cmd_snapshot:snapshot"
+memorykg-mcp      = "memory_kg.mcp_server:main"
+memorykg-build    = "memory_kg.cli.cmd_build:build"
+memorykg-build-graph = "memory_kg.cli.cmd_build:build_graph"
+memorykg-build-index = "memory_kg.cli.cmd_build:build_index"
+memorykg-query    = "memory_kg.cli.cmd_query:query"
+memorykg-pack     = "memory_kg.cli.cmd_query:pack"
+memorykg-analyze  = "memory_kg.cli.cmd_analyze:analyze"
+memorykg-viz      = "memory_kg.cli.cmd_viz:viz"
+memorykg-pipeline = "memory_kg.cli.cmd_pipeline:pipeline"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+exclude = [".claude"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.13"
+strict = false
+ignore_missing_imports = true
+mypy_path = "src"
+explicit_package_bases = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"
+pythonpath = ["src"]
+
+[tool.pylint.messages_control]
+disable = ["all"]
+enable = [
+    "cyclic-import",           # R0401
+    "broad-exception-caught",  # W0718
+    "cell-var-from-loop",      # W0640
+    "undefined-variable",      # E0602
+    "import-outside-toplevel", # C0415
+]
+
+[tool.pycodekg]
+# Exclude test directories from the knowledge graph.
+# Tests skew architectural metrics (fan-in, public API surface, docstring coverage)
+exclude = ["tests"]
+include = ["src"]
+
+[tool.memorykg]
+# Exclude directories from the knowledge graph by default.
+exclude = [".memorykg", ".pycodekg", "src", ".git", ".venv", "venv", "__pycache__",
+".mypy_cache", ".pytest_cache", "bundles", "dist"]
+
+[tool.poe.tasks.docs]
+help = "Generate project documentation and user guide PDFs"
+sequence = [
+  { shell = "cd src && pdoc --o ../docs --logo ./logo.png memory_kg" },
+]
