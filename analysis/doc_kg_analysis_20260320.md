@@ -1,4 +1,4 @@
-# DocKG Thorough Analysis
+# MemoryKG Thorough Analysis
 
 Generated: `2026-03-20T23:44:35.980945+00:00`
 Elapsed: `0.04s`

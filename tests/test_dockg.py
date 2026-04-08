@@ -99,8 +99,8 @@ def test_parse_corpus_next_edges(tmp_path):
 def test_parse_corpus_semantic_edges(tmp_path):
     (tmp_path / "semantic.md").write_text(
         "# Architecture\n\n"
-        "DocKG architecture improves database query design. "
-        "DocKG integrates LanceDB and SQLite for performance.\n"
+        "MemoryKG architecture improves database query design. "
+        "MemoryKG integrates LanceDB and SQLite for performance.\n"
     )
 
     nodes, edges = parse_corpus(tmp_path)

@@ -87,8 +87,8 @@ Replace `<current_version>` with `<new_version>` (e.g. `0.2.3` → `0.2.4`).
    git add .codekg/
    ```
 
-**DocKG Build & Analysis:**
-1. Rebuild the DocKG index against the current source:
+**MemoryKG Build & Analysis:**
+1. Rebuild the MemoryKG index against the current source:
    ```bash
    poetry run memorykg build --repo . --wipe
    ```
@@ -103,7 +103,7 @@ Replace `<current_version>` with `<new_version>` (e.g. `0.2.3` → `0.2.4`).
    **Generated:** <today's date in YYYY-MM-DD>
    ```
    Add or update these fields if missing.
-4. DocKG snapshot is automatically saved by the analyze process; verify `.memorykg/snapshots/manifest.json` was updated.
+4. MemoryKG snapshot is automatically saved by the analyze process; verify `.memorykg/snapshots/manifest.json` was updated.
 5. Stage the generated artifacts:
    ```bash
    git add analysis/memory_kg_analysis_*.md
@@ -123,7 +123,7 @@ Replace `<current_version>` with `<new_version>` (e.g. `0.2.3` → `0.2.4`).
    - `README.md`
    - `analysis/memory_kg_analysis_*.md`
    - `.codekg/` (CodeKG indices and snapshots)
-   - `.memorykg/` (DocKG indices and snapshots)
+   - `.memorykg/` (MemoryKG indices and snapshots)
 3. Create a commit with message:
    ```
    chore(release): v<new_version> release notes
@@ -170,7 +170,7 @@ After all steps succeed, print a summary:
 ✓ pyproject.toml + src/memory_kg/__init__.py bumped to <new_version>
 ✓ README.md version badge updated
 ✓ CodeKG indices rebuilt (SQLite + LanceDB) with snapshot
-✓ DocKG indices rebuilt with analysis generated
+✓ MemoryKG indices rebuilt with analysis generated
 ✓ Both .codekg/ and .memorykg/ snapshots staged
 ✓ Commit created (chore(release): v<new_version>)
 ✓ Tag v<new_version> created

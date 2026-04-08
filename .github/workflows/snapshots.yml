@@ -35,7 +35,7 @@ jobs:
       - name: Install dependencies
         run: poetry install --no-interaction
 
-      - name: Build DocKG database
+      - name: Build MemoryKG database
         run: poetry run memorykg build --wipe
 
       - name: Get version and commit info
@@ -48,7 +48,7 @@ jobs:
           echo "tree_hash=${TREE_HASH}" >> $GITHUB_OUTPUT
           echo "branch=${BRANCH}" >> $GITHUB_OUTPUT
 
-      - name: Capture DocKG snapshot
+      - name: Capture MemoryKG snapshot
         run: |
           poetry run memorykg snapshot save "${{ steps.version.outputs.version }}" \
             --repo . \
@@ -60,5 +60,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add .memorykg/snapshots/
-          git diff --cached --quiet || git commit -m "chore(snapshot): capture DocKG metrics snapshot [skip ci]"
+          git diff --cached --quiet || git commit -m "chore(snapshot): capture MemoryKG metrics snapshot [skip ci]"
           git push

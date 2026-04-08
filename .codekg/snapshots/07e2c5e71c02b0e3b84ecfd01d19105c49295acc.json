@@ -56,7 +56,7 @@
   },
   "hotspots": [
     {
-      "name": "m:src/memory_kg/kg.py:DocKG.close",
+      "name": "m:src/memory_kg/kg.py:MemoryKG.close",
       "callers": 10,
       "callees": 1,
       "risk_level": "low"
@@ -74,7 +74,7 @@
       "risk_level": "low"
     },
     {
-      "name": "m:src/memory_kg/kg.py:DocKG.store",
+      "name": "m:src/memory_kg/kg.py:MemoryKG.store",
       "callers": 6,
       "callees": 1,
       "risk_level": "low"
@@ -104,7 +104,7 @@
       "risk_level": "low"
     },
     {
-      "name": "m:src/memory_kg/kg.py:DocKG.index",
+      "name": "m:src/memory_kg/kg.py:MemoryKG.index",
       "callers": 4,
       "callees": 2,
       "risk_level": "low"

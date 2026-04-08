@@ -1,6 +1,6 @@
-# DocKG - Knowledge Graph Builder for Markdown and Text Documents
+# MemoryKG - Knowledge Graph Builder for Markdown and Text Documents
 #
-# DocKG builds a semantically searchable knowledge graph from .md and .txt files.
+# MemoryKG builds a semantically searchable knowledge graph from .md and .txt files.
 # It chunks text semantically, embeds the chunks, discovers relations (edges),
 # and supports hybrid graph+vector querying — the same architecture as CodeKG
 # but for natural-language documents instead of Python source code.
@@ -19,14 +19,14 @@ requires = ["poetry-core>=2.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
-name = "doc-kg"
-version = "0.7.0"
-description = "A tool to build a semantically searchable knowledge graph from markdown and text documents"
+name = "memory-kg"
+version = "0.1.0"
+description = "A tool to build a semantically searchable knowledge graph from memories"
 authors = ["Eric G. Suchanek, PhD <suchanek@mac.com>"]
 license = "Elastic-2.0"
 readme = "README.md"
 homepage = "https://github.com/Flux-Frontiers/memory_kg"
-repository = "https://github.com/Flux-Frontiers/memory_kg"
+repository = "https://github.com/Flux-Frontiers/memory_kg.git"
 keywords = ["knowledge-graph", "document-analysis", "markdown", "lancedb", "sqlite", "semantic-search"]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -48,7 +48,7 @@ pyyaml = ">=6.0.0"
 mcp = ">=1.0.0"
 markdown-it-py = ">=3.0.0"
 einops = "^0.8.2"
-kg-snapshot = { version = ">=0.3.0", source = "testpypi" }
+kg-snapshot = { git = "https://github.com/Flux-Frontiers/kg_snapshot.git" }
 
 
 [tool.poetry.extras]
@@ -61,6 +61,7 @@ optional = true
 pycode-kg = { git = "https://github.com/Flux-Frontiers/pycode_kg.git" }
 ftree-kg = { git = "https://github.com/Flux-Frontiers/FTree_kg.git" }
 agent-kg = { git = "https://github.com/Flux-Frontiers/agent_kg.git" }
+kg-snapshot = { git = "https://github.com/Flux-Frontiers/kg_snapshot.git" }
 
 [tool.poetry.group.dev.dependencies]
 pytest = ">=8.0.0"

@@ -1,8 +1,8 @@
-# DocKG — Complete Ingestion Architecture
+# MemoryKG — Complete Ingestion Architecture
 
 **Two complementary pipelines for building semantically searchable knowledge graphs from document corpora.**
 
-DocKG offers two ingestion paths: the **Core Build Pipeline** for fast, deterministic graph construction, and the **Multipass Analysis Pipeline** for deeper NLP analysis with diversity sampling, hybrid topic classification, corpus embedding, and manifold analysis. Both produce artifacts under `.memorykg/` and can be used independently or together.
+MemoryKG offers two ingestion paths: the **Core Build Pipeline** for fast, deterministic graph construction, and the **Multipass Analysis Pipeline** for deeper NLP analysis with diversity sampling, hybrid topic classification, corpus embedding, and manifold analysis. Both produce artifacts under `.memorykg/` and can be used independently or together.
 
 ---
 
@@ -89,7 +89,7 @@ The standard ingestion path. Parses a corpus into a hybrid SQLite + LanceDB know
 
 | Component | File | Role |
 |-----------|------|------|
-| `DocKG` | `kg.py` | Top-level orchestrator: `build()`, `query()`, `pack()` |
+| `MemoryKG` | `kg.py` | Top-level orchestrator: `build()`, `query()`, `pack()` |
 | `parse_corpus()` | `memorykg.py` | Deterministic extraction: files → nodes + edges |
 | `TextChunker` | `chunker.py` | Semantic text segmentation (embedding-based boundaries) |
 | `GraphStore` | `store.py` | SQLite persistence layer |
@@ -331,7 +331,7 @@ Override via `--model` on any pipeline command.
 ### Output Format (.psv)
 
 ```
-# DocKG Multipass Analysis Pipeline - Run Parameters
+# MemoryKG Multipass Analysis Pipeline - Run Parameters
 # Run ID: a26f95a69fd5
 # Generated: 2026-04-05T22:20:21+00:00
 # Chunk strategy: sentence_group

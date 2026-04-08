@@ -5,7 +5,6 @@ from pathlib import Path
 from memory_kg.entry_chunk import EntryChunk, SourceProvenance
 from memory_kg.pipeline import AnalysisPipeline, PipelineConfig, PipelineResult
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -24,7 +23,7 @@ def _make_corpus(tmp_path: Path, n: int = 3) -> Path:
             f"Deployment to production requires careful planning.\n\n"
             f"## Section {i}\n\n"
             f"More details about topic {i}. "
-            f"DocKG and SQLite are mentioned here for entity extraction. "
+            f"MemoryKG and SQLite are mentioned here for entity extraction. "
             f"Performance tuning and caching strategies matter.\n",
             encoding="utf-8",
         )
@@ -253,7 +252,7 @@ def test_pipeline_run_psv_has_expected_header(tmp_path):
     result = pipeline.run()
 
     content = result.output_path.read_text(encoding="utf-8")
-    assert "# DocKG Multipass Analysis Pipeline" in content
+    assert "# MemoryKG Multipass Analysis Pipeline" in content
     assert "# Run ID:" in content
     assert "# Chunk strategy:" in content
     assert "# Total chunks:" in content

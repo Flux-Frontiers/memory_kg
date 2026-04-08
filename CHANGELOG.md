@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Renamed
+- **Package restructuring:** `src/doc_kg/` → `src/memory_kg/` — major branding update from "DocKG" to "MemoryKG" across all skills, documentation, CLI, and internal references. All 113 files updated for the new naming convention.
+
 ### Added
 - `cmd_snapshot.py`: `memorykg snapshot prune` command — removes vestigial snapshots (metric-duplicates, broken manifest entries, orphaned JSON files) while always preserving the oldest and newest; supports `--dry-run`
 - `snapshots.py`: Re-export `PruneResult` from `kg_snapshot.snapshots` in the public API
@@ -41,11 +44,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `scripts/generate_wiki.py`: Script to generate and publish GitHub wiki pages from `docs/` markdown files
 - `poetry.toml`: `in-project = true` Poetry virtualenv configuration
-- `src/memory_kg/__init__.py`: Package-level `__init__` exporting `DocKG` for cleaner imports
+- `src/memory_kg/__init__.py`: Package-level `__init__` exporting `MemoryKG` for cleaner imports
 - `cli/cmd_model.py`: `memorykg download-model` command to download and cache embedding models for offline use; supports `--force` re-download and `trust_remote_code` for `nomic-ai/*` models
 - `pyproject.toml`: `einops` dependency added (required by `nomic-embed-text-v1`)
 - `generate_wiki.py`: Wiki generation script added to project root
-- `analysis/memory_kg_analysis_20260320.md`: DocKG architectural analysis report (2026-03-20)
+- `analysis/memory_kg_analysis_20260320.md`: MemoryKG architectural analysis report (2026-03-20)
 
 ### Changed
 - `cli/options.py`, `cli/cmd_build.py`, `cli/cmd_query.py`, `cli/cmd_snapshot.py`: `--sqlite` and `--lancedb` options now default to `None`; each command resolves the paths relative to `<repo>/.memorykg/` when not supplied, so the CLI works correctly regardless of the caller's working directory
@@ -54,7 +57,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `cli/cmd_hooks.py`: Pre-commit hook reordered — snapshot capture now runs *before* quality checks so the tree hash reflects staged content; snapshot failure is now non-fatal (warning only, does not abort commit); skip env var renamed from `CODEKG_SKIP_SNAPSHOT` to `DOCKG_SKIP_SNAPSHOT`
 - `cli/main.py`: Registered `cmd_model` subcommand; updated usage docstring with `download-model`
 - `index.py`: `SentenceTransformerEmbedder.__init__` now suppresses HF logging via `hf_logging.set_verbosity_error()`, wraps model load with `TQDM_DISABLE=1`, and passes `trust_remote_code=True` for `nomic-ai/*` models
-- `analysis/CodeKG_Agent_instructions.md` renamed to `analysis/DocKG_Agent_instructions.md`
+- `analysis/CodeKG_Agent_instructions.md` renamed to `analysis/MemoryKG_Agent_instructions.md`
 
 ### Changed
 - `pyproject.toml`: `kg-snapshot` dependency switched from local path (`../kg_snapshot`) to published git source (`github.com/Flux-Frontiers/kg_snapshot`); `kg-rag` dev dependency removed
@@ -104,7 +107,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `src/memory_kg/cli/main.py`: reduced to re-exporting `cli` from `group.py` and registering submodule imports
 - `src/memory_kg/cli/cmd_hooks.py`: Enhanced pre-commit hook with quality checks integration
   - Hook now runs `.pre-commit-config.yaml` checks (ruff, mypy, detect-secrets, etc.) before snapshot capture
-  - Hook rebuilds local DocKG index (`memorykg build --wipe`) to keep it in sync with commits
+  - Hook rebuilds local MemoryKG index (`memorykg build --wipe`) to keep it in sync with commits
   - Changed success message from `✓` emoji to `OK` prefix
 - `.github/workflows/snapshots.yml`: Refactored snapshot workflow for consistency
   - Simplified build phase to use unified `memorykg build --wipe` instead of separate `build-graph` and `build-index` commands
@@ -119,23 +122,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.3.0] - 2026-03-12
 
 ### Added
-- `memorykg install-hooks` CLI command: installs a DocKG pre-commit hook that captures a metrics snapshot (keyed by tree hash) and stages it atomically — mirrors CodeKG hook pattern; skip with `DOCKG_SKIP_SNAPSHOT=1` env var
+- `memorykg install-hooks` CLI command: installs a MemoryKG pre-commit hook that captures a metrics snapshot (keyed by tree hash) and stages it atomically — mirrors CodeKG hook pattern; skip with `DOCKG_SKIP_SNAPSHOT=1` env var
 - `src/memory_kg/cli/cmd_hooks.py`: hook installation module with embedded pre-commit hook script
 - Documentation updates:
-  - `docs/CHEATSHEET.md`: rewritten for DocKG MCP tools (`graph_stats`, `query_docs`, `pack_docs`, `get_node`)
-  - `docs/SNAPSHOTS.md`: updated from CodeKG to DocKG snapshots (metrics for document corpora, not code)
-  - `docs/deployment.md`: rewritten for DocKG deployment options (PyPI, Streamlit Cloud, Fly.io, MCP server)
+  - `docs/CHEATSHEET.md`: rewritten for MemoryKG MCP tools (`graph_stats`, `query_docs`, `pack_docs`, `get_node`)
+  - `docs/SNAPSHOTS.md`: updated from CodeKG to MemoryKG snapshots (metrics for document corpora, not code)
+  - `docs/deployment.md`: rewritten for MemoryKG deployment options (PyPI, Streamlit Cloud, Fly.io, MCP server)
   - `docs/memorykg_workflow.md`: new practical workflow guide showing `memorykg build`, `query`, `pack`, `analyze`, `viz`, `snapshot` commands
-- `scripts/install-hooks.sh`: installs a DocKG pre-commit hook that captures a metrics snapshot (keyed by tree hash) and stages it atomically — mirrors CodeKG hook pattern; skip with `DOCKG_SKIP_SNAPSHOT=1`
+- `scripts/install-hooks.sh`: installs a MemoryKG pre-commit hook that captures a metrics snapshot (keyed by tree hash) and stages it atomically — mirrors CodeKG hook pattern; skip with `DOCKG_SKIP_SNAPSHOT=1`
 - `--exclude-dir` CLI option on `build` and `build-graph` commands: exclude directory names at every depth during file walk (repeatable, merged with config)
 - `src/memory_kg/config.py`: new module with `load_exclude_dirs()` to read `[tool.memorykg].exclude` from pyproject.toml — mirrors CodeKG pattern
 - `.memorykg/snapshots/`: initial 6-commit snapshot history (migrated from `.codekg/snapshots/` where bad hook was writing them)
 - MCP server (`src/memory_kg/mcp_server.py`): `memorykg mcp` / `memorykg-mcp` entry point exposing `graph_stats`, `query_docs`, `pack_docs`, and `get_node` tools for MCP-compatible agents (Claude Code, Claude Desktop, GitHub Copilot, Cursor, Continue)
 - Streamlit visualizer (`src/memory_kg/app.py`): interactive PyVis-based graph explorer with per-node-kind colour/shape coding and per-relation-kind edge colours
 - CLI subcommands: `memorykg mcp`, `memorykg analyze`, `memorykg viz`, `memorykg build-graph`, `memorykg build-index`
-- `DocKGAnalyzer` (`src/memory_kg/memorykg_thorough_analysis.py`): nine-phase corpus analysis engine (baseline metrics, semantic coverage, top documents, hot chunks, strengths/weaknesses)
+- `MemoryKGAnalyzer` (`src/memory_kg/memorykg_thorough_analysis.py`): nine-phase corpus analysis engine (baseline metrics, semantic coverage, top documents, hot chunks, strengths/weaknesses)
 - Snapshot management (`src/memory_kg/snapshots.py`, `src/memory_kg/cli/cmd_snapshot.py`): `memorykg snapshot save|list|show|diff` for temporal tracking of metrics across versions (commits, branches, coverage)
-- GitHub workflows and actions: CI pipeline, publish workflow, snapshot CI, and DocKG reusable action for automated knowledge graph building
+- GitHub workflows and actions: CI pipeline, publish workflow, snapshot CI, and MemoryKG reusable action for automated knowledge graph building
 - `mcp>=1.0.0` dependency
 - `types-pyyaml^6.0.12.20250915` for type hints
 - CLI smoke tests (`tests/test_cli.py`): verify all subcommands are registered via Click `CliRunner`
@@ -145,13 +148,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `src/memory_kg/memorykg.py`: `SKIP_DIRS` documented with per-entry comments and a block comment explaining the additive exclusion contract
 - `pyproject.toml`: removed redundant `[tool.memorykg].exclude` list (all entries duplicated `SKIP_DIRS`); replaced with template comment; removed contradictory `ignore = ["E501"]`; cleaned up stale blank lines
 - `.gitignore`: generalized `.memorykg/*.sqlite*` glob to cover all SQLite files (was only excluding `graph.sqlite`, missing `docs.sqlite` and future DBs); removed stale `.memorykg/docs_lancedb/` entry; consolidated lancedb pattern to `lancedb*`
-- `DocKG.__init__` now accepts `exclude: set[str] | None` parameter, forwarded to DocGraph for file walk filtering
+- `MemoryKG.__init__` now accepts `exclude: set[str] | None` parameter, forwarded to DocGraph for file walk filtering
 - `src/memory_kg/cli/cmd_build.py`: `build` and `build-graph` commands now merge `--exclude-dir` flags with `[tool.memorykg].exclude` from pyproject.toml
-- `docs/MCP.md` rewritten as a DocKG-specific MCP setup guide covering all supported clients; added example of excluding directories
+- `docs/MCP.md` rewritten as a MemoryKG-specific MCP setup guide covering all supported clients; added example of excluding directories
 - `README.md`: documented `--exclude-dir` option and exclude priority order (built-in SKIP_DIRS + pyproject.toml + CLI flags)
 - `src/memory_kg/cli/main.py`: registers `cmd_analyze`, `cmd_mcp`, `cmd_viz` subcommands
 - `src/memory_kg/cli/cmd_build.py`: extended with `build-graph` and `build-index` split commands
-- `analysis/memory_kg_analysis_20260308.md`: replaced with fresh DocKG-native analysis (1 537 nodes, 8 358 edges; 97.4% topic coverage)
+- `analysis/memory_kg_analysis_20260308.md`: replaced with fresh MemoryKG-native analysis (1 537 nodes, 8 358 edges; 97.4% topic coverage)
 
 ### Removed
 
@@ -168,7 +171,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.0] - 2026-03-08
 
 ### Added
-- Initial DocKG implementation — document knowledge graph from `.md` / `.txt` files
+- Initial MemoryKG implementation — document knowledge graph from `.md` / `.txt` files
 - `memorykg build`, `memorykg query`, `memorykg pack` CLI commands
 - Hybrid semantic + structural graph (SQLite + LanceDB)
 - Default embedding model: `all-mpnet-base-v2`

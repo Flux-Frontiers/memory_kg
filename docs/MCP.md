@@ -1,10 +1,10 @@
-# DocKG MCP Setup Guide
+# MemoryKG MCP Setup Guide
 
-Integrating DocKG with MCP-compatible agents (Claude Code, GitHub Copilot, Claude Desktop, Cursor, Continue).
+Integrating MemoryKG with MCP-compatible agents (Claude Code, GitHub Copilot, Claude Desktop, Cursor, Continue).
 
 ## Overview
 
-DocKG includes an MCP server exposed by:
+MemoryKG includes an MCP server exposed by:
 
 - `memorykg mcp`
 - `memorykg-mcp`
@@ -18,7 +18,7 @@ Once configured, agents get these tools:
 
 ## Quick Start
 
-1. Build the DocKG graph artifacts.
+1. Build the MemoryKG graph artifacts.
 2. Add MCP config for your client.
 3. Restart the client.
 
@@ -127,7 +127,7 @@ Add to `claude_desktop_config.json`:
 
 ## Excluding Directories from Indexing
 
-By default, DocKG skips common directories (`.git`, `.venv`, `__pycache__`, `.memorykg`, etc.). To exclude additional directories:
+By default, MemoryKG skips common directories (`.git`, `.venv`, `__pycache__`, `.memorykg`, etc.). To exclude additional directories:
 
 **Configuration (`pyproject.toml`, persistent — recommended):**
 

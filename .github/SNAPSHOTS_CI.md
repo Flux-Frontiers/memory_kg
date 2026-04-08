@@ -7,7 +7,7 @@ Snapshots are automatically captured on every commit to the `develop` branch via
 The **Temporal Snapshots** workflow (`.github/workflows/snapshots.yml`):
 
 1. **Triggers on:** Every push to `develop` branch or manual workflow dispatch
-2. **Builds:** DocKG database (SQLite + LanceDB vector index)
+2. **Builds:** MemoryKG database (SQLite + LanceDB vector index)
 3. **Runs analysis:** Generates a Markdown report capturing current corpus metrics:
    - Total nodes/edges
    - Semantic coverage (topic, entity, keyword)
@@ -83,5 +83,5 @@ retention-days: 90
 
 ## See Also
 
-- [MCP Setup Guide](../docs/MCP.md) — Connecting DocKG to AI agents
+- [MCP Setup Guide](../docs/MCP.md) — Connecting MemoryKG to AI agents
 - [README](../README.md) — Project overview

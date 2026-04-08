@@ -25,15 +25,15 @@ def test_topic_extractor_keywords_fallback():
 
 
 def test_extract_entities_detects_camelcase_and_acronyms():
-    entities = extract_entities("DocKG integrates SQLite and LanceDB for analytics.")
-    assert "DocKG" in entities
+    entities = extract_entities("MemoryKG integrates SQLite and LanceDB for analytics.")
+    assert "MemoryKG" in entities
     assert "SQLite" in entities
 
 
 def test_stable_ids_are_prefixed():
     assert stable_topic_id("Architecture") == "topic:architecture"
     assert stable_keyword_id("Query") == "keyword:query"
-    assert stable_entity_id("DocKG").startswith("entity:")
+    assert stable_entity_id("MemoryKG").startswith("entity:")
 
 
 def test_cooccur_pairs_dedup_and_sorted():

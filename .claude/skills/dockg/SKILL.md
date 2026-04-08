@@ -1,15 +1,15 @@
 ---
 name: memorykg
-description: Expert knowledge for installing, configuring, and using DocKG — a hybrid semantic + structural knowledge graph for document corpora (.md and .txt files). Use this skill when the user asks about: setting up DocKG in a project, adding doc-kg as a Poetry dependency, building the SQLite or LanceDB knowledge graph from documents, running the multipass analysis pipeline (memorykg pipeline run/embed/manifold), configuring .mcp.json for Claude Code or Kilo Code, configuring .vscode/mcp.json for GitHub Copilot, configuring claude_desktop_config.json for Claude Desktop, using the memorykg CLI (memorykg build, memorykg build-graph, memorykg build-index, memorykg query, memorykg pack, memorykg analyze, memorykg semantic-analyze, memorykg pipeline, memorykg viz, memorykg mcp, memorykg snapshot), using the graph_stats / query_docs / pack_docs / get_node MCP tools, or troubleshooting DocKG errors.
+description: Expert knowledge for installing, configuring, and using MemoryKG — a hybrid semantic + structural knowledge graph for document corpora (.md and .txt files). Use this skill when the user asks about: setting up MemoryKG in a project, adding doc-kg as a Poetry dependency, building the SQLite or LanceDB knowledge graph from documents, running the multipass analysis pipeline (memorykg pipeline run/embed/manifold), configuring .mcp.json for Claude Code or Kilo Code, configuring .vscode/mcp.json for GitHub Copilot, configuring claude_desktop_config.json for Claude Desktop, using the memorykg CLI (memorykg build, memorykg build-graph, memorykg build-index, memorykg query, memorykg pack, memorykg analyze, memorykg semantic-analyze, memorykg pipeline, memorykg viz, memorykg mcp, memorykg snapshot), using the graph_stats / query_docs / pack_docs / get_node MCP tools, or troubleshooting MemoryKG errors.
 ---
 
-# DocKG Skill
+# MemoryKG Skill
 
-> **Use DocKG first — before grep, file reads, or text search.**
+> **Use MemoryKG first — before grep, file reads, or text search.**
 >
-> Text search finds strings. DocKG understands documents. It knows which sections contain which chunks, how topics and entities cross-reference across files, and surfaces the most semantically relevant excerpts in a single query. One `pack_docs` call replaces five rounds of search-and-read and gives the agent real structural insight into the corpus — not just keyword matches.
+> Text search finds strings. MemoryKG understands documents. It knows which sections contain which chunks, how topics and entities cross-reference across files, and surfaces the most semantically relevant excerpts in a single query. One `pack_docs` call replaces five rounds of search-and-read and gives the agent real structural insight into the corpus — not just keyword matches.
 
-DocKG indexes `.md` and `.txt` document corpora into a hybrid knowledge graph (SQLite + LanceDB) and exposes it as MCP tools for AI agents. It also provides a **multipass analysis pipeline** (diary_kg-style) for deep NLP transformation with diversity sampling, hybrid topic classification, corpus embedding, and manifold analysis.
+MemoryKG indexes `.md` and `.txt` document corpora into a hybrid knowledge graph (SQLite + LanceDB) and exposes it as MCP tools for AI agents. It also provides a **multipass analysis pipeline** (diary_kg-style) for deep NLP transformation with diversity sampling, hybrid topic classification, corpus embedding, and manifold analysis.
 
 ## Installation (Poetry)
 
@@ -25,7 +25,7 @@ doc-kg = { git = "https://github.com/Flux-Frontiers/memory_kg.git", extras = ["m
 
 ## Build the Knowledge Graph
 
-DocKG uses a **single build command** that runs corpus parsing, SQLite persistence, and LanceDB vector indexing in one step:
+MemoryKG uses a **single build command** that runs corpus parsing, SQLite persistence, and LanceDB vector indexing in one step:
 
 ```bash
 # Build from a corpus directory
@@ -96,7 +96,7 @@ The knowledge graph is a snapshot of the corpus at build time. It does **not** u
 
 ## Multipass Analysis Pipeline
 
-DocKG includes a diary_kg-style multipass analysis pipeline for deep NLP transformation. This is complementary to the core build — use it for corpus-level analysis, embedding quality evaluation, and structured provenance tracking.
+MemoryKG includes a diary_kg-style multipass analysis pipeline for deep NLP transformation. This is complementary to the core build — use it for corpus-level analysis, embedding quality evaluation, and structured provenance tracking.
 
 ### Pipeline Commands
 
@@ -329,7 +329,7 @@ Config path: `~/Library/Application Support/Claude/claude_desktop_config.json` (
 .memorykg/
 ```
 
-The `.memorykg/` directory holds the SQLite graph, LanceDB vector index, snapshots, pipeline outputs, feature caches, and embedding caches. All are local reproducible artifacts. Add this to `.gitignore` when installing DocKG in a new repo.
+The `.memorykg/` directory holds the SQLite graph, LanceDB vector index, snapshots, pipeline outputs, feature caches, and embedding caches. All are local reproducible artifacts. Add this to `.gitignore` when installing MemoryKG in a new repo.
 
 ## Offline Setup
 

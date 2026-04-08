@@ -1,7 +1,7 @@
-# DocKG Action
+# MemoryKG Action
 
 A GitHub composite action that indexes a document corpus into a
-[DocKG](https://github.com/Flux-Frontiers/memory_kg) knowledge graph and runs a
+[MemoryKG](https://github.com/Flux-Frontiers/memory_kg) knowledge graph and runs a
 thorough analysis.
 
 The action:
@@ -21,7 +21,7 @@ The action:
 
 ```yaml
 # .github/workflows/memorykg.yml
-name: DocKG Analysis
+name: MemoryKG Analysis
 
 on:
   push:
@@ -196,7 +196,7 @@ This is useful as a quality gate in CI:
 ### Full configuration
 
 ```yaml
-name: DocKG Analysis
+name: MemoryKG Analysis
 
 on:
   push:

@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# install-hooks.sh — Install DocKG git hooks into .git/hooks/
+# install-hooks.sh — Install MemoryKG git hooks into .git/hooks/
 #
 # Usage:
 #   ./scripts/install-hooks.sh [--force]
 #
-# Installs a pre-commit hook that captures a DocKG metrics snapshot before
+# Installs a pre-commit hook that captures a MemoryKG metrics snapshot before
 # each commit. The snapshot file is staged and included in the commit.
 #
 # Skip with: DOCKG_SKIP_SNAPSHOT=1 git commit ...
@@ -33,7 +33,7 @@ mkdir -p "$HOOKS_DIR"
 
 cat > "$HOOK_PATH" << 'HOOK'
 #!/usr/bin/env bash
-# DocKG pre-commit hook — captures a metrics snapshot keyed by tree hash.
+# MemoryKG pre-commit hook — captures a metrics snapshot keyed by tree hash.
 # Installed by: scripts/install-hooks.sh
 # Skip with: DOCKG_SKIP_SNAPSHOT=1 git commit ...
 set -euo pipefail

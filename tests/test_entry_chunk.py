@@ -5,7 +5,6 @@ import hashlib
 
 from memory_kg.entry_chunk import EntryChunk, SourceProvenance, make_chunk_id
 
-
 # ---------------------------------------------------------------------------
 # SourceProvenance
 # ---------------------------------------------------------------------------
@@ -99,7 +98,7 @@ def test_entry_chunk_creation_with_all_fields():
         topic_method="supervised",
         topic_confidence=0.85,
         keywords=["architecture", "design"],
-        entities=["DocKG"],
+        entities=["MemoryKG"],
         embedding=[0.1, 0.2, 0.3],
         run_id="run-abc",
     )
@@ -107,7 +106,7 @@ def test_entry_chunk_creation_with_all_fields():
     assert chunk.topic_method == "supervised"
     assert chunk.topic_confidence == 0.85
     assert chunk.keywords == ["architecture", "design"]
-    assert chunk.entities == ["DocKG"]
+    assert chunk.entities == ["MemoryKG"]
     assert chunk.embedding == [0.1, 0.2, 0.3]
     assert chunk.run_id == "run-abc"
 

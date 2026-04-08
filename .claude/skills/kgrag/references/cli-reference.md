@@ -65,7 +65,7 @@ kgrag query "database connection setup"
 # Code KGs only, 5 results per KG
 kgrag query "error handling" --kind code -k 5
 
-# DocKGs only
+# MemoryKGs only
 kgrag query "REST API endpoints" --kind doc
 
 # JSON output for scripting
@@ -298,7 +298,7 @@ kgrag unregister KG_NAME [OPTIONS]
 kgrag scan [DIRECTORY] [OPTIONS]
 ```
 
-**Purpose:** Scan directory tree for existing CodeKG/DocKG databases and suggest registration.
+**Purpose:** Scan directory tree for existing CodeKG/MemoryKG databases and suggest registration.
 
 **Arguments:**
 - `DIRECTORY` — Directory to scan (default: current directory)
@@ -361,7 +361,7 @@ Always use **absolute paths** in .mcp.json.
 |----------|---------|---------|
 | `KGRAG_REGISTRY` | Path to registry SQLite file | `~/.kgrag/registry.sqlite` |
 | `CODEKG_MODEL_DIR` | Cache embedding model (CodeKG) | `.codekg/models` |
-| `DOCKG_MODEL_DIR` | Cache embedding model (DocKG) | `.memorykg/models` |
+| `DOCKG_MODEL_DIR` | Cache embedding model (MemoryKG) | `.memorykg/models` |
 
 **Set in shell profile:**
 ```bash

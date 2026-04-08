@@ -27,7 +27,7 @@
 - `src/memory_kg/cli/main.py`: reduced to re-exporting `cli` from `group.py` and registering submodule imports
 - `src/memory_kg/cli/cmd_hooks.py`: Enhanced pre-commit hook with quality checks integration
   - Hook now runs `.pre-commit-config.yaml` checks (ruff, mypy, detect-secrets, etc.) before snapshot capture
-  - Hook rebuilds local DocKG index (`memorykg build --wipe`) to keep it in sync with commits
+  - Hook rebuilds local MemoryKG index (`memorykg build --wipe`) to keep it in sync with commits
   - Changed success message from `✓` emoji to `OK` prefix
 - `.github/workflows/snapshots.yml`: Refactored snapshot workflow for consistency
   - Simplified build phase to use unified `memorykg build --wipe` instead of separate `build-graph` and `build-index` commands

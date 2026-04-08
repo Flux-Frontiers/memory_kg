@@ -1,4 +1,4 @@
-# DocKG Thorough Analysis
+# MemoryKG Thorough Analysis
 
 **Version:** 0.4.0
 **Generated:** 2026-03-14

@@ -8,7 +8,7 @@ plus wiring of the previously-dead `[tool.memorykg].exclude` pyproject.toml conf
 ## Problem
 
 `[tool.memorykg].exclude` existed in pyproject.toml but was never read — no code loaded it.
-`iter_text_files` supported an `exclude` parameter but neither `DocKG.__init__` nor any CLI
+`iter_text_files` supported an `exclude` parameter but neither `MemoryKG.__init__` nor any CLI
 command passed anything to it. The exclusion config was silently ignored on every build.
 
 ## Files Changed
@@ -28,7 +28,7 @@ Returns an empty set if pyproject.toml is absent, unreadable, or has no `[tool.m
 
 ### `src/memory_kg/kg.py`
 
-Added `exclude: set[str] | None = None` parameter to `DocKG.__init__`.
+Added `exclude: set[str] | None = None` parameter to `MemoryKG.__init__`.
 Stored as `self.exclude` and forwarded to `DocGraph` in the lazy `graph` property.
 
 ### `src/memory_kg/cli/cmd_build.py`
@@ -39,7 +39,7 @@ Stored as `self.exclude` and forwarded to `DocGraph` in the lazy `graph` propert
   ```python
   exclude = load_exclude_dirs(corpus_root) | set(exclude_dir)
   ```
-- `exclude` is passed to `DocKG(... exclude=exclude or None)`.
+- `exclude` is passed to `MemoryKG(... exclude=exclude or None)`.
 - Build output now prints `exclude :` line showing active exclusions.
 
 `build-index` was intentionally left unchanged — it operates on an existing SQLite graph,

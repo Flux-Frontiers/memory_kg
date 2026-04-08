@@ -4,7 +4,7 @@
 [![Version](https://img.shields.io/badge/version-0.7.0-blue.svg)](https://github.com/Flux-Frontiers/memory_kg/releases)
 [![Poetry](https://img.shields.io/endpoint?url=https://python-poetry.org/badge/v0.json)](https://python-poetry.org/)
 
-**DocKG** — A Hybrid Knowledge Graph for Document Corpora
+**MemoryKG** — A Hybrid Knowledge Graph for Document Corpora
 with Semantic Indexing and Source-Grounded Passage Packing
 
 *Author: Eric G. Suchanek, PhD*
@@ -14,11 +14,11 @@ with Semantic Indexing and Source-Grounded Passage Packing
 
 ## Overview
 
-DocKG constructs a **deterministic, explainable knowledge graph** from a corpus of Markdown and plain-text documents. It semantically chunks text, discovers structural and semantic relationships between sections and chunks, stores them in SQLite, and augments retrieval with vector embeddings via LanceDB.
+MemoryKG constructs a **deterministic, explainable knowledge graph** from a corpus of Markdown and plain-text documents. It semantically chunks text, discovers structural and semantic relationships between sections and chunks, stores them in SQLite, and augments retrieval with vector embeddings via LanceDB.
 
 Structure is treated as **ground truth**; semantic search is strictly an acceleration layer. The result is a searchable, auditable representation of a document corpus that supports precise navigation, contextual passage extraction, and downstream reasoning — making it an ideal retrieval engine for LLMs and a practical foundation for **Knowledge-Graph RAG (KRAG)**, in contrast to embedding-only approaches.
 
-DocKG uses the same architecture as [CodeKG](https://github.com/Flux-Frontiers/code_kg) but targets natural-language documents rather than Python source code.
+MemoryKG uses the same architecture as [CodeKG](https://github.com/Flux-Frontiers/code_kg) but targets natural-language documents rather than Python source code.
 
 ---
 
@@ -185,7 +185,7 @@ Or declare in `pyproject.toml`:
 doc-kg = {git = "https://github.com/Flux-Frontiers/memory_kg.git", extras = ["viz"]}
 ```
 
-> **Note for DocKG developers:** Use `poetry install -E viz` to install the Streamlit visualizer locally. The `extras` mechanism above is for *consumers* of the package; `-E` is for local development.
+> **Note for MemoryKG developers:** Use `poetry install -E viz` to install the Streamlit visualizer locally. The `extras` mechanism above is for *consumers* of the package; `-E` is for local development.
 
 All CLI entry points are available immediately after installation:
 
@@ -292,7 +292,7 @@ memorykg analyze [CORPUS_ROOT] [--db PATH] [--lancedb PATH]
               [--output PATH] [--json] [--quiet]
 ```
 
-Runs the full `DocKGAnalyzer` pipeline:
+Runs the full `MemoryKGAnalyzer` pipeline:
 
 1. Baseline graph statistics (node/edge counts by kind)
 2. Per-document structure metrics (sections, chunks, depth)
@@ -424,9 +424,9 @@ See [docs/MCP.md](docs/MCP.md) for the full setup guide covering Claude Code, Gi
 ## Python API
 
 ```python
-from memory_kg import DocKG
+from memory_kg import MemoryKG
 
-kg = DocKG(corpus_root="docs/")
+kg = MemoryKG(corpus_root="docs/")
 kg.build(wipe=True)
 
 # Hybrid query

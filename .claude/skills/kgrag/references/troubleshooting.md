@@ -152,9 +152,9 @@ Common issues and solutions.
    ```bash
    python -c "import code_kg; print('CodeKG installed')"
    ```
-   For DocKGs:
+   For MemoryKGs:
    ```bash
-   python -c "import memory_kg; print('DocKG installed')"
+   python -c "import memory_kg; print('MemoryKG installed')"
    ```
 
 ---
@@ -315,7 +315,7 @@ Common issues and solutions.
 1. **Check if KG library is installed:**
    ```bash
    python -c "import code_kg"  # for CodeKGs
-   python -c "import memory_kg"   # for DocKGs
+   python -c "import memory_kg"   # for MemoryKGs
    ```
    If import fails, install: `pip install code-kg` or `pip install doc-kg`
 

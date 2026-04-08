@@ -1,4 +1,4 @@
-# DocKG Deployment Guide
+# MemoryKG Deployment Guide
 
 *Author: Eric G. Suchanek, PhD*
 
@@ -6,7 +6,7 @@
 
 ## Overview
 
-DocKG has two distinct deployment surfaces:
+MemoryKG has two distinct deployment surfaces:
 
 | Surface | What it is | Best options |
 |---|---|---|
@@ -187,7 +187,7 @@ poetry build
 
 # Create a GitHub release and attach artifacts
 gh release create v0.1.0 dist/* \
-  --title "DocKG v0.1.0" \
+  --title "MemoryKG v0.1.0" \
   --notes "Initial release"
 ```
 
@@ -201,7 +201,7 @@ pip install https://github.com/Flux-Frontiers/memory_kg/releases/download/v0.1.0
 
 ## Option 5 — MCP Server (AI agent integration)
 
-DocKG ships a production-ready MCP server (`memorykg mcp`) that exposes the full hybrid query and document retrieval pipeline as structured tools for any MCP-compatible agent — Claude Code, Kilo Code, GitHub Copilot, Claude Desktop, Cursor, Continue, or any custom agent.
+MemoryKG ships a production-ready MCP server (`memorykg mcp`) that exposes the full hybrid query and document retrieval pipeline as structured tools for any MCP-compatible agent — Claude Code, Kilo Code, GitHub Copilot, Claude Desktop, Cursor, Continue, or any custom agent.
 
 ### Install
 

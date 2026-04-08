@@ -18,7 +18,7 @@ def _make_corpus(tmp_path: Path, n: int = 5) -> list[Path]:
             f"# Document {i}\n\n"
             f"This is document number {i}. "
             f"It contains some text about topic {i}. "
-            f"DocKG and SQLite are mentioned here. "
+            f"MemoryKG and SQLite are mentioned here. "
             f"This sentence adds more content for testing.\n",
             encoding="utf-8",
         )

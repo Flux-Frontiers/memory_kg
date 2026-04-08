@@ -1,4 +1,4 @@
-DocKG — Command Workflow
+MemoryKG — Command Workflow
 ===
 
 Document-centric knowledge graph building and querying.

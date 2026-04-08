@@ -1,4 +1,4 @@
-# DocKG Temporal Snapshots
+# MemoryKG Temporal Snapshots
 
 **Enterprise-Grade Metrics Tracking Across Commits**
 

@@ -1,7 +1,7 @@
-# DocKG Query Cheatsheet
+# MemoryKG Query Cheatsheet
 
 A practical reference for the four MCP tools, with examples drawn from document corpora.
-All queries below work against a live DocKG knowledge graph built from `.md` and `.txt` files.
+All queries below work against a live MemoryKG knowledge graph built from `.md` and `.txt` files.
 
 ---
 
@@ -309,7 +309,7 @@ query_docs("chunk text", rels="CONTAINS,NEXT")
 
 ## 8. Excluding Directories from Indexing
 
-By default, DocKG indexes all `.md` and `.txt` files and skips common directories (`.git`, `.venv`, `__pycache__`, etc.).
+By default, MemoryKG indexes all `.md` and `.txt` files and skips common directories (`.git`, `.venv`, `__pycache__`, etc.).
 
 **Why exclude?** Archive directories, drafts, and vendored docs pollute the graph with irrelevant nodes.
 
@@ -332,7 +332,7 @@ Both options are additive — CLI flags extend `pyproject.toml` excludes.
 
 ## 9. Multipass Analysis Pipeline
 
-DocKG also includes a diary_kg-style multipass pipeline for deep NLP analysis. This is complementary to the core build and MCP tools.
+MemoryKG also includes a diary_kg-style multipass pipeline for deep NLP analysis. This is complementary to the core build and MCP tools.
 
 ### Pipeline Commands
 
