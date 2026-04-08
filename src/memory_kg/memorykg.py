@@ -247,6 +247,7 @@ def parse_corpus(
     *,
     extensions: set[str] | None = None,
     exclude: set[str] | None = None,
+    chunk_strategy: str = "semantic",
     chunk_size: int = 512,
     chunk_overlap: int = 64,
     similarity_threshold: float = 0.75,
@@ -276,8 +277,12 @@ def parse_corpus(
     :param corpus_root: Root directory of the corpus.
     :param extensions: File extensions to include (default: .md, .txt, .rst).
     :param exclude: Extra directory names to skip.
-    :param chunk_size: Approximate maximum characters per chunk.
-    :param chunk_overlap: Character overlap between consecutive chunks.
+    :param chunk_strategy: Chunking strategy: ``"semantic"`` (embedding-based),
+                           ``"fixed"`` (size-based), ``"sentence_group"`` (N sentences),
+                           or ``"heading"`` (one chunk per Markdown heading section —
+                           best for conversation corpora like LongMemEval).
+    :param chunk_size: Approximate maximum characters per chunk (semantic/fixed strategies).
+    :param chunk_overlap: Character overlap between consecutive chunks (semantic/fixed strategies).
     :param similarity_threshold: Cosine-similarity threshold for semantic split detection.
     :param embedder: Optional :class:`~memory_kg.index.Embedder` instance for semantic
                      boundary detection.  When ``None``, structure-only chunking is used.
@@ -291,12 +296,13 @@ def parse_corpus(
     :param topics_file: Optional topics catalog (JSON/YAML).
     :return: ``(nodes, edges)`` tuple.
     """
-    from memory_kg.chunker import TextChunker  # pylint: disable=import-outside-toplevel
+    from memory_kg.chunker import chunker_for  # pylint: disable=import-outside-toplevel
 
     nodes: dict[str, DocNode] = {}
     edges: dict[tuple[str, str, str], DocEdge] = {}
 
-    chunker = TextChunker(
+    chunker = chunker_for(
+        chunk_strategy,
         chunk_size=chunk_size,
         chunk_overlap=chunk_overlap,
         similarity_threshold=similarity_threshold,
@@ -312,7 +318,29 @@ def parse_corpus(
         rel_file_path(p, corpus_root): doc_node_id(rel_file_path(p, corpus_root)) for p in files
     }
 
-    for abs_path in files:
+    try:
+        from rich.progress import BarColumn, MofNCompleteColumn, Progress, TimeElapsedColumn  # pylint: disable=import-outside-toplevel
+        _progress_ctx: object = Progress(
+            "[progress.description]{task.description}",
+            BarColumn(),
+            MofNCompleteColumn(),
+            TimeElapsedColumn(),
+            transient=True,
+        )
+    except ImportError:
+        _progress_ctx = None
+
+    def _iter_files():
+        if _progress_ctx is not None:
+            with _progress_ctx as prog:
+                task = prog.add_task("  Parsing", total=len(files))
+                for p in files:
+                    yield p
+                    prog.advance(task)
+        else:
+            yield from files
+
+    for abs_path in _iter_files():
         file_path = rel_file_path(abs_path, corpus_root)
         doc_id = doc_node_id(file_path)
 

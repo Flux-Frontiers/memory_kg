@@ -510,14 +510,95 @@ class SentenceGroupChunker:
 
 
 # ---------------------------------------------------------------------------
+# Heading-level chunker (turn/segment level)
+# ---------------------------------------------------------------------------
+
+
+class HeadingChunker:
+    """Chunk Markdown documents at heading boundaries only — no sub-chunking.
+
+    Each ATX heading section (``## User``, ``## Assistant``, etc.) becomes
+    exactly one chunk.  This is the correct granularity for conversation
+    corpora such as LongMemEval where each turn is a complete semantic unit.
+
+    Long sections are only split further when they exceed *max_section_chars*,
+    preventing runaway embedding of multi-page assistant responses.
+
+    :param max_section_chars: Hard cap per chunk.  Sections longer than this
+                              are split at the nearest sentence boundary.
+    :param min_chunk_chars: Sections shorter than this are silently dropped.
+    """
+
+    def __init__(
+        self,
+        *,
+        max_section_chars: int = 4096,
+        min_chunk_chars: int = 20,
+    ) -> None:
+        self.max_section_chars = max_section_chars
+        self.min_chunk_chars = min_chunk_chars
+
+    def chunk(self, text: str, *, file_path: str = "") -> list[dict]:
+        """Chunk *text* into heading-level segments.
+
+        :param text: Raw document text.
+        :param file_path: Corpus-relative path (unused; kept for API parity).
+        :return: List of chunk dicts (same schema as ``TextChunker.chunk()``).
+        """
+        sections = _split_by_headings(text)
+        chunks: list[dict] = []
+
+        for section in sections:
+            section_text = section["text"].strip()
+            if len(section_text) < self.min_chunk_chars:
+                continue
+
+            if len(section_text) <= self.max_section_chars:
+                refs = _extract_links(section_text)
+                chunks.append({
+                    "text": section_text,
+                    "section_title": section["title"],
+                    "section_level": section["level"],
+                    "char_start": section["char_start"],
+                    "char_end": section["char_start"] + len(section_text),
+                    "references": refs,
+                })
+            else:
+                # Overflow: sentence-group fallback within the section
+                sentences = _split_sentences(section_text)
+                groups: list[list[str]] = [[]]
+                for sent in sentences:
+                    current = " ".join(groups[-1])
+                    if groups[-1] and len(current) + len(sent) > self.max_section_chars:
+                        groups.append([sent])
+                    else:
+                        groups[-1].append(sent)
+                sub_chunks = _groups_to_chunks(
+                    groups, section_text, section["char_start"], self.min_chunk_chars
+                )
+                for sc in sub_chunks:
+                    refs = _extract_links(sc["text"])
+                    chunks.append({
+                        "text": sc["text"],
+                        "section_title": section["title"],
+                        "section_level": section["level"],
+                        "char_start": sc["char_start"],
+                        "char_end": sc["char_end"],
+                        "references": refs,
+                    })
+
+        return chunks
+
+
+# ---------------------------------------------------------------------------
 # Chunker factory
 # ---------------------------------------------------------------------------
 
 
 def chunker_for(
-    strategy: Literal["semantic", "sentence_group", "fixed"] = "semantic",
+    strategy: Literal["semantic", "sentence_group", "fixed", "heading"] = "semantic",
     **kwargs,
-) -> TextChunker | SentenceGroupChunker:
+) -> "TextChunker | SentenceGroupChunker | HeadingChunker":
     """Factory: create the appropriate chunker for *strategy*.
 
     :param strategy: ``"semantic"`` (embedding-based), ``"sentence_group"``
@@ -529,6 +610,11 @@ def chunker_for(
         return SentenceGroupChunker(
             sentences_per_chunk=kwargs.get("sentences_per_chunk", 4),
             min_chunk_chars=kwargs.get("min_chunk_chars", 50),
+        )
+    if strategy == "heading":
+        return HeadingChunker(
+            max_section_chars=kwargs.get("max_section_chars", 4096),
+            min_chunk_chars=kwargs.get("min_chunk_chars", 20),
         )
     # "semantic" and "fixed" both use TextChunker; "fixed" just omits the embedder
     return TextChunker(

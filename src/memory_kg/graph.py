@@ -54,6 +54,7 @@ class DocGraph:
         *,
         extensions: set[str] | None = None,
         exclude: set[str] | None = None,
+        chunk_strategy: str = "semantic",
         chunk_size: int = 512,
         chunk_overlap: int = 64,
         similarity_threshold: float = 0.75,
@@ -69,6 +70,7 @@ class DocGraph:
         self.corpus_root: Path = Path(corpus_root).resolve()
         self.extensions = extensions
         self.exclude: set[str] = exclude or set()
+        self.chunk_strategy = chunk_strategy
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
         self.similarity_threshold = similarity_threshold
@@ -99,6 +101,7 @@ class DocGraph:
                 self.corpus_root,
                 extensions=self.extensions,
                 exclude=self.exclude,
+                chunk_strategy=self.chunk_strategy,
                 chunk_size=self.chunk_size,
                 chunk_overlap=self.chunk_overlap,
                 similarity_threshold=self.similarity_threshold,

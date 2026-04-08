@@ -332,6 +332,7 @@ class MemoryKG:
         *,
         model: str = DEFAULT_MODEL,
         table: str = "memorykg_nodes",
+        chunk_strategy: str = "semantic",
         chunk_size: int = 512,
         chunk_overlap: int = 64,
         similarity_threshold: float = 0.75,
@@ -358,6 +359,7 @@ class MemoryKG:
         )
         self.model_name = model
         self.table_name = table
+        self.chunk_strategy = chunk_strategy
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
         self.similarity_threshold = similarity_threshold
@@ -381,14 +383,22 @@ class MemoryKG:
 
     @property
     def graph(self) -> DocGraph:
-        """Corpus parsing layer (lazy)."""
+        """Corpus parsing layer (lazy).
+
+        For the ``semantic`` chunking strategy the embedder is passed so that
+        topic-boundary detection works during phase 1.  Other strategies
+        (``heading``, ``fixed``, ``sentence_group``) ignore the embedder.
+        """
         if self._graph is None:
+            embedder = self.embedder if self.chunk_strategy == "semantic" else None
             self._graph = DocGraph(
                 self.corpus_root,
                 exclude=self.exclude or None,
+                chunk_strategy=self.chunk_strategy,
                 chunk_size=self.chunk_size,
                 chunk_overlap=self.chunk_overlap,
                 similarity_threshold=self.similarity_threshold,
+                embedder=embedder,
                 enable_topics=self.enable_topics,
                 enable_entities=self.enable_entities,
                 enable_keywords=self.enable_keywords,
@@ -434,7 +444,17 @@ class MemoryKG:
         :param wipe: Clear existing data before writing.
         :return: :class:`BuildStats`.
         """
+        import time  # pylint: disable=import-outside-toplevel
+        t0 = time.time()
+        print("  Phase 1: parsing corpus → SQLite...", flush=True)
         graph_stats = self.build_graph(wipe=wipe)
+        print(
+            f"  Phase 1 done: {graph_stats.total_nodes} nodes, "
+            f"{graph_stats.total_edges} edges ({time.time()-t0:.1f}s)",
+            flush=True,
+        )
+        t1 = time.time()
+        print("  Phase 2: embedding → LanceDB...", flush=True)
         index_stats = self.build_index(wipe=wipe)
         graph_stats.indexed_rows = index_stats.indexed_rows
         graph_stats.index_dim = index_stats.index_dim
@@ -466,7 +486,7 @@ class MemoryKG:
         :return: :class:`BuildStats` with ``indexed_rows``, ``index_dim``, and
                  ``similar_edges_added`` set.
         """
-        idx_stats = self.index.build(self.store, wipe=wipe)
+        idx_stats = self.index.build(self.store, wipe=wipe, quiet=False)
         s = self.store.stats()
         return BuildStats(
             corpus_root=str(self.corpus_root),

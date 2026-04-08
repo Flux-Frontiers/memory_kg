@@ -252,6 +252,9 @@ __marimo__/
 .DS_Store
 commit.txt
 
+# Benchmark data (large corpus files, not tracked)
+benchmarks/data/
+
 # Large asset files (> 1MB)
 assets/*-1024x1024.png
 assets/*-xl-*.png
