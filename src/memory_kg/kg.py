@@ -438,24 +438,30 @@ class MemoryKG:
     # Build
     # ------------------------------------------------------------------
 
-    def build(self, *, wipe: bool = False) -> BuildStats:
+    def build(
+        self, *, wipe: bool = False, batch_size: int = 256, discover_similar: bool = True
+    ) -> BuildStats:
         """Full pipeline: corpus parsing → SQLite → LanceDB + SIMILAR_TO edges.
 
         :param wipe: Clear existing data before writing.
+        :param batch_size: Number of nodes to embed per batch.
+        :param discover_similar: Run SIMILAR_TO edge discovery after indexing.
         :return: :class:`BuildStats`.
         """
         import time  # pylint: disable=import-outside-toplevel
+
         t0 = time.time()
         print("  Phase 1: parsing corpus → SQLite...", flush=True)
         graph_stats = self.build_graph(wipe=wipe)
         print(
             f"  Phase 1 done: {graph_stats.total_nodes} nodes, "
-            f"{graph_stats.total_edges} edges ({time.time()-t0:.1f}s)",
+            f"{graph_stats.total_edges} edges ({time.time() - t0:.1f}s)",
             flush=True,
         )
-        t1 = time.time()
         print("  Phase 2: embedding → LanceDB...", flush=True)
-        index_stats = self.build_index(wipe=wipe)
+        index_stats = self.build_index(
+            wipe=wipe, batch_size=batch_size, discover_similar=discover_similar
+        )
         graph_stats.indexed_rows = index_stats.indexed_rows
         graph_stats.index_dim = index_stats.index_dim
         graph_stats.similar_edges_added = index_stats.similar_edges_added
@@ -479,14 +485,24 @@ class MemoryKG:
             edge_counts=s["edge_counts"],
         )
 
-    def build_index(self, *, wipe: bool = False) -> BuildStats:
+    def build_index(
+        self, *, wipe: bool = False, batch_size: int = 256, discover_similar: bool = True
+    ) -> BuildStats:
         """SQLite → LanceDB only (graph must already exist).
 
         :param wipe: Delete existing vectors before indexing.
+        :param batch_size: Number of nodes to embed per batch.
+        :param discover_similar: Run SIMILAR_TO edge discovery after indexing.
         :return: :class:`BuildStats` with ``indexed_rows``, ``index_dim``, and
                  ``similar_edges_added`` set.
         """
-        idx_stats = self.index.build(self.store, wipe=wipe, quiet=False)
+        idx_stats = self.index.build(
+            self.store,
+            wipe=wipe,
+            batch_size=batch_size,
+            discover_similar=discover_similar,
+            quiet=False,
+        )
         s = self.store.stats()
         return BuildStats(
             corpus_root=str(self.corpus_root),

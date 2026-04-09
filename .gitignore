@@ -220,11 +220,11 @@ __marimo__/
 # CodeKG generated artifacts — databases are transient/reproducible, snapshots are tracked
 # MUST include .codekg/snapshots!
 # This is the correct pattern
-.codekg/lancedb/
-.codekg/lancedb-*
-.codekg/graph.sqlite
-.codekg/graph.sqlite*
-.codekg/models
+.pycodekg/lancedb/
+.pycodekg/lancedb-*
+.pycodekg/graph.sqlite
+.pycodekg/graph.sqlite*
+.pycodekg/models
 # dockg
 .dockg/lancedb/
 .dockg/lancedb-*
@@ -260,3 +260,4 @@ assets/*-1024x1024.png
 assets/*-xl-*.png
 assets/code_kg_arch_*.png
 commit.txt
+benchmarks/iStatistica Pro - 2026-04-09 03-26-10 +0000.csv

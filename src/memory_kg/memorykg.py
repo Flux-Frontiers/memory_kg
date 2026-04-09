@@ -55,7 +55,7 @@ from memory_kg.topics import TopicExtractor
 #: Default sentence-transformer model for general text (not code).
 #: Mirrors personal_agent's sentence-transformer default.
 #: Override via the ``DOCKG_MODEL`` environment variable.
-DEFAULT_MODEL: str = os.environ.get("DOCKG_MODEL", "all-mpnet-base-v2")
+DEFAULT_MODEL: str = os.environ.get("DOCKG_MODEL", "all-MiniLM-L6-v2")
 
 # ============================================================================
 # Graph primitives (LOCKED v0 CONTRACT)
@@ -319,7 +319,13 @@ def parse_corpus(
     }
 
     try:
-        from rich.progress import BarColumn, MofNCompleteColumn, Progress, TimeElapsedColumn  # pylint: disable=import-outside-toplevel
+        from rich.progress import (  # pylint: disable=import-outside-toplevel
+            BarColumn,
+            MofNCompleteColumn,
+            Progress,
+            TimeElapsedColumn,
+        )
+
         _progress_ctx: object = Progress(
             "[progress.description]{task.description}",
             BarColumn(),

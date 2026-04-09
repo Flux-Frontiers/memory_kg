@@ -303,9 +303,10 @@ class SemanticIndex:
         tbl = self._open_table(wipe=wipe)
 
         indexed = 0
-        # Keep vectors in memory for SIMILAR_TO pass
-        all_ids: list[str] = []
-        all_vecs: list[list[float]] = []
+        # Only accumulate vectors in memory when SIMILAR_TO discovery is needed.
+        # Skipping this saves ~800 MB RAM for a 528K-node corpus at 384 dims.
+        all_ids: list[str] = [] if discover_similar else []
+        all_vecs: list[list[float]] = [] if discover_similar else []
 
         if not quiet:
             from rich.progress import (  # pylint: disable=import-outside-toplevel
@@ -325,6 +326,21 @@ class SemanticIndex:
         else:
             _progress_ctx = contextlib.nullcontext()
 
+        # On wipe builds the table is empty — accumulate rows and write in large
+        # batches to avoid LanceDB fragment churn. On incremental builds, delete
+        # + add per embedding batch to handle updates correctly.
+        lance_batch_size = 4096
+        pending_rows: list[dict] = []
+
+        def _flush(force: bool = False) -> None:
+            nonlocal indexed
+            if not pending_rows:
+                return
+            if force or len(pending_rows) >= lance_batch_size:
+                tbl.add(pending_rows)
+                indexed += len(pending_rows)
+                pending_rows.clear()
+
         with _progress_ctx as prog:
             task_id = prog.add_task("  Embedding", total=len(nodes)) if prog is not None else None
             for i in range(0, len(nodes), batch_size):
@@ -333,9 +349,12 @@ class SemanticIndex:
                 vecs = self.embedder.embed_texts(texts)
 
                 ids = [n["id"] for n in chunk]
-                if ids:
-                    pred = " OR ".join([f"id = '{_escape(nid)}'" for nid in ids])
-                    tbl.delete(pred)
+
+                if not wipe:
+                    # Incremental: delete stale vectors before re-adding
+                    if ids:
+                        pred = " OR ".join([f"id = '{_escape(nid)}'" for nid in ids])
+                        tbl.delete(pred)
 
                 rows = [
                     {
@@ -349,12 +368,21 @@ class SemanticIndex:
                     }
                     for n, text, vec in zip(chunk, texts, vecs)
                 ]
-                tbl.add(rows)
-                indexed += len(rows)
-                all_ids.extend(ids)
-                all_vecs.extend(vecs)
+
+                if wipe:
+                    pending_rows.extend(rows)
+                    _flush()
+                else:
+                    tbl.add(rows)
+                    indexed += len(rows)
+
+                if discover_similar:
+                    all_ids.extend(ids)
+                    all_vecs.extend(vecs)
                 if task_id is not None:
                     prog.advance(task_id, len(rows))
+
+            _flush(force=True)  # write any remaining rows
 
         self._tbl = tbl
 
@@ -419,9 +447,9 @@ class SemanticIndex:
         import numpy as np  # pylint: disable=import-outside-toplevel
 
         chunk_ids = [node_ids[i] for i in chunk_indices]
+        chunk_id_to_idx: dict[str, int] = {nid: idx for idx, nid in enumerate(chunk_ids)}
         chunk_vecs = np.asarray([vecs[i] for i in chunk_indices], dtype="float32")
 
-        # Cosine similarity matrix (chunked to avoid OOM on large corpora)
         edges: list[DocEdge] = []
         seen: set[frozenset] = set()
 
@@ -429,39 +457,49 @@ class SemanticIndex:
         if tbl is None:
             return 0
 
-        for ci, (nid, qvec) in enumerate(zip(chunk_ids, chunk_vecs)):
-            raw = tbl.search(qvec.tolist()).limit(k + 1).to_list()
-            for row in raw:
-                candidate = row["id"]
-                if candidate == nid:
-                    continue
-                if not candidate.startswith("chunk:"):
-                    continue
-                pair = frozenset([nid, candidate])
-                if pair in seen:
-                    continue
-                seen.add(pair)
+        from rich.progress import (  # pylint: disable=import-outside-toplevel
+            BarColumn,
+            MofNCompleteColumn,
+            Progress,
+            TimeElapsedColumn,
+        )
 
-                # Compute cosine similarity
-                ci2 = chunk_ids.index(candidate) if candidate in chunk_ids else -1
-                if ci2 == -1:
-                    continue
-                a, b = chunk_vecs[ci], chunk_vecs[ci2]
-                na, nb = np.linalg.norm(a), np.linalg.norm(b)
-                if na > 0 and nb > 0:
-                    sim = float(np.dot(a, b) / (na * nb))
-                else:
-                    sim = 0.0
+        with Progress(
+            "[progress.description]{task.description}",
+            BarColumn(),
+            MofNCompleteColumn(),
+            TimeElapsedColumn(),
+            transient=True,
+        ) as prog:
+            task = prog.add_task("  SIMILAR_TO", total=len(chunk_ids))
+            for ci, (nid, qvec) in enumerate(zip(chunk_ids, chunk_vecs)):
+                raw = tbl.search(qvec.tolist()).limit(k + 1).to_list()
+                for row in raw:
+                    candidate = row["id"]
+                    if candidate == nid or not candidate.startswith("chunk:"):
+                        continue
+                    pair = frozenset([nid, candidate])
+                    if pair in seen:
+                        continue
+                    seen.add(pair)
 
-                if sim >= threshold:
-                    edges.append(
-                        DocEdge(
-                            src=nid,
-                            rel="SIMILAR_TO",
-                            dst=candidate,
-                            evidence={"similarity": round(sim, 4)},
+                    ci2 = chunk_id_to_idx.get(candidate, -1)
+                    if ci2 == -1:
+                        continue
+                    a, b = chunk_vecs[ci], chunk_vecs[ci2]
+                    na, nb = np.linalg.norm(a), np.linalg.norm(b)
+                    sim = float(np.dot(a, b) / (na * nb)) if na > 0 and nb > 0 else 0.0
+
+                    if sim >= threshold:
+                        edges.append(
+                            DocEdge(
+                                src=nid,
+                                rel="SIMILAR_TO",
+                                dst=candidate,
+                                evidence={"similarity": round(sim, 4)},
+                            )
                         )
-                    )
+                prog.advance(task)
 
         if edges:
             store._upsert_edges(edges)

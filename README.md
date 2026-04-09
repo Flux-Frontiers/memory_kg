@@ -1,11 +1,10 @@
 [![CI](https://github.com/Flux-Frontiers/memory_kg/actions/workflows/publish.yml/badge.svg)](https://github.com/Flux-Frontiers/memory_kg/actions/workflows/publish.yml)
 [![Python](https://img.shields.io/badge/python-3.12%20%7C%203.13-blue.svg)](https://www.python.org/)
 [![License: Elastic-2.0](https://img.shields.io/badge/License-Elastic%202.0-blue.svg)](https://www.elastic.co/licensing/elastic-license)
-[![Version](https://img.shields.io/badge/version-0.7.0-blue.svg)](https://github.com/Flux-Frontiers/memory_kg/releases)
+[![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](https://github.com/Flux-Frontiers/memory_kg/releases)
 [![Poetry](https://img.shields.io/endpoint?url=https://python-poetry.org/badge/v0.json)](https://python-poetry.org/)
 
-**MemoryKG** — A Hybrid Knowledge Graph for Document Corpora
-with Semantic Indexing and Source-Grounded Passage Packing
+**MemoryKG** — A Hybrid Knowledge Graph for Document Corpora and Conversational Memory
 
 *Author: Eric G. Suchanek, PhD*
 *Flux-Frontiers, Liberty TWP, OH*
@@ -16,24 +15,24 @@ with Semantic Indexing and Source-Grounded Passage Packing
 
 MemoryKG constructs a **deterministic, explainable knowledge graph** from a corpus of Markdown and plain-text documents. It semantically chunks text, discovers structural and semantic relationships between sections and chunks, stores them in SQLite, and augments retrieval with vector embeddings via LanceDB.
 
-Structure is treated as **ground truth**; semantic search is strictly an acceleration layer. The result is a searchable, auditable representation of a document corpus that supports precise navigation, contextual passage extraction, and downstream reasoning — making it an ideal retrieval engine for LLMs and a practical foundation for **Knowledge-Graph RAG (KRAG)**, in contrast to embedding-only approaches.
+Structure is treated as **ground truth**; semantic search is strictly an acceleration layer. The result is a searchable, auditable representation of a document corpus that supports precise navigation, contextual passage extraction, and downstream reasoning — making it an ideal retrieval engine for LLMs and a practical foundation for **Knowledge-Graph RAG (KGRAG)**, in contrast to embedding-only approaches.
 
-MemoryKG uses the same architecture as [CodeKG](https://github.com/Flux-Frontiers/code_kg) but targets natural-language documents rather than Python source code.
+MemoryKG uses the same architecture as [CodeKG](https://github.com/Flux-Frontiers/code_kg) and [DocKG](https://github.com/Flux-Frontiers/doc_kg) but adds a **conversational memory layer** — ingesting and indexing agent turns, consolidating them into summaries, and enabling semantic recall across sessions.
 
 ---
 
 ## Features
 
-- **Semantic chunking** — Splits `.md` and `.txt` files into semantically coherent chunks by heading and paragraph structure
+- **Semantic chunking** — Multiple strategies: `heading` (one chunk per `## Section`), `fixed` (size-bounded), `sentence_group`, and `semantic` (embedding-boundary detection)
 - **Deterministic knowledge graph** — SQLite-backed canonical store with typed nodes and provenance-tracked edges
 - **Relation extraction** — Topics, named entities, and keywords extracted from each chunk; co-occurrence and similarity edges built automatically
 - **Hybrid query model** — Semantic seeding (LanceDB embeddings) + structural expansion (graph traversal)
 - **Passage packing** — Extract context-rich text passages grounded to source documents with headings
 - **Semantic coverage analysis** — Per-document metrics, hot chunks, orphan detection, and overall corpus health report
 - **Temporal snapshots** — Save and diff graph metrics over time; compare coverage across corpus versions
+- **Conversational memory** — Auto-ingest Claude Code session turns via hooks; periodic consolidation into summaries; semantic recall across sessions
 - **MCP server** — Four tools for AI agent integration (`graph_stats`, `query_docs`, `pack_docs`, `get_node`)
 - **Streamlit web app** — Interactive graph browser, hybrid query UI, and passage pack explorer
-- **Configurable extraction** — Toggle topic/entity/keyword extraction per build
 
 ---
 
@@ -71,6 +70,9 @@ memorykg build docs/
 
 # Incremental update — keep existing data
 memorykg build docs/ --update
+
+# Use heading-based chunking (one chunk per ## section — faster, better for conversations)
+memorykg build docs/ --chunk-strategy heading
 
 # Exclude specific directories
 memorykg build docs/ --exclude-dir dir1 --exclude-dir dir2
@@ -121,10 +123,27 @@ memorykg snapshot show 0.1.0
 memorykg snapshot diff 0.1.0 0.2.0
 ```
 
+### Install hooks
+
+```bash
+# Install git pre-commit hook (rebuilds index and snapshots before each commit)
+memorykg install-hooks --repo .
+
+# Also install Claude Code auto-ingest hooks for this repo
+memorykg install-hooks --repo . --claude
+
+# Install Claude Code hooks globally (all repos)
+memorykg install-hooks --global
+```
+
+Claude Code hooks auto-ingest every session turn into the AgentKG conversation graph,
+consolidate old turns into summaries, and snapshot the graph — enabling semantic recall
+across sessions.
+
 ### Launch the Streamlit visualizer
 
 ```bash
-# Requires [viz] extra: pip install 'doc-kg[viz]'
+# Requires [viz] extra: pip install 'memory-kg[viz]'
 memorykg viz
 
 # Custom port, suppress browser launch
@@ -162,30 +181,30 @@ get_node("chunk:intro:overview")     # fetch a single node by ID
 
 ```bash
 # Core install (SQLite + LanceDB + MCP server)
-pip install 'doc-kg @ git+https://github.com/Flux-Frontiers/memory_kg.git'
+pip install 'memory-kg @ git+https://github.com/Flux-Frontiers/memory_kg.git'
 
 # With Streamlit web visualizer (adds Streamlit, pyvis, plotly)
-pip install 'doc-kg[viz] @ git+https://github.com/Flux-Frontiers/memory_kg.git'
+pip install 'memory-kg[viz] @ git+https://github.com/Flux-Frontiers/memory_kg.git'
 ```
 
 ### Existing Poetry project
 
 ```bash
 # Core
-poetry add 'doc-kg @ git+https://github.com/Flux-Frontiers/memory_kg.git'
+poetry add 'memory-kg @ git+https://github.com/Flux-Frontiers/memory_kg.git'
 
 # With Streamlit visualizer
-poetry add 'doc-kg[viz] @ git+https://github.com/Flux-Frontiers/memory_kg.git'
+poetry add 'memory-kg[viz] @ git+https://github.com/Flux-Frontiers/memory_kg.git'
 ```
 
 Or declare in `pyproject.toml`:
 
 ```toml
 [tool.poetry.dependencies]
-doc-kg = {git = "https://github.com/Flux-Frontiers/memory_kg.git", extras = ["viz"]}
+memory-kg = {git = "https://github.com/Flux-Frontiers/memory_kg.git", extras = ["viz"]}
 ```
 
-> **Note for MemoryKG developers:** Use `poetry install -E viz` to install the Streamlit visualizer locally. The `extras` mechanism above is for *consumers* of the package; `-E` is for local development.
+> **Note for MemoryKG developers:** Use `poetry install -E viz` to install the Streamlit visualizer locally.
 
 All CLI entry points are available immediately after installation:
 
@@ -223,7 +242,8 @@ Every subcommand also ships as a dedicated `memorykg-<name>` script — useful f
 
 ```bash
 memorykg build CORPUS_ROOT [--db PATH] [--lancedb PATH] [--model NAME]
-            [--update] [--no-similar] [--exclude-dir DIR]...
+            [--update] [--no-similar] [--chunk-strategy STRATEGY]
+            [--exclude-dir DIR]...
 ```
 
 | Option | Default | Description |
@@ -234,7 +254,17 @@ memorykg build CORPUS_ROOT [--db PATH] [--lancedb PATH] [--model NAME]
 | `--model` | `all-MiniLM-L6-v2` | Sentence-transformer embedding model |
 | `--update` | off | Incremental update — keep existing data instead of wiping |
 | `--no-similar` | off | Skip computing `SIMILAR_TO` edges |
-| `--exclude-dir` | — | Exclude a directory at every depth (repeatable); merged with `[tool.memorykg].exclude` |
+| `--chunk-strategy` | `semantic` | Chunking strategy: `semantic`, `heading`, `fixed`, `sentence_group` |
+| `--exclude-dir` | — | Exclude a directory at every depth (repeatable) |
+
+**Chunking strategies:**
+
+| Strategy | Description | Best for |
+|---|---|---|
+| `semantic` | Embedding-boundary detection | General document corpora |
+| `heading` | One chunk per `## Section` heading | Conversation logs, structured Markdown |
+| `fixed` | Fixed character size with overlap | Uniform text, fast builds |
+| `sentence_group` | Groups of N sentences | Prose-heavy documents |
 
 ### `memorykg build-graph` — SQLite only
 
@@ -244,17 +274,13 @@ memorykg build-graph CORPUS_ROOT [--db PATH] [--update] [--exclude-dir DIR]...
 
 Parses documents, extracts nodes (documents, sections, chunks, topics, entities, keywords), and writes the SQLite graph. No embedding model required.
 
-| Option | Default | Description |
-|---|---|---|
-| `--exclude-dir` | — | Exclude a directory at every depth (repeatable); merged with `[tool.memorykg].exclude` |
-
 ### `memorykg build-index` — LanceDB only
 
 ```bash
 memorykg build-index [--db PATH] [--lancedb PATH] [--model NAME] [--no-similar]
 ```
 
-Reads an existing SQLite graph and builds (or rebuilds) the LanceDB vector index. Use after `build-graph` or when reindexing with a different model.
+Reads an existing SQLite graph and builds (or rebuilds) the LanceDB vector index.
 
 ### `memorykg query` — Hybrid search
 
@@ -285,6 +311,28 @@ memorykg pack QUERY [--db PATH] [--lancedb PATH] [--k N] [--hop N]
 | `--max-chars` | `12000` | Max total characters in pack |
 | `--max-nodes` | `50` | Max nodes included |
 
+### `memorykg install-hooks` — Hook installation
+
+```bash
+memorykg install-hooks [--repo PATH] [--force] [--claude] [--global]
+```
+
+| Option | Description |
+|---|---|
+| `--repo PATH` | Repository root (default: `.`) |
+| `--force` | Overwrite existing hooks |
+| `--claude` | Install Claude Code hooks into `.claude/settings.json` (project scope) |
+| `--global` | Install Claude Code hooks into `~/.claude/settings.json` (all repos) |
+
+With `--claude` or `--global`, writes three shell scripts to `~/.agentkg/hooks/` and
+registers them in the target `settings.json`:
+
+| Event | Action |
+|---|---|
+| `UserPromptSubmit` | Ingest user turn with embeddings |
+| `Stop` | Ingest assistant turn; periodic consolidation; async snapshot |
+| `PreCompact` | Synchronous prune + snapshot before context compression |
+
 ### `memorykg analyze` — Corpus health report
 
 ```bash
@@ -311,41 +359,6 @@ memorykg snapshot list           # list all saved snapshots
 memorykg snapshot show COMMIT    # full detail + delta vs previous
 memorykg snapshot diff A B       # side-by-side comparison
 ```
-
-Snapshots are stored in `.memorykg/snapshots/`. Use them to track documentation coverage trends across iterations.
-
-```bash
-# Save snapshots at key milestones
-memorykg snapshot save 0.1.0
-# ... add more docs, rebuild ...
-memorykg snapshot save 0.2.0
-
-# See what changed
-memorykg snapshot diff 0.1.0 0.2.0
-```
-
-### `memorykg viz` — Streamlit visualizer
-
-```bash
-memorykg viz [--db PATH] [--port PORT] [--no-browser]
-```
-
-Launches a Streamlit web app with three tabs:
-
-- **Graph** — Interactive pyvis graph browser with node kind / edge type filters
-- **Query** — Hybrid search UI with result ranking and provenance
-- **Pack** — Passage pack explorer for LLM context injection
-
-Requires the `[viz]` extra: `pip install 'doc-kg[viz]'`.
-
-### `memorykg mcp` — MCP server
-
-```bash
-memorykg mcp [--repo PATH] [--db PATH] [--lancedb PATH] [--model NAME]
-          [--transport stdio|sse]
-```
-
-Starts the FastMCP server. Default transport is `stdio` for AI agent integration; use `sse` for web clients.
 
 ---
 
@@ -426,7 +439,7 @@ See [docs/MCP.md](docs/MCP.md) for the full setup guide covering Claude Code, Gi
 ```python
 from memory_kg import MemoryKG
 
-kg = MemoryKG(corpus_root="docs/")
+kg = MemoryKG(corpus_root="docs/", chunk_strategy="heading")
 kg.build(wipe=True)
 
 # Hybrid query
@@ -454,18 +467,9 @@ exclude = ["archive", "vendor", "generated"]
 
 Exclusions are **additive** across three levels:
 
-1. **Built-in** — hardcoded in `memorykg.py`: `.git`, `.venv`, `__pycache__`, `.memorykg`, `.codekg`, etc.
+1. **Built-in** — hardcoded defaults: `.git`, `.venv`, `__pycache__`, `.memorykg`, etc.
 2. **Config** — `[tool.memorykg].exclude` from `pyproject.toml` (auto-loaded from corpus root)
 3. **CLI** — `--exclude-dir` flags (merged at call time)
-
-All three are unioned—there is no override, only additive exclusion. Example:
-
-```bash
-# pyproject.toml has: exclude = ["archive", "vendor"]
-# This adds to those:
-memorykg build docs/ --exclude-dir node_modules --exclude-dir dist
-# Result: archive + vendor + node_modules + dist are all excluded (plus built-ins)
-```
 
 ---
 
@@ -480,6 +484,13 @@ After running `memorykg build`, the following files are created:
   snapshots/        # Temporal snapshots (JSON)
     manifest.json
     <version>.json
+
+~/.agentkg/           # Conversational memory (created by install-hooks)
+  hooks/              # Claude Code auto-ingest hook scripts
+  graph.sqlite        # Agent turn graph
+  lancedb/            # Agent turn embeddings
+  snapshots/          # Session snapshots
+  hook_state/         # Per-session consolidation state
 ```
 
 ---

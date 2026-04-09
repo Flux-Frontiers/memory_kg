@@ -114,6 +114,13 @@ _console = Console()
     help="Skip SIMILAR_TO edge discovery after indexing.",
 )
 @click.option(
+    "--batch",
+    type=int,
+    default=256,
+    show_default=True,
+    help="Embedding batch size.",
+)
+@click.option(
     "--update",
     is_flag=True,
     default=False,
@@ -152,6 +159,7 @@ def build(
     topic_threshold: float,
     topics_file: str | None,
     no_similar: bool,
+    batch: int,
     update: bool,
     ext: tuple[str, ...],
     exclude_dir: tuple[str, ...],
@@ -208,6 +216,7 @@ def build(
     _console.print(Rule(f"MemoryKG build — {repo_root.name}", style="bold blue"))
     _console.print(f"  corpus   : {repo_root}")
     _console.print(f"  model    : {model}")
+    _console.print(f"  batch    : {batch}")
     _console.print(f"  sqlite   : {db_path}")
     _console.print(f"  lancedb  : {lancedb_dir}")
     _console.print(f"  ext      : {', '.join(sorted(extensions))}")
@@ -227,6 +236,7 @@ def build(
     idx_stats = kg.index.build(
         kg.store,
         wipe=wipe,
+        batch_size=batch,
         discover_similar=not no_similar,
         quiet=False,
     )

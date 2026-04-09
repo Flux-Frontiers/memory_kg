@@ -94,12 +94,8 @@ def dcg(relevances: list[float], k: int) -> float:
     return sum(rel / math.log2(i + 2) for i, rel in enumerate(relevances[:k]))
 
 
-def ndcg(
-    rankings: list[int], correct_ids: set[str], corpus_ids: list[str], k: int
-) -> float:
-    relevances = [
-        1.0 if corpus_ids[idx] in correct_ids else 0.0 for idx in rankings[:k]
-    ]
+def ndcg(rankings: list[int], correct_ids: set[str], corpus_ids: list[str], k: int) -> float:
+    relevances = [1.0 if corpus_ids[idx] in correct_ids else 0.0 for idx in rankings[:k]]
     ideal = sorted(relevances, reverse=True)
     idcg = dcg(ideal, k)
     if idcg == 0:
@@ -142,9 +138,7 @@ def _format_session_markdown(sess_id: str, date: str, turns: list[dict]) -> str:
     return "\n".join(lines).rstrip() + "\n"
 
 
-def write_corpus(
-    data_file: Path, corpus_dir: Path, force: bool = False
-) -> dict[str, str]:
+def write_corpus(data_file: Path, corpus_dir: Path, force: bool = False) -> dict[str, str]:
     """Walk the longmemeval JSON and write every unique haystack session to disk.
 
     Returns a map of ``session_id → file_path`` (as a string, repo-relative).
@@ -175,10 +169,7 @@ def write_corpus(
             existing.add(sess_id)
 
     total = written + skipped
-    print(
-        f"  Corpus: {total} unique sessions "
-        f"({written} written, {skipped} reused) → {corpus_dir}"
-    )
+    print(f"  Corpus: {total} unique sessions ({written} written, {skipped} reused) → {corpus_dir}")
     return session_files
 
 
@@ -189,6 +180,8 @@ def build_kg(
     wipe: bool = True,
     model: str | None = None,
     chunk_strategy: str = "semantic",
+    batch_size: int = 256,
+    discover_similar: bool = True,
 ) -> None:
     """Build a persistent MemoryKG from the corpus dir."""
     from memory_kg.kg import MemoryKG
@@ -200,6 +193,7 @@ def build_kg(
     print(f"    lancedb: {lancedb_dir}")
     print(f"    model:   {model or DEFAULT_MODEL}")
     print(f"    chunk:   {chunk_strategy}")
+    print(f"    batch:   {batch_size}")
 
     db_path.parent.mkdir(parents=True, exist_ok=True)
     lancedb_dir.mkdir(parents=True, exist_ok=True)
@@ -213,7 +207,7 @@ def build_kg(
         chunk_strategy=chunk_strategy,
     )
     try:
-        stats = kg.build(wipe=wipe)
+        stats = kg.build(wipe=wipe, batch_size=batch_size, discover_similar=discover_similar)
     finally:
         kg.close()
     dt = time.time() - t0
@@ -270,6 +264,8 @@ def cmd_prepare(args: argparse.Namespace) -> None:
         wipe=args.wipe,
         model=args.model,
         chunk_strategy=getattr(args, "chunk_strategy", "semantic"),
+        batch_size=getattr(args, "batch", 256),
+        discover_similar=not getattr(args, "no_similar", False),
     )
     print("  Ready. Run with:")
     print(f"    python {Path(__file__).name} run {data_file}")
@@ -549,9 +545,7 @@ def cmd_run(args: argparse.Namespace) -> None:
 
     print()
     print("=" * 60)
-    print(
-        f"  RESULTS — DocKG (k={args.k} hop={args.hop} " f"max_nodes={args.max_nodes})"
-    )
+    print(f"  RESULTS — DocKG (k={args.k} hop={args.hop} max_nodes={args.max_nodes})")
     print("=" * 60)
     print(f"  Time: {elapsed:.1f}s ({elapsed / max(len(data), 1):.2f}s per question)")
     print()
@@ -599,9 +593,7 @@ def cmd_all(args: argparse.Namespace) -> None:
 
 def _add_run_args(p: argparse.ArgumentParser) -> None:
     p.add_argument("data_file", help="Path to longmemeval_s_cleaned.json")
-    p.add_argument(
-        "--limit", type=int, default=0, help="Limit to N questions (0 = all)"
-    )
+    p.add_argument("--limit", type=int, default=0, help="Limit to N questions (0 = all)")
     p.add_argument("--skip", type=int, default=0, help="Skip first N questions")
     p.add_argument(
         "--k",
@@ -629,7 +621,7 @@ def _add_run_args(p: argparse.ArgumentParser) -> None:
     # extremely slow without meaningfully improving session recall.  The tighter
     # default below keeps the high-signal semantic edges only.
     _DEFAULT_BENCH_RELS = (
-        "CONTAINS,NEXT,REFERENCES,SIMILAR_TO," "HAS_TOPIC,MENTIONS_ENTITY,HAS_KEYWORD"
+        "CONTAINS,NEXT,REFERENCES,SIMILAR_TO,HAS_TOPIC,MENTIONS_ENTITY,HAS_KEYWORD"
     )
     p.add_argument(
         "--rels",
@@ -654,9 +646,7 @@ def main() -> None:
         action="store_true",
         help="Rewrite corpus files and rebuild from scratch",
     )
-    p_prep.add_argument(
-        "--model", default=None, help="Override sentence-transformer model"
-    )
+    p_prep.add_argument("--model", default=None, help="Override sentence-transformer model")
     p_prep.add_argument(
         "--chunk-strategy",
         default="semantic",
@@ -665,6 +655,17 @@ def main() -> None:
             "Chunking strategy. 'heading' = one chunk per Markdown section (best for "
             "conversation corpora like LongMemEval). Default: semantic."
         ),
+    )
+    p_prep.add_argument(
+        "--batch",
+        type=int,
+        default=256,
+        help="Embedding batch size (default: 256; try 64-128 to reduce CPU pressure).",
+    )
+    p_prep.add_argument(
+        "--no-similar",
+        action="store_true",
+        help="Skip SIMILAR_TO edge discovery (much faster; heading chunks are already well-connected).",
     )
     p_prep.add_argument(
         "--download",
@@ -680,9 +681,7 @@ def main() -> None:
     p_all = sub.add_parser("all", help="prepare + run in one invocation")
     _add_run_args(p_all)
     p_all.add_argument("--wipe", action="store_true", help="Rebuild the KG")
-    p_all.add_argument(
-        "--model", default=None, help="Override sentence-transformer model"
-    )
+    p_all.add_argument("--model", default=None, help="Override sentence-transformer model")
     p_all.add_argument(
         "--chunk-strategy",
         default="semantic",
@@ -691,6 +690,17 @@ def main() -> None:
             "Chunking strategy. 'heading' = one chunk per Markdown section (best for "
             "conversation corpora like LongMemEval). Default: semantic."
         ),
+    )
+    p_all.add_argument(
+        "--batch",
+        type=int,
+        default=256,
+        help="Embedding batch size (default: 256; try 64-128 to reduce CPU pressure).",
+    )
+    p_all.add_argument(
+        "--no-similar",
+        action="store_true",
+        help="Skip SIMILAR_TO edge discovery (much faster; heading chunks are already well-connected).",
     )
     p_all.add_argument(
         "--download",
