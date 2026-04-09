@@ -125,7 +125,7 @@ include = ["src"]
 
 [tool.memorykg]
 # Exclude directories from the knowledge graph by default.
-exclude = [".memorykg", ".pycodekg", "src", ".git", ".venv", "venv", "__pycache__",
+exclude = [".memorykg", ".pycodekg", "src", "benchmarks", ".git", ".venv", "venv", "__pycache__",
 ".mypy_cache", ".pytest_cache", "bundles", "dist"]
 
 [tool.poe.tasks.docs]

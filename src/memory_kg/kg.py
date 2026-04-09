@@ -528,6 +528,8 @@ class MemoryKG:
         hop: int = 1,
         rels: tuple[str, ...] = DEFAULT_RELS,
         max_nodes: int = 25,
+        seed_kinds: tuple[str, ...] | None = None,
+        haystack_files: frozenset[str] | None = None,
     ) -> QueryResult:
         """Hybrid query: semantic seeding + structural expansion.
 
@@ -536,9 +538,26 @@ class MemoryKG:
         :param hop: Graph expansion hops.
         :param rels: Edge types to expand.
         :param max_nodes: Maximum nodes to return.
+        :param seed_kinds: If set, restrict semantic seeding to these node kinds.
+            ``("document",)`` seeds from session-root nodes only — one per session,
+            full text embedded. Useful for reducing chunk-level noise when doing
+            session-granularity retrieval. Default: all kinds.
+        :param haystack_files: If set, restrict seeding to nodes from these files only.
+            Pass the per-question haystack as ``frozenset(f"{sid}.md" for sid in haystack_ids)``
+            to make retrieval apples-to-apples with flat per-question search (same 50-session
+            search pool as MemPalace).
         :return: :class:`QueryResult`.
+
+        Example — haystack-filtered seeding::
+
+            result = kg.query(
+                "What degree did I graduate with?",
+                k=50,
+                hop=1,
+                haystack_files=frozenset(f"{sid}.md" for sid in haystack_session_ids),
+            )
         """
-        hits = self.index.search(q, k=k)
+        hits = self.index.search(q, k=k, seed_kinds=seed_kinds, haystack_files=haystack_files)
         seed_ids: set[str] = {h.id for h in hits}
         seed_rank: dict[str, dict] = {h.id: {"rank": h.rank, "dist": h.distance} for h in hits}
 

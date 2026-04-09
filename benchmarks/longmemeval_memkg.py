@@ -46,6 +46,9 @@ Step 2 — run the benchmark (many times — KG is reused):
     python benchmarks/longmemeval_memkg.py run <data.json> --k 50 --hop 2 --max-nodes 500
     python benchmarks/longmemeval_memkg.py run <data.json> --rels CONTAINS,NEXT,SIMILAR_TO,HAS_TOPIC,MENTIONS_ENTITY,HAS_KEYWORD,CO_OCCURS_WITH
 
+    # Seed from document nodes only (session-root seeding — reduces chunk noise):
+    python benchmarks/longmemeval_memkg.py run data.json --seed-kinds document
+
 All-in-one convenience:
 
     python benchmarks/longmemeval_memkg.py all <data.json> --limit 20
@@ -627,6 +630,8 @@ def query_sessions(
     rels: tuple[str, ...],
     max_nodes: int,
     haystack: set[str] | None = None,
+    seed_kinds: tuple[str, ...] | None = None,
+    haystack_files: frozenset[str] | None = None,
 ) -> tuple[list[SessionHit], Any]:
     """Run ``DocKG.query`` and collapse its ranked nodes to session-level hits.
 
@@ -646,9 +651,16 @@ def query_sessions(
     :param rels: Edge types to traverse during expansion.
     :param max_nodes: Cap on ranked nodes returned by ``DocKG.query``.
     :param haystack: If supplied, only sessions in this set are returned.
+    :param seed_kinds: If set, restrict LanceDB seeding to these node kinds.
+        Pass ``("document",)`` to seed only from session-root document nodes.
+    :param haystack_files: If set, restrict LanceDB seeding to nodes from these
+        file paths only (e.g. the 50 haystack session files per question).
     :return: Tuple of (session-level hits sorted by ascending rank, raw QueryResult).
     """
-    result = kg.query(question, k=k, hop=hop, rels=rels, max_nodes=max_nodes)
+    result = kg.query(
+        question, k=k, hop=hop, rels=rels, max_nodes=max_nodes,
+        seed_kinds=seed_kinds, haystack_files=haystack_files,
+    )
 
     best_per_session: dict[str, SessionHit] = {}
     for rank, node in enumerate(result.nodes):
@@ -758,6 +770,11 @@ def cmd_run(args: argparse.Namespace) -> None:
                 rels=rels,
                 max_nodes=args.max_nodes,
                 haystack=haystack,
+                seed_kinds=tuple(args.seed_kinds.split(",")) if getattr(args, "seed_kinds", None) else None,
+                haystack_files=(
+                    frozenset(f"{sid}.md" for sid in entry["haystack_session_ids"])
+                    if getattr(args, "haystack_filter", False) else None
+                ),
             )
             t_q = time.time() - t_q0
 
@@ -978,6 +995,16 @@ def _add_run_args(p: argparse.ArgumentParser) -> None:
         ),
     )
     p.add_argument("--out", default=None, help="Output JSONL file path")
+    p.add_argument(
+        "--seed-kinds",
+        default=None,
+        help="Comma-separated node kinds to restrict semantic seeding to (e.g. 'document' for session-root seeding). Default: all kinds.",
+    )
+    p.add_argument(
+        "--haystack-filter",
+        action="store_true",
+        help="Restrict LanceDB seeding to the per-question haystack files only (apples-to-apples with MemPalace).",
+    )
     p.add_argument(
         "--ollama",
         action="store_true",

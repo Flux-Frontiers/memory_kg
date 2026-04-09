@@ -516,16 +516,40 @@ class SemanticIndex:
     # Search
     # ------------------------------------------------------------------
 
-    def search(self, query: str, k: int = 8) -> list[SeedHit]:
+    def search(
+        self,
+        query: str,
+        k: int = 8,
+        seed_kinds: tuple[str, ...] | None = None,
+        haystack_files: frozenset[str] | None = None,
+    ) -> list[SeedHit]:
         """Semantic vector search.
 
         :param query: Natural-language query string.
         :param k: Number of results to return.
+        :param seed_kinds: If set, restrict the vector search to nodes whose ``kind``
+            is in this tuple. Passed as a LanceDB ``WHERE`` filter. Example:
+            ``seed_kinds=("document",)`` returns only document-level hits.
+        :param haystack_files: If set, restrict seeding to nodes whose ``file_path``
+            is in this set. Use to limit search to the per-question haystack (e.g.
+            the 50 session files for a LongMemEval question) rather than the full
+            corpus. This makes retrieval apples-to-apples with flat per-question
+            search approaches like MemPalace.
         :return: List of :class:`SeedHit` ordered by ascending distance.
         """
         tbl = self._get_table()
         qvec = self.embedder.embed_query(query)
-        raw = tbl.search(qvec).limit(k).to_list()
+        s = tbl.search(qvec).limit(k)
+        filters: list[str] = []
+        if seed_kinds:
+            kind_list = ", ".join(f"'{k}'" for k in seed_kinds)
+            filters.append(f"kind IN ({kind_list})")
+        if haystack_files:
+            file_list = ", ".join(f"'{f}'" for f in haystack_files)
+            filters.append(f"file_path IN ({file_list})")
+        if filters:
+            s = s.where(" AND ".join(filters))
+        raw = s.to_list()
 
         hits: list[SeedHit] = []
         for rank, row in enumerate(raw):

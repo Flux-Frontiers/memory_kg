@@ -1,32 +1,178 @@
 # MemoryKG × LongMemEval — Multi-Run Comparison
 
-**Generated:** 2026-04-09 11:45:52  
-**Repository:** memory_kg @ `2142eaf` (develop)  
+**Generated:** 2026-04-09 12:10:48  
+**Repository:** memory_kg @ `9a491f4` (develop)  
 **Machine:** Apple M5 Max MacBook Pro, 64 GB RAM, 2 TB SSD  
 
 ---
 
 ## Recall@k Comparison
 
-| k | results_bge_hop0 | results_heading_minilm | results_k150_fixes | results_k150_kw_temporal | results_k150_pref | results_bge_hop1 |
-|--:|--:|--:|--:|--:|--:|--:|
-|  1 | 0.796 | 0.708 | 0.808 | 0.274 | 0.808 | 0.824 |
-|  3 | 0.824 | 0.736 | 0.834 | 0.352 | 0.832 | 0.858 |
-|  5 | 0.834 | 0.758 | 0.846 | 0.406 | 0.846 | 0.866 |
-| 10 | 0.870 | 0.818 | 0.878 | 0.530 | 0.876 | 0.894 |
-| 30 | 0.946 | 0.928 | 0.954 | 0.820 | 0.954 | 0.954 |
-| 50 | 0.998 | 0.998 | 0.998 | 0.994 | 0.998 | 1.000 |
+| k | results_bge_doc_seed | results_bge_hop0 | results_bge_hop1 | results_heading_minilm | results_k150_fixes | results_k150_kw_temporal | results_k150_pref | results_haystack_filter |
+|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+|  1 | 0.724 | 0.796 | 0.824 | 0.708 | 0.808 | 0.274 | 0.808 | 0.766 |
+|  3 | 0.762 | 0.824 | 0.858 | 0.736 | 0.834 | 0.352 | 0.832 | 0.912 |
+|  5 | 0.778 | 0.834 | 0.866 | 0.758 | 0.846 | 0.406 | 0.846 | 0.940 |
+| 10 | 0.812 | 0.870 | 0.894 | 0.818 | 0.878 | 0.530 | 0.876 | 0.970 |
+| 30 | 0.906 | 0.946 | 0.954 | 0.928 | 0.954 | 0.820 | 0.954 | 0.994 |
+| 50 | 0.996 | 0.998 | 1.000 | 0.998 | 0.998 | 0.994 | 0.998 | 1.000 |
 
 ## NDCG@k Comparison
 
-| k | results_bge_hop0 | results_heading_minilm | results_k150_fixes | results_k150_kw_temporal | results_k150_pref | results_bge_hop1 |
-|--:|--:|--:|--:|--:|--:|--:|
-|  1 | 0.796 | 0.708 | 0.808 | 0.274 | 0.808 | 0.824 |
-|  3 | 0.813 | 0.723 | 0.823 | 0.322 | 0.822 | 0.844 |
-|  5 | 0.816 | 0.730 | 0.825 | 0.343 | 0.826 | 0.846 |
-| 10 | 0.823 | 0.742 | 0.830 | 0.380 | 0.829 | 0.852 |
-| 30 | 0.815 | 0.741 | 0.824 | 0.438 | 0.822 | 0.841 |
-| 50 | 0.805 | 0.733 | 0.818 | 0.455 | 0.816 | 0.832 |
+| k | results_bge_doc_seed | results_bge_hop0 | results_bge_hop1 | results_heading_minilm | results_k150_fixes | results_k150_kw_temporal | results_k150_pref | results_haystack_filter |
+|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+|  1 | 0.724 | 0.796 | 0.824 | 0.708 | 0.808 | 0.274 | 0.808 | 0.766 |
+|  3 | 0.746 | 0.813 | 0.844 | 0.723 | 0.823 | 0.322 | 0.822 | 0.848 |
+|  5 | 0.751 | 0.816 | 0.846 | 0.730 | 0.825 | 0.343 | 0.826 | 0.854 |
+| 10 | 0.758 | 0.823 | 0.852 | 0.742 | 0.830 | 0.380 | 0.829 | 0.858 |
+| 30 | 0.754 | 0.815 | 0.841 | 0.741 | 0.824 | 0.438 | 0.822 | 0.860 |
+| 50 | 0.754 | 0.805 | 0.832 | 0.733 | 0.818 | 0.455 | 0.816 | 0.858 |
+
+---
+
+## Run: `results_bge_doc_seed` (n=500)
+
+## Session-Level Retrieval Metrics
+
+| k | Recall@k | NDCG@k |
+|--:|--:|--:|
+|  1 | 0.724 | 0.724 |
+|  3 | 0.762 | 0.746 |
+|  5 | 0.778 | 0.751 |
+| 10 | 0.812 | 0.758 |
+| 30 | 0.906 | 0.754 |
+| 50 | 0.996 | 0.754 |
+
+## Per-Type Breakdown
+
+| Question Type | n | Recall@5 | Recall@10 | NDCG@10 |
+|---|--:|--:|--:|--:|
+| knowledge-update | 78 | 0.885 | 0.910 | 0.840 |
+| multi-session | 133 | 0.880 | 0.917 | 0.864 |
+| single-session-assistant | 56 | 0.911 | 0.911 | 0.911 |
+| single-session-preference | 30 | 0.533 | 0.600 | 0.553 |
+| single-session-user | 70 | 0.429 | 0.500 | 0.411 |
+| temporal-reasoning | 133 | 0.797 | 0.820 | 0.768 |
+
+## Key Findings
+
+- **Top-1 recall:** 72.4% — immediate precision of the semantic seed
+- **Top-5 recall:** 77.8%
+- **Top-10 recall:** 81.2%
+- **Top-50 recall (coverage ceiling):** 99.6%
+
+**Hardest question types (by Recall@10):**
+- `single-session-user`: 50.0%
+- `single-session-preference`: 60.0%
+
+**Easiest question types (by Recall@10):**
+- `single-session-assistant`: 91.1%
+- `multi-session`: 91.7%
+
+## Misses @ k=10
+
+**94 / 500** questions had zero sessions retrieved in top-10.
+
+<details>
+<summary>Show all 94 missed question IDs</summary>
+
+```
+e47becba
+51a45a95
+58bf7951
+1e043500
+6f9b354f
+f8c5f88b
+5d3d2817
+7527f7e2
+3b6f954b
+726462e0
+94f70d80
+66f24dbb
+ad7109d1
+8ebdbe50
+75499fd8
+0862e8bf
+853b0a1d
+b86304ba
+d52b4f67
+60d45044
+86b68151
+577d4d32
+ec81a493
+001be529
+545bd2b5
+8e9d538c
+311778f1
+4100d0a0
+f4f1d8a4
+c14c00dd
+36580ce8
+a82c026e
+0862e8bf_abs
+bc8a6e93_abs
+f4f1d8a4_abs
+dd2973ad
+129d1232
+60472f9c
+10d9b85a
+60bf93ed_abs
+35a27287
+32260d93
+195a1a1b
+06f04340
+09d032c9
+38146c39
+d24813b1
+75f70248
+d6233ab6
+a89d7624
+1d4e3b97
+1c0ddc50
+d905b33f
+5025383b
+a1cc6108
+92a0aa75
+c18a7dc8
+a96c20ee_abs
+71017276
+af082822
+gpt4_b5700ca9
+gpt4_7f6b06db
+gpt4_6dc9b45b
+gpt4_468eb063
+4dfccbf7
+gpt4_e061b84f
+gpt4_ec93e27f
+gpt4_21adecb5
+5e1b23de
+gpt4_e061b84g
+71017277
+gpt4_4929293b
+gpt4_468eb064
+4dfccbf8
+6e984302
+gpt4_8279ba03
+gpt4_b5700ca0
+gpt4_68e94288
+bbf86515
+a3045048
+gpt4_d31cdae3
+gpt4_1a1dc16d
+830ce83f
+4d6b87c8
+7e974930
+5831f84d
+cf22b7bf
+0977f2af
+6aeb4375_abs
+6222b6eb
+d596882b
+e982271f
+fca762bc
+4baee567
+```
+</details>
 
 ---
 
@@ -141,6 +287,111 @@ gpt4_d31cdae3
 gpt4_1a1dc16d
 45dc21b6
 5831f84d
+6aeb4375_abs
+```
+</details>
+
+---
+
+## Run: `results_bge_hop1` (n=500)
+
+## Session-Level Retrieval Metrics
+
+| k | Recall@k | NDCG@k |
+|--:|--:|--:|
+|  1 | 0.824 | 0.824 |
+|  3 | 0.858 | 0.844 |
+|  5 | 0.866 | 0.846 |
+| 10 | 0.894 | 0.852 |
+| 30 | 0.954 | 0.841 |
+| 50 | 1.000 | 0.832 |
+
+## Per-Type Breakdown
+
+| Question Type | n | Recall@5 | Recall@10 | NDCG@10 |
+|---|--:|--:|--:|--:|
+| knowledge-update | 78 | 0.974 | 0.987 | 0.966 |
+| multi-session | 133 | 0.887 | 0.925 | 0.864 |
+| single-session-assistant | 56 | 1.000 | 1.000 | 1.000 |
+| single-session-preference | 30 | 0.467 | 0.567 | 0.485 |
+| single-session-user | 70 | 0.800 | 0.814 | 0.780 |
+| temporal-reasoning | 133 | 0.850 | 0.880 | 0.830 |
+
+## Key Findings
+
+- **Top-1 recall:** 82.4% — immediate precision of the semantic seed
+- **Top-5 recall:** 86.6%
+- **Top-10 recall:** 89.4%
+- **Top-50 recall (coverage ceiling):** 100.0%
+
+**Hardest question types (by Recall@10):**
+- `single-session-preference`: 56.7%
+- `single-session-user`: 81.4%
+
+**Easiest question types (by Recall@10):**
+- `knowledge-update`: 98.7%
+- `single-session-assistant`: 100.0%
+
+## Misses @ k=10
+
+**53 / 500** questions had zero sessions retrieved in top-10.
+
+<details>
+<summary>Show all 53 missed question IDs</summary>
+
+```
+6f9b354f
+5d3d2817
+7527f7e2
+3b6f954b
+726462e0
+d52b4f67
+577d4d32
+bc8a6e93
+b320f3f8
+a82c026e
+0862e8bf_abs
+bc8a6e93_abs
+f4f1d8a4_abs
+dd2973ad
+d23cf73b
+60bf93ed
+2b8f3739
+60bf93ed_abs
+06878be2
+0edc2aef
+32260d93
+06f04340
+09d032c9
+38146c39
+d24813b1
+57f827a0
+75f70248
+d6233ab6
+b6025781
+1c0ddc50
+0a34ad58
+ef66a6e5
+5025383b
+c18a7dc8
+8e91e7d9
+a96c20ee_abs
+gpt4_e061b84f
+gpt4_21adecb5
+5e1b23de
+gpt4_e061b84g
+71017277
+gpt4_4929293b
+gpt4_468eb064
+gpt4_fa19884d
+4dfccbf8
+6e984302
+gpt4_8279ba03
+gpt4_b5700ca0
+gpt4_68e94288
+a3045048
+gpt4_d31cdae3
+gpt4_1a1dc16d
 6aeb4375_abs
 ```
 </details>
@@ -804,106 +1055,68 @@ gpt4_2f56ae70
 
 ---
 
-## Run: `results_bge_hop1` (n=500)
+## Run: `results_haystack_filter` (n=500)
 
 ## Session-Level Retrieval Metrics
 
 | k | Recall@k | NDCG@k |
 |--:|--:|--:|
-|  1 | 0.824 | 0.824 |
-|  3 | 0.858 | 0.844 |
-|  5 | 0.866 | 0.846 |
-| 10 | 0.894 | 0.852 |
-| 30 | 0.954 | 0.841 |
-| 50 | 1.000 | 0.832 |
+|  1 | 0.766 | 0.766 |
+|  3 | 0.912 | 0.848 |
+|  5 | 0.940 | 0.854 |
+| 10 | 0.970 | 0.858 |
+| 30 | 0.994 | 0.860 |
+| 50 | 1.000 | 0.858 |
 
 ## Per-Type Breakdown
 
 | Question Type | n | Recall@5 | Recall@10 | NDCG@10 |
 |---|--:|--:|--:|--:|
-| knowledge-update | 78 | 0.974 | 0.987 | 0.966 |
-| multi-session | 133 | 0.887 | 0.925 | 0.864 |
-| single-session-assistant | 56 | 1.000 | 1.000 | 1.000 |
-| single-session-preference | 30 | 0.467 | 0.567 | 0.485 |
-| single-session-user | 70 | 0.800 | 0.814 | 0.780 |
-| temporal-reasoning | 133 | 0.850 | 0.880 | 0.830 |
+| knowledge-update | 78 | 1.000 | 1.000 | 0.906 |
+| multi-session | 133 | 0.955 | 0.970 | 0.858 |
+| single-session-assistant | 56 | 1.000 | 1.000 | 0.980 |
+| single-session-preference | 30 | 0.900 | 0.967 | 0.843 |
+| single-session-user | 70 | 0.929 | 0.971 | 0.839 |
+| temporal-reasoning | 133 | 0.880 | 0.940 | 0.791 |
 
 ## Key Findings
 
-- **Top-1 recall:** 82.4% — immediate precision of the semantic seed
-- **Top-5 recall:** 86.6%
-- **Top-10 recall:** 89.4%
+- **Top-1 recall:** 76.6% — immediate precision of the semantic seed
+- **Top-5 recall:** 94.0%
+- **Top-10 recall:** 97.0%
 - **Top-50 recall (coverage ceiling):** 100.0%
 
 **Hardest question types (by Recall@10):**
-- `single-session-preference`: 56.7%
-- `single-session-user`: 81.4%
+- `temporal-reasoning`: 94.0%
+- `single-session-preference`: 96.7%
 
 **Easiest question types (by Recall@10):**
-- `knowledge-update`: 98.7%
+- `knowledge-update`: 100.0%
 - `single-session-assistant`: 100.0%
 
 ## Misses @ k=10
 
-**53 / 500** questions had zero sessions retrieved in top-10.
+**15 / 500** questions had zero sessions retrieved in top-10.
 
 <details>
-<summary>Show all 53 missed question IDs</summary>
+<summary>Show all 15 missed question IDs</summary>
 
 ```
-6f9b354f
-5d3d2817
-7527f7e2
-3b6f954b
 726462e0
-d52b4f67
-577d4d32
-bc8a6e93
-b320f3f8
-a82c026e
-0862e8bf_abs
-bc8a6e93_abs
-f4f1d8a4_abs
-dd2973ad
-d23cf73b
-60bf93ed
-2b8f3739
+ccb36322
+10d9b85a
 60bf93ed_abs
-06878be2
-0edc2aef
-32260d93
-06f04340
-09d032c9
-38146c39
-d24813b1
-57f827a0
-75f70248
 d6233ab6
-b6025781
-1c0ddc50
-0a34ad58
-ef66a6e5
-5025383b
-c18a7dc8
-8e91e7d9
-a96c20ee_abs
-gpt4_e061b84f
-gpt4_21adecb5
-5e1b23de
-gpt4_e061b84g
-71017277
-gpt4_4929293b
+8cf4d046
+2311e44b_abs
+af082822
+gpt4_1d4ab0c9
+gpt4_468eb063
 gpt4_468eb064
-gpt4_fa19884d
 4dfccbf8
 6e984302
-gpt4_8279ba03
-gpt4_b5700ca0
 gpt4_68e94288
-a3045048
-gpt4_d31cdae3
-gpt4_1a1dc16d
-6aeb4375_abs
+gpt4_2f56ae70
 ```
 </details>
 

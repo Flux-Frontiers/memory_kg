@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `index.py`: `SemanticIndex.search()` gains `seed_kinds` and `haystack_files` parameters — `seed_kinds` restricts LanceDB seeding to specific node kinds (e.g. `("document",)` for session-root-only seeding); `haystack_files` restricts seeding to a per-question file set for apples-to-apples comparison with MemPalace
+- `kg.py`: `MemoryKG.query()` gains matching `seed_kinds` and `haystack_files` pass-through parameters with usage example in docstring
+- `benchmarks/longmemeval_memkg.py`: `--seed-kinds` CLI flag (comma-separated node kinds, e.g. `document`) and `--haystack-filter` flag (limits seeding to per-question haystack files); both wired through `query_sessions()`
+- `benchmarks/BENCHMARKS_COMPARISON.md`: Added `results_bge_doc_seed` (Recall@10 81.2%) and `results_haystack_filter` (Recall@10 97.0%) runs to the multi-run comparison; updated summary tables to 8 columns
 - `benchmarks/BENCHMARKS_COMPARISON.md`: Multi-run LongMemEval comparison across baseline, `k150+fixes`, and `k150+kw+temporal` runs — shows +10pp Recall@1 and +6pp Recall@10 improvement from the ranking fix
 
 ### Changed
