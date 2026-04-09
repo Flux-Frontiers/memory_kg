@@ -20,7 +20,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "memory-kg"
-version = "0.1.0"
+version = "0.2.0"
 description = "A tool to build a semantically searchable knowledge graph from memories"
 authors = ["Eric G. Suchanek, PhD <suchanek@mac.com>"]
 license = "Elastic-2.0"

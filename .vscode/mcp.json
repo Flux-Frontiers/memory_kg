@@ -2,13 +2,13 @@
   "servers": {
     "codekg": {
       "type": "stdio",
-      "command": "/Users/egs/repos/memory_kg/.venv/bin/codekg",
+      "command": "/Users/egs/repos/memory_kg/.venv/bin/pycodekg",
       "args": [
         "mcp",
         "--repo",
         "/Users/egs/repos/memory_kg",
         "--db",
-        "/Users/egs/repos/memory_kg/.codekg/graph.sqlite"
+        "/Users/egs/repos/memory_kg/.pycodekg/graph.sqlite"
       ]
     }
   }

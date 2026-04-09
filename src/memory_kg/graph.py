@@ -46,6 +46,7 @@ class DocGraph:
     :param cooccur_window: Co-occurrence window metadata.
     :param topic_threshold: Topic confidence threshold.
     :param topics_file: Optional topics file path (JSON/YAML).
+    :param n_workers: Number of parallel threads for file parsing (default: 8).
     """
 
     def __init__(
@@ -66,6 +67,7 @@ class DocGraph:
         cooccur_window: int = 1,
         topic_threshold: float = 0.2,
         topics_file: str | None = None,
+        n_workers: int = 8,
     ) -> None:
         self.corpus_root: Path = Path(corpus_root).resolve()
         self.extensions = extensions
@@ -82,6 +84,7 @@ class DocGraph:
         self.cooccur_window = cooccur_window
         self.topic_threshold = topic_threshold
         self.topics_file = topics_file
+        self.n_workers = n_workers
 
         self._nodes: list[DocNode] | None = None
         self._edges: list[DocEdge] | None = None
@@ -113,6 +116,7 @@ class DocGraph:
                 cooccur_window=self.cooccur_window,
                 topic_threshold=self.topic_threshold,
                 topics_file=self.topics_file,
+                n_workers=self.n_workers,
             )
         return self
 

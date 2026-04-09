@@ -36,6 +36,8 @@ from __future__ import annotations
 
 import os
 import re
+import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal, cast
@@ -260,6 +262,7 @@ def parse_corpus(
     cooccur_window: int = 1,
     topic_threshold: float = 0.2,
     topics_file: str | None = None,
+    n_workers: int = 8,
 ) -> tuple[list[DocNode], list[DocEdge]]:
     """Extract a document knowledge graph from a corpus directory.
 
@@ -299,57 +302,43 @@ def parse_corpus(
     """
     from memory_kg.chunker import chunker_for  # pylint: disable=import-outside-toplevel
 
-    nodes: dict[str, DocNode] = {}
-    edges: dict[tuple[str, str, str], DocEdge] = {}
+    # Thread-local storage: each worker thread gets its own chunker + topic_extractor
+    # so models are not shared across concurrent calls.
+    _tls = threading.local()
 
-    chunker = chunker_for(
-        cast(Literal["semantic", "sentence_group", "fixed", "heading"], chunk_strategy),
-        chunk_size=chunk_size,
-        chunk_overlap=chunk_overlap,
-        similarity_threshold=similarity_threshold,
-        embedder=embedder,
-    )
+    def _get_chunker():
+        if not hasattr(_tls, "chunker"):
+            _tls.chunker = chunker_for(
+                cast(Literal["semantic", "sentence_group", "fixed", "heading"], chunk_strategy),
+                chunk_size=chunk_size,
+                chunk_overlap=chunk_overlap,
+                similarity_threshold=similarity_threshold,
+                embedder=embedder,
+            )
+        return _tls.chunker
 
-    topic_extractor = TopicExtractor(topics_file=topics_file) if enable_topics else None
+    def _get_topic_extractor():
+        if not hasattr(_tls, "topic_extractor"):
+            _tls.topic_extractor = (
+                TopicExtractor(topics_file=topics_file) if enable_topics else None
+            )
+        return _tls.topic_extractor
 
-    files = iter_text_files(corpus_root, extensions=extensions, exclude=exclude)
+    abs_files = iter_text_files(corpus_root, extensions=extensions, exclude=exclude)
 
     # Pre-populate all document paths so forward REFERENCES links resolve correctly
     path_to_doc_id: dict[str, str] = {
-        rel_file_path(p, corpus_root): doc_node_id(rel_file_path(p, corpus_root)) for p in files
+        rel_file_path(p, corpus_root): doc_node_id(rel_file_path(p, corpus_root)) for p in abs_files
     }
 
-    try:
-        from rich.progress import (  # pylint: disable=import-outside-toplevel
-            BarColumn,
-            MofNCompleteColumn,
-            Progress,
-            TimeElapsedColumn,
-        )
-
-        _progress_ctx: object = Progress(
-            "[progress.description]{task.description}",
-            BarColumn(),
-            MofNCompleteColumn(),
-            TimeElapsedColumn(),
-            transient=True,
-        )
-    except ImportError:
-        _progress_ctx = None
-
-    def _iter_files():
-        if _progress_ctx is not None:
-            with _progress_ctx as prog:
-                task = prog.add_task("  Parsing", total=len(files))
-                for p in files:
-                    yield p
-                    prog.advance(task)
-        else:
-            yield from files
-
-    for abs_path in _iter_files():
+    def _parse_one_file(
+        abs_path: Path,
+    ) -> tuple[dict[str, DocNode], dict[tuple[str, str, str], DocEdge]]:
+        """Parse one file; returns per-file nodes/edges (no shared state)."""
         file_path = rel_file_path(abs_path, corpus_root)
         doc_id = doc_node_id(file_path)
+        local_nodes: dict[str, DocNode] = {}
+        local_edges: dict[tuple[str, str, str], DocEdge] = {}
 
         try:
             raw_text = abs_path.read_text(encoding="utf-8")
@@ -357,11 +346,13 @@ def parse_corpus(
             try:
                 raw_text = abs_path.read_text(encoding="utf-8", errors="ignore")
             except OSError:
-                continue
+                return local_nodes, local_edges
 
-        # Build the document node
+        chunker = _get_chunker()
+        topic_extractor = _get_topic_extractor()
+
         doc_title = _extract_doc_title(raw_text, abs_path)
-        nodes[doc_id] = DocNode(
+        local_nodes[doc_id] = DocNode(
             id=doc_id,
             kind="document",
             name=abs_path.stem,
@@ -370,17 +361,15 @@ def parse_corpus(
             char_start=0,
             char_end=len(raw_text),
             heading_level=None,
-            text=raw_text[:512],  # keep first 512 chars as document summary
+            text=raw_text[:512],
         )
 
-        # Chunk the document (returns structured chunks with section info)
         chunks = chunker.chunk(raw_text, file_path=file_path)
 
-        # Track the previous chunk id per section for NEXT edges
         prev_chunk_id: str | None = None
         prev_section_slug: str | None = None
         global_chunk_idx = 0
-        section_nodes: dict[str, str] = {}  # slug → section_node_id
+        section_nodes: dict[str, str] = {}
 
         for chunk_info in chunks:
             section_title = chunk_info.get("section_title")
@@ -390,13 +379,12 @@ def parse_corpus(
             char_end = chunk_info.get("char_end", len(text))
             references = chunk_info.get("references", [])
 
-            # Create/reuse section node
             if section_title:
                 slug = slugify(section_title)
                 sec_id = section_node_id(file_path, slug)
                 if sec_id not in section_nodes:
                     section_nodes[slug] = sec_id
-                    nodes[sec_id] = DocNode(
+                    local_nodes[sec_id] = DocNode(
                         id=sec_id,
                         kind="section",
                         name=section_title,
@@ -407,18 +395,16 @@ def parse_corpus(
                         heading_level=section_level,
                         text=None,
                     )
-                    # document → section
-                    edges[(doc_id, "CONTAINS", sec_id)] = DocEdge(
+                    local_edges[(doc_id, "CONTAINS", sec_id)] = DocEdge(
                         src=doc_id, rel="CONTAINS", dst=sec_id
                     )
                 parent_id = sec_id
             else:
                 parent_id = doc_id
 
-            # Create chunk node
             chunk_id = chunk_node_id(file_path, global_chunk_idx)
             global_chunk_idx += 1
-            nodes[chunk_id] = DocNode(
+            local_nodes[chunk_id] = DocNode(
                 id=chunk_id,
                 kind="chunk",
                 name=f"chunk:{global_chunk_idx:04d}",
@@ -430,47 +416,38 @@ def parse_corpus(
                 text=text,
             )
 
-            # section/document → chunk CONTAINS edge
-            edges[(parent_id, "CONTAINS", chunk_id)] = DocEdge(
+            local_edges[(parent_id, "CONTAINS", chunk_id)] = DocEdge(
                 src=parent_id, rel="CONTAINS", dst=chunk_id
             )
 
-            # NEXT edge (sequential within same section)
             current_section_slug = slugify(section_title) if section_title else "__root__"
             if prev_chunk_id is not None and prev_section_slug == current_section_slug:
-                edges[(prev_chunk_id, "NEXT", chunk_id)] = DocEdge(
+                local_edges[(prev_chunk_id, "NEXT", chunk_id)] = DocEdge(
                     src=prev_chunk_id, rel="NEXT", dst=chunk_id
                 )
             prev_chunk_id = chunk_id
             prev_section_slug = current_section_slug
 
-            # REFERENCES edges (hyperlinks in the chunk text)
             for href in references:
-                # Resolve relative links to known documents
                 resolved = _resolve_reference(href, file_path, path_to_doc_id)
                 if resolved:
                     ref_doc_id = doc_node_id(resolved)
-                    edges[(chunk_id, "REFERENCES", ref_doc_id)] = DocEdge(
+                    local_edges[(chunk_id, "REFERENCES", ref_doc_id)] = DocEdge(
                         src=chunk_id,
                         rel="REFERENCES",
                         dst=ref_doc_id,
                         evidence={"href": href},
                     )
 
-            # Semantic nodes/edges (topic/entity/keyword + co-occurrence)
             semantic_ids: list[str] = []
 
             if topic_extractor is not None:
-                topic_matches = topic_extractor.classify(
-                    text,
-                    threshold=topic_threshold,
-                    top_k=3,
-                )
-                for match in topic_matches:
+                for match in topic_extractor.classify(text, threshold=topic_threshold, top_k=3):
                     topic_id = stable_topic_id(match.topic)
                     semantic_ids.append(topic_id)
-                    if topic_id not in nodes:
-                        nodes[topic_id] = DocNode(
+                    local_nodes.setdefault(
+                        topic_id,
+                        DocNode(
                             id=topic_id,
                             kind="topic",
                             name=match.topic,
@@ -480,24 +457,22 @@ def parse_corpus(
                             char_end=None,
                             heading_level=None,
                             text=", ".join(match.matched_terms),
-                        )
-                    edges[(chunk_id, "HAS_TOPIC", topic_id)] = DocEdge(
+                        ),
+                    )
+                    local_edges[(chunk_id, "HAS_TOPIC", topic_id)] = DocEdge(
                         src=chunk_id,
                         rel="HAS_TOPIC",
                         dst=topic_id,
-                        evidence={
-                            "confidence": match.score,
-                            "terms": match.matched_terms,
-                        },
+                        evidence={"confidence": match.score, "terms": match.matched_terms},
                     )
 
             if enable_entities:
-                entities = extract_entities(text, max_entities=8)
-                for entity in entities:
+                for entity in extract_entities(text, max_entities=8):
                     entity_id = stable_entity_id(entity)
                     semantic_ids.append(entity_id)
-                    if entity_id not in nodes:
-                        nodes[entity_id] = DocNode(
+                    local_nodes.setdefault(
+                        entity_id,
+                        DocNode(
                             id=entity_id,
                             kind="entity",
                             name=entity,
@@ -507,8 +482,9 @@ def parse_corpus(
                             char_end=None,
                             heading_level=None,
                             text=None,
-                        )
-                    edges[(chunk_id, "MENTIONS_ENTITY", entity_id)] = DocEdge(
+                        ),
+                    )
+                    local_edges[(chunk_id, "MENTIONS_ENTITY", entity_id)] = DocEdge(
                         src=chunk_id,
                         rel="MENTIONS_ENTITY",
                         dst=entity_id,
@@ -516,11 +492,11 @@ def parse_corpus(
                     )
 
             if topic_extractor is not None and enable_keywords:
-                keywords = topic_extractor.extract_keywords(text, max_keywords=4)
-                for keyword in keywords:
+                for keyword in topic_extractor.extract_keywords(text, max_keywords=4):
                     kw_id = stable_keyword_id(keyword)
-                    if kw_id not in nodes:
-                        nodes[kw_id] = DocNode(
+                    local_nodes.setdefault(
+                        kw_id,
+                        DocNode(
                             id=kw_id,
                             kind="keyword",
                             name=keyword,
@@ -530,8 +506,9 @@ def parse_corpus(
                             char_end=None,
                             heading_level=None,
                             text=None,
-                        )
-                    edges[(chunk_id, "HAS_KEYWORD", kw_id)] = DocEdge(
+                        ),
+                    )
+                    local_edges[(chunk_id, "HAS_KEYWORD", kw_id)] = DocEdge(
                         src=chunk_id,
                         rel="HAS_KEYWORD",
                         dst=kw_id,
@@ -540,18 +517,70 @@ def parse_corpus(
 
             if emit_cooccur and semantic_ids and cooccur_window >= 1:
                 for left, right in cooccur_pairs(semantic_ids):
-                    edges[(left, "CO_OCCURS_WITH", right)] = DocEdge(
+                    local_edges[(left, "CO_OCCURS_WITH", right)] = DocEdge(
                         src=left,
                         rel="CO_OCCURS_WITH",
                         dst=right,
                         evidence={"file": file_path, "window": cooccur_window},
                     )
-                    edges[(right, "CO_OCCURS_WITH", left)] = DocEdge(
+                    local_edges[(right, "CO_OCCURS_WITH", left)] = DocEdge(
                         src=right,
                         rel="CO_OCCURS_WITH",
                         dst=left,
                         evidence={"file": file_path, "window": cooccur_window},
                     )
+
+        return local_nodes, local_edges
+
+    # -----------------------------------------------------------------------
+    # Progress bar
+    # -----------------------------------------------------------------------
+    try:
+        from rich.progress import (  # pylint: disable=import-outside-toplevel
+            BarColumn,
+            MofNCompleteColumn,
+            Progress,
+            TimeElapsedColumn,
+        )
+
+        progress = Progress(
+            "[progress.description]{task.description}",
+            BarColumn(),
+            MofNCompleteColumn(),
+            TimeElapsedColumn(),
+            transient=True,
+        )
+    except ImportError:
+        progress = None
+
+    # -----------------------------------------------------------------------
+    # Parallel parse + merge
+    # -----------------------------------------------------------------------
+    nodes: dict[str, DocNode] = {}
+    edges: dict[tuple[str, str, str], DocEdge] = {}
+
+    effective_workers = max(1, min(n_workers, len(abs_files)))
+
+    with ThreadPoolExecutor(max_workers=effective_workers) as executor:
+        futures = {executor.submit(_parse_one_file, p): p for p in abs_files}
+        if progress is not None:
+            with progress as prog:
+                task = prog.add_task("  Parsing", total=len(futures))
+                for fut in as_completed(futures):
+                    local_nodes, local_edges = fut.result()
+                    # File-specific nodes (document/section/chunk) never collide.
+                    # Shared nodes (topic/entity/keyword) use setdefault so the
+                    # first writer wins — values are identical across files.
+                    for k, v in local_nodes.items():
+                        nodes.setdefault(k, v)
+                    edges.update(local_edges)
+                    prog.advance(task)
+        else:
+            for fut in as_completed(futures):
+                local_nodes, local_edges = fut.result()
+                for k, v in local_nodes.items():
+                    nodes.setdefault(k, v)
+                edges.update(local_edges)
 
     return list(nodes.values()), list(edges.values())
 

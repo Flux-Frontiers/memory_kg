@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `--workers` / `n_workers` parameter throughout the build pipeline — `MemoryKG`, `DocGraph`, `SemanticIndex.build()`, `cmd_build.py` (`build` and `build-index` commands), and benchmark scripts now accept `--workers N` for parallel Phase 1 file parsing (default: 8)
+- `memorykg.py`: `parse_corpus()` parallelized via `ThreadPoolExecutor` — each worker thread gets its own thread-local chunker and topic extractor; per-file local nodes/edges are merged after all futures complete, eliminating shared-state races
+- `benchmarks/convomem/convomem_bench.py`: New ConvoMem benchmark harness — evaluates retrieval against the Salesforce ConvoMem dataset (75,336 QA pairs across 6 evidence categories: user facts, assistant facts, changing facts, abstention, preferences, implicit connections); downloads evidence files from HuggingFace on first run; supports `--limit`, `--top-k`, `--category`, `--mode` (raw/aaak), and `--out` options
+
+### Changed
+- `benchmarks/BENCHMARKS.md`: Expanded comparison table to include R@10 and NDCG@10 columns; updated narrative — MemoryKG (97.6% R@5, 99.2% R@10, 0.936 NDCG@10) is the only zero-inference system to exceed MemPalace hybrid v2 at both R@10 and NDCG@10
+- `benchmarks/BENCHMARKS_MEMKG.md`: Updated to `results_bge_haystack` run (R@1 89.4%, R@5 97.6%, R@10 99.2%, NDCG@10 0.936, only 4 misses — all multi-hop temporal arithmetic); configuration section added (BGE-small, heading chunks, haystack filter enabled)
+- `benchmarks/RESULTS_SUMMARY.md`: Refined narrative to explicitly highlight MemoryKG beating MemPalace hybrid v2 at NDCG@10 (0.936 vs 0.934) and R@10 (99.2% vs 99.0%)
+- `benchmarks/longmemeval/longmemeval_memkg.py`: Added `--workers` flag; updated default data path to `~/Downloads`; added model caching documentation (offline use via `DOCKG_MODEL_DIR`); wired `n_workers` through `build_kg()` and `cmd_prepare()`
+- `.vscode/mcp.json`: Updated CodeKG binary `codekg` → `pycodekg` and DB path `.codekg/` → `.pycodekg/`
+- `pyproject.toml`: Version bumped `0.1.0` → `0.2.0`
+
+### Added
 - `benchmarks/longmemeval/`: New self-contained benchmark subdirectory — moved `longmemeval_memkg.py`, all result JSONL files, and the `data/` corpus+KG directory here; `.gitignore` updated to exclude `data/` and `results_*.jsonl` from the new location
 - `benchmarks/BENCHMARKS.md`: Full MemoryKG benchmark report modeled on MemPalace's structure — field comparison table, per-type breakdown vs MemPalace (with and without Haiku rerank), complete score progression narrative from 75.8% → 97.6%, architecture diagram, and reproducer
 - `benchmarks/RESULTS_SUMMARY.md`: Concise comparison of best MemoryKG result (97.6% R@5, no LLM) against MemPalace and other published systems

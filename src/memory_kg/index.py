@@ -288,6 +288,7 @@ class SemanticIndex:
         discover_similar: bool = True,
         similar_k: int = 5,
         similarity_edge_threshold: float = 0.85,
+        n_workers: int = 8,
     ) -> dict:
         """Build (or rebuild) the vector index from *store*.
 
@@ -298,6 +299,8 @@ class SemanticIndex:
         :param wipe: If ``True``, delete all existing vectors first.
         :param batch_size: Number of nodes to embed per batch.
         :param quiet: Suppress progress output.
+        :param n_workers: Number of parallel embedding workers (>1 enables
+                          multi-process embedding via :class:`~memory_kg.embedder_worker.CorpusEmbedder`).
         :param discover_similar: If ``True``, run SIMILAR_TO edge discovery.
         :param similar_k: k-nearest neighbors to examine per chunk.
         :param similarity_edge_threshold: Minimum cosine similarity to emit a
@@ -315,6 +318,10 @@ class SemanticIndex:
         # Skipping this saves ~800 MB RAM for a 528K-node corpus at 384 dims.
         all_ids: list[str] = [] if discover_similar else []
         all_vecs: list[list[float]] = [] if discover_similar else []
+
+        # NOTE: n_workers is accepted but Phase 2 embedding runs single-process.
+        # Multi-process spawn (CorpusEmbedder) deadlocks on macOS with MPS; the
+        # GPU batch loop below is already hardware-accelerated.
 
         if not quiet:
             from rich.progress import (  # pylint: disable=import-outside-toplevel

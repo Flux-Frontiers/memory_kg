@@ -35,24 +35,24 @@ The comparison story: at 97.6% R@5 with **no inference**, MemoryKG exceeds every
 
 ## Comparison vs Published Systems (LongMemEval-S, 500 questions)
 
-| # | System | R@5 | LLM Required | Which LLM | Notes |
-|---|---|---|---|---|---|
-| 1 | MemPalace hybrid v4 + rerank | 100% | Optional | Haiku | Reproducible, 500/500 |
-| 2 | Supermemory ASMR | ~99% | Yes | Undisclosed | Research only |
-| 3 | MemPalace hybrid v3 + rerank | 99.4% | Optional | Haiku | Reproducible |
-| 4 | MemPalace hybrid v2 | 98.4% | None | None | Hybrid scoring only |
-| 5 | **MemoryKG (BGE-small + haystack filter)** | **97.6%** | **None** | **None** | **Graph-augmented, zero inference** |
-| 6 | MemPalace raw ChromaDB | 96.6% | None | None | Previous highest zero-LLM score |
-| 7 | Mastra | 94.87% | Yes | GPT-5-mini | — |
-| 8 | Hindsight | 91.4% | Yes | Gemini-3 | — |
-| 9 | Supermemory (production) | ~85% | Yes | Undisclosed | — |
-| 10 | Stella (dense retriever) | ~85% | None | None | Academic baseline |
-| 11 | Contriever | ~78% | None | None | Academic baseline |
-| 12 | BM25 (sparse) | ~70% | None | None | Keyword baseline |
+| # | System | R@5 | R@10 | NDCG@10 | LLM Required | Which LLM | Notes |
+|---|---|---|---|---|---|---|---|
+| 1 | MemPalace hybrid v4 + rerank | 100% | — | — | Optional | Haiku | Reproducible, 500/500 |
+| 2 | Supermemory ASMR | ~99% | — | — | Yes | Undisclosed | Research only |
+| 3 | MemPalace hybrid v3 + rerank | 99.4% | 99.6% | 0.975 | Optional | Haiku | Reproducible |
+| 4 | MemPalace hybrid v2 | 98.4% | 99.0% | 0.934 | None | None | Hybrid scoring only |
+| 5 | **MemoryKG (BGE-small + haystack filter)** | **97.6%** | **99.2%** | **0.936** | **None** | **None** | **Graph-augmented, zero inference** |
+| 6 | MemPalace raw ChromaDB | 96.6% | 98.2% | 0.889 | None | None | Previous highest zero-LLM score |
+| 7 | Mastra | 94.87% | — | — | Yes | GPT-5-mini | — |
+| 8 | Hindsight | 91.4% | — | — | Yes | Gemini-3 | — |
+| 9 | Supermemory (production) | ~85% | — | — | Yes | Undisclosed | — |
+| 10 | Stella (dense retriever) | ~85% | — | — | None | None | Academic baseline |
+| 11 | Contriever | ~78% | — | — | None | None | Academic baseline |
+| 12 | BM25 (sparse) | ~70% | — | — | None | None | Keyword baseline |
 
 **MemoryKG (97.6%) is the highest published LongMemEval score that requires no API key, no cloud, and no LLM at any stage.**
 
-MemoryKG exceeds MemPalace's no-inference baseline by **+1.0 pp** and falls only 1.8 pp short of their Haiku-reranked result — without a single inference call. At NDCG@10, MemoryKG (0.936) exceeds MemPalace hybrid v2 (0.934) — the best inference-free hybrid result from either system.
+MemoryKG beats MemPalace's raw baseline by **+1.0 pp R@5** and falls only 1.8 pp short of their Haiku-reranked result — without a single inference call. At NDCG@10 and R@10, **MemoryKG exceeds MemPalace hybrid v2** (0.936 vs 0.934 NDCG@10; 99.2% vs 99.0% R@10) — the only zero-inference system to do so.
 
 ---
 

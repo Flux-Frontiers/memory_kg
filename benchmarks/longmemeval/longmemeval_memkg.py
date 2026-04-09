@@ -30,31 +30,56 @@ Usage
 
 Step 0 — download the dataset (one time, ~50 MB):
 
-    python benchmarks/longmemeval/longmemeval_memkg.py prepare /tmp/longmemeval-data/longmemeval_s_cleaned.json --download
+    python benchmarks/longmemeval/longmemeval_memkg.py prepare ~/Downloads/longmemeval_s_cleaned.json --download
 
 Step 1 — prepare corpus + build the KG (one time):
 
-    python benchmarks/longmemeval/longmemeval_memkg.py prepare /tmp/longmemeval-data/longmemeval_s_cleaned.json
+    python benchmarks/longmemeval/longmemeval_memkg.py prepare ~/Downloads/longmemeval_s_cleaned.json \
+        --wipe --chunk-strategy heading --workers 8
 
-    # Rebuild from scratch (after corpus / code changes):
-    python benchmarks/longmemeval/longmemeval_memkg.py prepare <data.json> --wipe
+    # heading strategy: one chunk per Markdown section — fastest parse (no per-file embeddings),
+    # best for conversation corpora like LongMemEval.
+    # --workers 8: parallel file parsing (Phase 1); Phase 2 embedding runs on MPS/GPU.
 
 Step 2 — run the benchmark (many times — KG is reused):
 
-    python benchmarks/longmemeval/longmemeval_memkg.py run <data.json>
+    python benchmarks/longmemeval/longmemeval_memkg.py run ~/Downloads/longmemeval_s_cleaned.json
     python benchmarks/longmemeval/longmemeval_memkg.py run <data.json> --limit 20
     python benchmarks/longmemeval/longmemeval_memkg.py run <data.json> --k 50 --hop 2 --max-nodes 500
     python benchmarks/longmemeval/longmemeval_memkg.py run <data.json> --rels CONTAINS,NEXT,SIMILAR_TO,HAS_TOPIC,MENTIONS_ENTITY,HAS_KEYWORD,CO_OCCURS_WITH
 
     # Seed from document nodes only (session-root seeding — reduces chunk noise):
-    python benchmarks/longmemeval/longmemeval_memkg.py run data.json --seed-kinds document
+    python benchmarks/longmemeval/longmemeval_memkg.py run <data.json> --seed-kinds document
 
 All-in-one convenience:
 
     python benchmarks/longmemeval/longmemeval_memkg.py all <data.json> --limit 20
 
+Model caching
+-------------
+
+The embedding model (default: BAAI/bge-small-en-v1.5) is cached locally so it
+does not need to be re-downloaded across reboots.  By default the cache lives at
+``.memorykg/models/`` under the current working directory.  To use a custom
+location (e.g. ~/Downloads), set ``DOCKG_MODEL_DIR`` before running:
+
+    # Download and save the model once:
+    python -c "
+    from sentence_transformers import SentenceTransformer
+    import os
+    SentenceTransformer('BAAI/bge-small-en-v1.5').save(
+        os.path.expanduser('~/Downloads/BAAI--bge-small-en-v1.5')
+    )
+    "
+
+    # Point MemoryKG at that directory:
+    DOCKG_MODEL_DIR=~/Downloads python benchmarks/longmemeval/longmemeval_memkg.py prepare ...
+
+The model directory name must use ``--`` in place of ``/`` in the HuggingFace
+model ID (e.g. ``BAAI/bge-small-en-v1.5`` → ``BAAI--bge-small-en-v1.5``).
+
 Author: Eric G. Suchanek, PhD
-Last Revision: 2026-04-08 19:58:49
+Last Revision: 2026-04-09
 
 License: Elastic 2.0
 """
@@ -225,6 +250,7 @@ def build_kg(
     chunk_strategy: str = "semantic",
     batch_size: int = 1024,
     discover_similar: bool = False,
+    n_workers: int = 8,
 ) -> None:
     """Build a persistent MemoryKG from the corpus dir."""
     from memory_kg.kg import MemoryKG
@@ -237,6 +263,7 @@ def build_kg(
     print(f"    model:   {model or DEFAULT_MODEL}")
     print(f"    chunk:   {chunk_strategy}")
     print(f"    batch:   {batch_size}")
+    print(f"    workers: {n_workers}")
     print(f"    device:  {os.environ.get('DOCKG_DEVICE', 'mps')}")
     print(f"    similar: {'yes' if discover_similar else 'no (use --similar to enable)'}")
 
@@ -250,9 +277,15 @@ def build_kg(
         lancedb_dir=lancedb_dir,
         model=model or DEFAULT_MODEL,
         chunk_strategy=chunk_strategy,
+        n_workers=n_workers,
     )
     try:
-        stats = kg.build(wipe=wipe, batch_size=batch_size, discover_similar=discover_similar)
+        stats = kg.build(
+            wipe=wipe,
+            batch_size=batch_size,
+            discover_similar=discover_similar,
+            n_workers=n_workers,
+        )
     finally:
         kg.close()
     dt = time.time() - t0
@@ -311,6 +344,7 @@ def cmd_prepare(args: argparse.Namespace) -> None:
         chunk_strategy=getattr(args, "chunk_strategy", "semantic"),
         batch_size=getattr(args, "batch", 1024),
         discover_similar=getattr(args, "similar", False),
+        n_workers=getattr(args, "workers", 8),
     )
     print("  Ready. Run with:")
     print(f"    python {Path(__file__).name} run {data_file}")
@@ -1093,6 +1127,12 @@ def main() -> None:
         help="Enable SIMILAR_TO edge discovery (slow — ~1hr for 528k nodes; off by default).",
     )
     p_prep.add_argument(
+        "--workers",
+        type=int,
+        default=8,
+        help="Number of parallel embedding workers (default: 8).",
+    )
+    p_prep.add_argument(
         "--download",
         action="store_true",
         help="Download the dataset from HuggingFace if the data file does not exist",
@@ -1126,6 +1166,12 @@ def main() -> None:
         "--similar",
         action="store_true",
         help="Enable SIMILAR_TO edge discovery (slow — ~1hr for 528k nodes; off by default).",
+    )
+    p_all.add_argument(
+        "--workers",
+        type=int,
+        default=8,
+        help="Number of parallel embedding workers (default: 8).",
     )
     p_all.add_argument(
         "--download",

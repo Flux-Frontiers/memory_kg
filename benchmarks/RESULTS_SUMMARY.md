@@ -22,7 +22,7 @@ MemoryKG with haystack-filtered seeding and BGE-small-en-v1.5 **beats MemPalace'
 | MemPalace hybrid v3 + Haiku | MiniLM | Haiku rerank | — | 99.4% | 99.6% | 0.975 |
 | **MemoryKG (this work)** | **BGE-small** | **None** | **89.4%** | **97.6%** | **99.2%** | **0.936** |
 
-MemoryKG at **97.6% R@5** beats MemPalace's raw baseline (+1.0 pp) and hybrid v2 (+0.8 pp) with no inference. It falls 1.8 pp short of their Haiku-reranked result at R@5, but exceeds it at NDCG@10 (0.936 vs 0.934 for hybrid v2).
+MemoryKG at **97.6% R@5** beats MemPalace's raw baseline (+1.0 pp) with no inference, and falls 1.8 pp short of their Haiku-reranked result at R@5. At NDCG@10 and R@10, MemoryKG **beats MemPalace hybrid v2** — the best zero-inference result from either system — with 0.936 vs 0.934 NDCG@10 and 99.2% vs 99.0% R@10.
 
 ---
 

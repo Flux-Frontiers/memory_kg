@@ -322,6 +322,7 @@ class MemoryKG:
     :param cooccur_window: Co-occurrence window metadata.
     :param topic_threshold: Topic confidence threshold.
     :param topics_file: Optional topic catalog file (JSON/YAML).
+    :param n_workers: Parallel threads for Phase 1 file parsing (default: 8).
     """
 
     def __init__(
@@ -344,6 +345,7 @@ class MemoryKG:
         topic_threshold: float = 0.2,
         topics_file: str | None = None,
         exclude: set[str] | None = None,
+        n_workers: int = 8,
     ) -> None:
         self.corpus_root = Path(corpus_root).resolve()
         self.exclude: set[str] = exclude or set()
@@ -370,6 +372,7 @@ class MemoryKG:
         self.cooccur_window = cooccur_window
         self.topic_threshold = topic_threshold
         self.topics_file = topics_file
+        self.n_workers = n_workers
 
         # Lazy-initialised layers
         self._graph: DocGraph | None = None
@@ -406,6 +409,7 @@ class MemoryKG:
                 cooccur_window=self.cooccur_window,
                 topic_threshold=self.topic_threshold,
                 topics_file=self.topics_file,
+                n_workers=self.n_workers,
             )
         return self._graph
 
@@ -439,13 +443,19 @@ class MemoryKG:
     # ------------------------------------------------------------------
 
     def build(
-        self, *, wipe: bool = False, batch_size: int = 1024, discover_similar: bool = True
+        self,
+        *,
+        wipe: bool = False,
+        batch_size: int = 1024,
+        discover_similar: bool = True,
+        n_workers: int = 8,
     ) -> BuildStats:
         """Full pipeline: corpus parsing → SQLite → LanceDB + SIMILAR_TO edges.
 
         :param wipe: Clear existing data before writing.
         :param batch_size: Number of nodes to embed per batch.
         :param discover_similar: Run SIMILAR_TO edge discovery after indexing.
+        :param n_workers: Parallel embedding workers (>1 uses multi-process embedding, default: 8).
         :return: :class:`BuildStats`.
         """
         import time  # pylint: disable=import-outside-toplevel
@@ -460,7 +470,7 @@ class MemoryKG:
         )
         print("  Phase 2: embedding → LanceDB...", flush=True)
         index_stats = self.build_index(
-            wipe=wipe, batch_size=batch_size, discover_similar=discover_similar
+            wipe=wipe, batch_size=batch_size, discover_similar=discover_similar, n_workers=n_workers
         )
         graph_stats.indexed_rows = index_stats.indexed_rows
         graph_stats.index_dim = index_stats.index_dim
@@ -486,13 +496,19 @@ class MemoryKG:
         )
 
     def build_index(
-        self, *, wipe: bool = False, batch_size: int = 1024, discover_similar: bool = True
+        self,
+        *,
+        wipe: bool = False,
+        batch_size: int = 1024,
+        discover_similar: bool = True,
+        n_workers: int = 8,
     ) -> BuildStats:
         """SQLite → LanceDB only (graph must already exist).
 
         :param wipe: Delete existing vectors before indexing.
         :param batch_size: Number of nodes to embed per batch.
         :param discover_similar: Run SIMILAR_TO edge discovery after indexing.
+        :param n_workers: Parallel embedding workers (>1 uses multi-process embedding, default: 8).
         :return: :class:`BuildStats` with ``indexed_rows``, ``index_dim``, and
                  ``similar_edges_added`` set.
         """
@@ -502,6 +518,7 @@ class MemoryKG:
             batch_size=batch_size,
             discover_similar=discover_similar,
             quiet=False,
+            n_workers=n_workers,
         )
         s = self.store.stats()
         return BuildStats(

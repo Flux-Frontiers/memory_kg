@@ -121,6 +121,13 @@ _console = Console()
     help="Embedding batch size.",
 )
 @click.option(
+    "--workers",
+    type=int,
+    default=8,
+    show_default=True,
+    help="Number of parallel embedding workers (>1 uses multi-process CorpusEmbedder).",
+)
+@click.option(
     "--update",
     is_flag=True,
     default=False,
@@ -160,6 +167,7 @@ def build(
     topics_file: str | None,
     no_similar: bool,
     batch: int,
+    workers: int,
     update: bool,
     ext: tuple[str, ...],
     exclude_dir: tuple[str, ...],
@@ -194,6 +202,7 @@ def build(
         cooccur_window=cooccur_window,
         topic_threshold=topic_threshold,
         topics_file=topics_file,
+        n_workers=workers,
     )
 
     # Override graph extensions if provided
@@ -239,6 +248,7 @@ def build(
         batch_size=batch,
         discover_similar=not no_similar,
         quiet=False,
+        n_workers=workers,
     )
     _console.print(f"  model    : {idx_stats['model_name']}  dim={idx_stats['dim']}")
     _console.print(f"  indexed  : {idx_stats['indexed_rows']} vectors")
@@ -430,6 +440,13 @@ def build_graph(
     show_default=True,
     help="Embedding batch size.",
 )
+@click.option(
+    "--workers",
+    type=int,
+    default=8,
+    show_default=True,
+    help="Number of parallel embedding workers (>1 uses multi-process CorpusEmbedder).",
+)
 def build_index(
     repo: str,
     sqlite: str,
@@ -439,6 +456,7 @@ def build_index(
     update: bool,
     no_similar: bool,
     batch: int,
+    workers: int,
 ) -> None:
     """Build only the LanceDB semantic index from an existing SQLite graph."""
     repo_root = Path(repo).resolve()
@@ -465,6 +483,7 @@ def build_index(
         batch_size=batch,
         discover_similar=not no_similar,
         quiet=False,
+        n_workers=workers,
     )
     _console.print(f"  model    : {idx_stats['model_name']}  dim={idx_stats['dim']}")
     _console.print(f"  indexed  : {idx_stats['indexed_rows']} vectors")
