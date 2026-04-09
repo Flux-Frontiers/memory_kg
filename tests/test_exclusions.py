@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+
 from memory_kg.config import load_exclude_dirs
 from memory_kg.memorykg import iter_text_files
 
@@ -48,9 +49,7 @@ def corpus_with_pyproject(tmp_path: Path) -> Path:
     (tmp_path / "tests").mkdir()
     (tmp_path / "tests" / "test_notes.md").write_text("# Test Notes\n")
 
-    (tmp_path / "pyproject.toml").write_text(
-        '[tool.memorykg]\nexclude = ["archive", "vendor"]\n'
-    )
+    (tmp_path / "pyproject.toml").write_text('[tool.memorykg]\nexclude = ["archive", "vendor"]\n')
     return tmp_path
 
 
@@ -71,9 +70,7 @@ def test_load_exclude_dirs_no_memorykg_section(tmp_path: Path):
 
 
 def test_load_exclude_dirs_no_exclude_key(tmp_path: Path):
-    (tmp_path / "pyproject.toml").write_text(
-        "[tool.memorykg]\nmodel = 'all-mpnet-base-v2'\n"
-    )
+    (tmp_path / "pyproject.toml").write_text("[tool.memorykg]\nmodel = 'all-mpnet-base-v2'\n")
     result = load_exclude_dirs(tmp_path)
     assert result == set()
 
@@ -93,9 +90,7 @@ def test_load_exclude_dirs_multiple_values(tmp_path: Path):
 
 
 def test_load_exclude_dirs_strips_trailing_slashes(tmp_path: Path):
-    (tmp_path / "pyproject.toml").write_text(
-        '[tool.memorykg]\nexclude = ["archive/", "vendor/"]\n'
-    )
+    (tmp_path / "pyproject.toml").write_text('[tool.memorykg]\nexclude = ["archive/", "vendor/"]\n')
     result = load_exclude_dirs(tmp_path)
     assert result == {"archive", "vendor"}
 
@@ -147,9 +142,7 @@ def test_iter_text_files_exclude_single_dir(corpus_with_dirs: Path):
 
 
 def test_iter_text_files_exclude_multiple_dirs(corpus_with_dirs: Path):
-    found = {
-        f.name for f in iter_text_files(corpus_with_dirs, exclude={"archive", "vendor"})
-    }
+    found = {f.name for f in iter_text_files(corpus_with_dirs, exclude={"archive", "vendor"})}
     assert "old.md" not in found
     assert "external.txt" not in found
     assert "guide.md" in found

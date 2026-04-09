@@ -11,6 +11,8 @@ CLI command for installing MemoryKG git hooks and Claude Code auto-ingest hooks:
   Last Revision: 2026-04-08
 """
 
+# pylint: disable=import-outside-toplevel
+
 from __future__ import annotations
 
 import stat
@@ -193,7 +195,7 @@ echo "{}"
 """
 
 # Maps Claude Code event → (script filename, hook config dict)
-_CLAUDE_HOOK_SCRIPTS: dict[str, tuple[str, dict]] = {
+_CLAUDE_HOOK_SCRIPTS: dict[str, tuple[str, str]] = {
     "UserPromptSubmit": (
         "agent_kg_user_prompt_hook.sh",
         _USER_PROMPT_HOOK,
@@ -233,7 +235,7 @@ def _merge_claude_settings(settings_path: Path, hooks_dir: Path, force: bool) ->
     :param force: Overwrite existing hook entries.
     :return: True if settings were updated.
     """
-    import json  # noqa: PLC0415
+    import json  # noqa: PLC0415  # pylint: disable=import-outside-toplevel
 
     settings_path.parent.mkdir(parents=True, exist_ok=True)
     existing: dict = {}

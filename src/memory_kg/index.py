@@ -21,6 +21,8 @@ Mirrors CodeKG's index.py with the following additions:
 Author: Eric G. Suchanek, PhD
 """
 
+# pylint: disable=C0415
+
 from __future__ import annotations
 
 import contextlib
@@ -143,8 +145,8 @@ class SentenceTransformerEmbedder(Embedder):
         from sentence_transformers import (  # pylint: disable=import-outside-toplevel
             SentenceTransformer,
         )
-        from transformers import (
-            logging as hf_logging,  # pylint: disable=import-outside-toplevel
+        from transformers import (  # pylint: disable=import-outside-toplevel
+            logging as hf_logging,
         )
 
         hf_logging.set_verbosity_error()
@@ -441,8 +443,8 @@ class SemanticIndex:
         :param quiet: Suppress progress output.
         :return: Number of edges added.
         """
-        from memory_kg.memorykg import (
-            DocEdge,  # pylint: disable=import-outside-toplevel
+        from memory_kg.memorykg import (  # pylint: disable=import-outside-toplevel
+            DocEdge,
         )
 
         # Only chunk nodes get SIMILAR_TO edges

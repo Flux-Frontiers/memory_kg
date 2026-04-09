@@ -1,6 +1,6 @@
 # MemoryKG × LongMemEval — Multi-Run Comparison
 
-**Generated:** 2026-04-09 13:37:23
+**Generated:** 2026-04-09 13:55:01
 **Repository:** memory_kg @ `a990e7b` (develop)
 **Machine:** Apple M5 Max MacBook Pro, 64 GB RAM, 2 TB SSD
 
@@ -8,25 +8,25 @@
 
 ## Recall@k Comparison
 
-| k | results_bge_doc_seed | results_bge_haystack | results_bge_haystack_doc | results_bge_hop0 | results_bge_hop1 | results_haystack_filter | results_heading_minilm | results_k150_fixes | results_k150_kw_temporal | results_k150_pref | results_default |
-|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|
-|  1 | 0.724 | 0.894 | 0.780 | 0.796 | 0.824 | 0.766 | 0.708 | 0.808 | 0.274 | 0.808 | 0.894 |
-|  3 | 0.762 | 0.958 | 0.904 | 0.824 | 0.858 | 0.912 | 0.736 | 0.834 | 0.352 | 0.832 | 0.958 |
-|  5 | 0.778 | 0.976 | 0.926 | 0.834 | 0.866 | 0.940 | 0.758 | 0.846 | 0.406 | 0.846 | 0.976 |
-| 10 | 0.812 | 0.992 | 0.952 | 0.870 | 0.894 | 0.970 | 0.818 | 0.878 | 0.530 | 0.876 | 0.992 |
-| 30 | 0.906 | 1.000 | 0.992 | 0.946 | 0.954 | 0.994 | 0.928 | 0.954 | 0.820 | 0.954 | 1.000 |
-| 50 | 0.996 | 1.000 | 1.000 | 0.998 | 1.000 | 1.000 | 0.998 | 0.998 | 0.994 | 0.998 | 1.000 |
+| k | results_bge_doc_seed | results_bge_haystack | results_bge_haystack_doc | results_bge_hop0 | results_bge_hop1 | results_default | results_haystack_filter | results_heading_minilm | results_k150_fixes | results_k150_kw_temporal | results_k150_pref | results_smoke |
+|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+|  1 | 0.724 | 0.894 | 0.780 | 0.796 | 0.824 | 0.894 | 0.766 | 0.708 | 0.808 | 0.274 | 0.808 | 1.000 |
+|  3 | 0.762 | 0.958 | 0.904 | 0.824 | 0.858 | 0.958 | 0.912 | 0.736 | 0.834 | 0.352 | 0.832 | 1.000 |
+|  5 | 0.778 | 0.976 | 0.926 | 0.834 | 0.866 | 0.976 | 0.940 | 0.758 | 0.846 | 0.406 | 0.846 | 1.000 |
+| 10 | 0.812 | 0.992 | 0.952 | 0.870 | 0.894 | 0.992 | 0.970 | 0.818 | 0.878 | 0.530 | 0.876 | 1.000 |
+| 30 | 0.906 | 1.000 | 0.992 | 0.946 | 0.954 | 1.000 | 0.994 | 0.928 | 0.954 | 0.820 | 0.954 | 1.000 |
+| 50 | 0.996 | 1.000 | 1.000 | 0.998 | 1.000 | 1.000 | 1.000 | 0.998 | 0.998 | 0.994 | 0.998 | 1.000 |
 
 ## NDCG@k Comparison
 
-| k | results_bge_doc_seed | results_bge_haystack | results_bge_haystack_doc | results_bge_hop0 | results_bge_hop1 | results_haystack_filter | results_heading_minilm | results_k150_fixes | results_k150_kw_temporal | results_k150_pref | results_default |
-|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|
-|  1 | 0.724 | 0.894 | 0.780 | 0.796 | 0.824 | 0.766 | 0.708 | 0.808 | 0.274 | 0.808 | 0.894 |
-|  3 | 0.746 | 0.929 | 0.849 | 0.813 | 0.844 | 0.848 | 0.723 | 0.823 | 0.322 | 0.822 | 0.929 |
-|  5 | 0.751 | 0.933 | 0.855 | 0.816 | 0.846 | 0.854 | 0.730 | 0.825 | 0.343 | 0.826 | 0.933 |
-| 10 | 0.758 | 0.936 | 0.858 | 0.823 | 0.852 | 0.858 | 0.742 | 0.830 | 0.380 | 0.829 | 0.936 |
-| 30 | 0.754 | 0.936 | 0.862 | 0.815 | 0.841 | 0.860 | 0.741 | 0.824 | 0.438 | 0.822 | 0.936 |
-| 50 | 0.754 | 0.936 | 0.863 | 0.805 | 0.832 | 0.858 | 0.733 | 0.818 | 0.455 | 0.816 | 0.936 |
+| k | results_bge_doc_seed | results_bge_haystack | results_bge_haystack_doc | results_bge_hop0 | results_bge_hop1 | results_default | results_haystack_filter | results_heading_minilm | results_k150_fixes | results_k150_kw_temporal | results_k150_pref | results_smoke |
+|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+|  1 | 0.724 | 0.894 | 0.780 | 0.796 | 0.824 | 0.894 | 0.766 | 0.708 | 0.808 | 0.274 | 0.808 | 1.000 |
+|  3 | 0.746 | 0.929 | 0.849 | 0.813 | 0.844 | 0.929 | 0.848 | 0.723 | 0.823 | 0.322 | 0.822 | 1.000 |
+|  5 | 0.751 | 0.933 | 0.855 | 0.816 | 0.846 | 0.933 | 0.854 | 0.730 | 0.825 | 0.343 | 0.826 | 1.000 |
+| 10 | 0.758 | 0.936 | 0.858 | 0.823 | 0.852 | 0.936 | 0.858 | 0.742 | 0.830 | 0.380 | 0.829 | 1.000 |
+| 30 | 0.754 | 0.936 | 0.862 | 0.815 | 0.841 | 0.936 | 0.860 | 0.741 | 0.824 | 0.438 | 0.822 | 1.000 |
+| 50 | 0.754 | 0.936 | 0.863 | 0.805 | 0.832 | 0.936 | 0.858 | 0.733 | 0.818 | 0.455 | 0.816 | 1.000 |
 
 ---
 
@@ -525,6 +525,62 @@ a3045048
 gpt4_d31cdae3
 gpt4_1a1dc16d
 6aeb4375_abs
+```
+</details>
+
+---
+
+## Run: `results_default` (n=500 — 201.0s (0.40s/q))
+
+## Session-Level Retrieval Metrics
+
+| k | Recall@k | NDCG@k |
+|--:|--:|--:|
+|  1 | 0.894 | 0.894 |
+|  3 | 0.958 | 0.929 |
+|  5 | 0.976 | 0.933 |
+| 10 | 0.992 | 0.936 |
+| 30 | 1.000 | 0.936 |
+| 50 | 1.000 | 0.936 |
+
+## Per-Type Breakdown
+
+| Question Type | n | Recall@5 | Recall@10 | NDCG@10 |
+|---|--:|--:|--:|--:|
+| knowledge-update | 78 | 1.000 | 1.000 | 0.987 |
+| multi-session | 133 | 0.977 | 0.992 | 0.941 |
+| single-session-assistant | 56 | 1.000 | 1.000 | 1.000 |
+| single-session-preference | 30 | 1.000 | 1.000 | 0.888 |
+| single-session-user | 70 | 0.971 | 0.986 | 0.927 |
+| temporal-reasoning | 133 | 0.947 | 0.985 | 0.890 |
+
+## Key Findings
+
+- **Top-1 recall:** 89.4% — immediate precision of the semantic seed
+- **Top-5 recall:** 97.6%
+- **Top-10 recall:** 99.2%
+- **Top-50 recall (coverage ceiling):** 100.0%
+
+**Hardest question types (by Recall@10):**
+- `temporal-reasoning`: 98.5%
+- `single-session-user`: 98.6%
+
+**Easiest question types (by Recall@10):**
+- `single-session-assistant`: 100.0%
+- `single-session-preference`: 100.0%
+
+## Misses @ k=10
+
+**4 / 500** questions had zero sessions retrieved in top-10.
+
+<details>
+<summary>Show all 4 missed question IDs</summary>
+
+```
+f4f1d8a4_abs
+10d9b85a
+gpt4_468eb064
+eac54add
 ```
 </details>
 
@@ -1254,56 +1310,38 @@ gpt4_2f56ae70
 
 ---
 
-## Run: `results_default` (n=500 — 201.0s (0.40s/q))
+## Run: `results_smoke` (n=5 — 4.1s (0.83s/q))
 
 ## Session-Level Retrieval Metrics
 
 | k | Recall@k | NDCG@k |
 |--:|--:|--:|
-|  1 | 0.894 | 0.894 |
-|  3 | 0.958 | 0.929 |
-|  5 | 0.976 | 0.933 |
-| 10 | 0.992 | 0.936 |
-| 30 | 1.000 | 0.936 |
-| 50 | 1.000 | 0.936 |
+|  1 | 1.000 | 1.000 |
+|  3 | 1.000 | 1.000 |
+|  5 | 1.000 | 1.000 |
+| 10 | 1.000 | 1.000 |
+| 30 | 1.000 | 1.000 |
+| 50 | 1.000 | 1.000 |
 
 ## Per-Type Breakdown
 
 | Question Type | n | Recall@5 | Recall@10 | NDCG@10 |
 |---|--:|--:|--:|--:|
-| knowledge-update | 78 | 1.000 | 1.000 | 0.987 |
-| multi-session | 133 | 0.977 | 0.992 | 0.941 |
-| single-session-assistant | 56 | 1.000 | 1.000 | 1.000 |
-| single-session-preference | 30 | 1.000 | 1.000 | 0.888 |
-| single-session-user | 70 | 0.971 | 0.986 | 0.927 |
-| temporal-reasoning | 133 | 0.947 | 0.985 | 0.890 |
+| single-session-user | 5 | 1.000 | 1.000 | 1.000 |
 
 ## Key Findings
 
-- **Top-1 recall:** 89.4% — immediate precision of the semantic seed
-- **Top-5 recall:** 97.6%
-- **Top-10 recall:** 99.2%
+- **Top-1 recall:** 100.0% — immediate precision of the semantic seed
+- **Top-5 recall:** 100.0%
+- **Top-10 recall:** 100.0%
 - **Top-50 recall (coverage ceiling):** 100.0%
 
 **Hardest question types (by Recall@10):**
-- `temporal-reasoning`: 98.5%
-- `single-session-user`: 98.6%
+- `single-session-user`: 100.0%
 
 **Easiest question types (by Recall@10):**
-- `single-session-assistant`: 100.0%
-- `single-session-preference`: 100.0%
+- `single-session-user`: 100.0%
 
 ## Misses @ k=10
 
-**4 / 500** questions had zero sessions retrieved in top-10.
-
-<details>
-<summary>Show all 4 missed question IDs</summary>
-
-```
-f4f1d8a4_abs
-10d9b85a
-gpt4_468eb064
-eac54add
-```
-</details>
+**0 / 5** questions had zero sessions retrieved in top-10.

@@ -8,6 +8,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `benchmarks/longmemeval/`: New self-contained benchmark subdirectory — moved `longmemeval_memkg.py`, all result JSONL files, and the `data/` corpus+KG directory here; `.gitignore` updated to exclude `data/` and `results_*.jsonl` from the new location
+- `benchmarks/BENCHMARKS.md`: Full MemoryKG benchmark report modeled on MemPalace's structure — field comparison table, per-type breakdown vs MemPalace (with and without Haiku rerank), complete score progression narrative from 75.8% → 97.6%, architecture diagram, and reproducer
+- `benchmarks/RESULTS_SUMMARY.md`: Concise comparison of best MemoryKG result (97.6% R@5, no LLM) against MemPalace and other published systems
+- `benchmarks/README.md`: Rewritten from scratch as MemoryKG benchmark guide — setup, quick start, full CLI reference table for all `run`/`prepare`/`all` flags, common recipes, environment variables
+- `benchmarks/render_results.py`: Run time now recorded in JSONL `_meta` header row (`elapsed_s`, `s_per_question`, `k`, `hop`, `haystack_filter`) and surfaced in single-run and comparison markdown reports; added `_load_meta()` and `_result_rows()` helpers; `_md_header()` accepts optional `meta` dict
+
+### Changed
+- `benchmarks/longmemeval/longmemeval_memkg.py`: `--haystack-filter` now defaults to **on** (add `--no-haystack-filter` to disable); `--k` default lowered from 150 → 50 (correct for haystack-scoped search); JSONL output now prefixed with a `_meta` header row containing run configuration and elapsed time; `REPO_ROOT` and data paths updated for new subdir location
+- `benchmarks/render_results.py`: `write_markdown()` and `write_comparison_markdown()` strip `_meta` rows before aggregation; comparison report run headings include elapsed time when available
+
+### Fixed
+- `src/memory_kg/cli/cmd_hooks.py`: Corrected type annotation `dict[str, tuple[str, dict]]` → `dict[str, tuple[str, str]]` (hook script content is `str`, not `dict`)
+- `src/memory_kg/pipeline.py`: Added `HeadingChunker` to import and to the `chunker` variable type annotation (`TextChunker | SentenceGroupChunker | HeadingChunker`) to match `chunker_for()` return type
+- `src/memory_kg/memorykg.py`: Added `cast(Literal[...], chunk_strategy)` when calling `chunker_for()` to satisfy mypy Literal argument requirement
+- `benchmarks/render_results.py`: Removed unused `bars` variable assignment (ruff F841); renamed ambiguous `l` → `lbl` in list comprehension (ruff E741)
+
+### Added
 - `index.py`: `SemanticIndex.search()` gains `seed_kinds` and `haystack_files` parameters — `seed_kinds` restricts LanceDB seeding to specific node kinds (e.g. `("document",)` for session-root-only seeding); `haystack_files` restricts seeding to a per-question file set for apples-to-apples comparison with MemPalace
 - `kg.py`: `MemoryKG.query()` gains matching `seed_kinds` and `haystack_files` pass-through parameters with usage example in docstring
 - `benchmarks/longmemeval_memkg.py`: `--seed-kinds` CLI flag (comma-separated node kinds, e.g. `document`) and `--haystack-filter` flag (limits seeding to per-question haystack files); both wired through `query_sessions()`

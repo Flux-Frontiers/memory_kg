@@ -11,6 +11,8 @@ DiaryTransformer approach:
 - fallback keyword extraction for sparse text
 """
 
+# pylint: disable=import-outside-toplevel
+
 from __future__ import annotations
 
 import json
@@ -232,8 +234,8 @@ class TopicExtractor:
         :param labels: Optional human-readable cluster labels (length == n_clusters).
         """
         try:
-            from sklearn.cluster import (
-                KMeans,  # pylint: disable=import-outside-toplevel
+            from sklearn.cluster import (  # pylint: disable=import-outside-toplevel
+                KMeans,
             )
             from sklearn.preprocessing import (  # pylint: disable=import-outside-toplevel
                 normalize,

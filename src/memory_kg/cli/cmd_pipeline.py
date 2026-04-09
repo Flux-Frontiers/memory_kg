@@ -11,6 +11,8 @@ Commands:
 Author: Eric G. Suchanek, PhD
 """
 
+# pylint: disable=import-outside-toplevel
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -226,8 +228,8 @@ def pipeline_embed(
     from memory_kg.embedder_worker import (  # pylint: disable=import-outside-toplevel
         CorpusEmbedder,
     )
-    from memory_kg.memorykg import (
-        iter_text_files,  # pylint: disable=import-outside-toplevel
+    from memory_kg.memorykg import (  # pylint: disable=import-outside-toplevel
+        iter_text_files,
     )
 
     console = Console()
@@ -312,8 +314,8 @@ def pipeline_manifold(
     from memory_kg.embedder_worker import (  # pylint: disable=import-outside-toplevel
         CorpusEmbedder,
     )
-    from memory_kg.manifold import (
-        ManifoldAnalyzer,  # pylint: disable=import-outside-toplevel
+    from memory_kg.manifold import (  # pylint: disable=import-outside-toplevel
+        ManifoldAnalyzer,
     )
 
     console = Console()

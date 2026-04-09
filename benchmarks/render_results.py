@@ -96,6 +96,23 @@ def _load(jsonl_path: Path) -> list[dict]:
         return [json.loads(line) for line in fh if line.strip()]
 
 
+def _load_meta(jsonl_path: Path) -> dict:
+    """Return the _meta header row from a JSONL file, or {} if absent."""
+    with open(jsonl_path) as fh:
+        for line in fh:
+            if line.strip():
+                row = json.loads(line)
+                if row.get("_meta"):
+                    return row
+                break
+    return {}
+
+
+def _result_rows(rows: list[dict]) -> list[dict]:
+    """Strip _meta header rows from a loaded list."""
+    return [r for r in rows if not r.get("_meta")]
+
+
 def _aggregate(rows: list[dict]) -> dict:
     """Return a single-run aggregate dict."""
     n = len(rows)
@@ -143,7 +160,14 @@ def _label_from_path(path: Path) -> str:
 # ---------------------------------------------------------------------------
 
 
-def _md_header(lines: list[str], label: str, path: Path, git_info: tuple, n: int) -> None:
+def _md_header(
+    lines: list[str],
+    label: str,
+    path: Path,
+    git_info: tuple,
+    n: int,
+    meta: dict | None = None,
+) -> None:
     short_hash, branch, commit_date, commit_msg = git_info
     generated = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -153,6 +177,11 @@ def _md_header(lines: list[str], label: str, path: Path, git_info: tuple, n: int
     lines.append(f"**Results file:** `{path.name}`  ")
     lines.append(f"**Questions evaluated:** {n}  ")
     lines.append(f"**Generated:** {generated}  ")
+    if meta:
+        elapsed = meta.get("elapsed_s")
+        s_per_q = meta.get("s_per_question")
+        if elapsed is not None:
+            lines.append(f"**Run time:** {elapsed:.1f}s ({s_per_q:.2f}s per question)  ")
     lines.append(f"**Machine:** {MACHINE_DESCRIPTION}  ")
     lines.append(f"**Repository:** memory_kg @ `{short_hash}` ({branch})  ")
     lines.append(f"**Commit:** {commit_date} — {commit_msg}  ")
@@ -238,15 +267,17 @@ def write_markdown(
     path: Path,
     out_path: Path,
     git_info: tuple,
+    meta: dict | None = None,
 ) -> Path:
     """Render a single-run Markdown report and write it to ``out_path``."""
-    n = len(rows)
-    agg = _aggregate(rows)
-    pt = _per_type(rows)
-    miss_ids = _misses(rows)
+    result_rows = _result_rows(rows)
+    n = len(result_rows)
+    agg = _aggregate(result_rows)
+    pt = _per_type(result_rows)
+    miss_ids = _misses(result_rows)
 
     lines: list[str] = []
-    _md_header(lines, label, path, git_info, n)
+    _md_header(lines, label, path, git_info, n, meta=meta)
     _md_aggregate_table(lines, agg, n)
     _md_per_type(lines, pt)
     _md_key_findings(lines, agg, pt)
@@ -287,7 +318,8 @@ def write_comparison_markdown(
     sep = "|--:|" + "|".join("--:" for _ in runs) + "|"
     lines.append(header)
     lines.append(sep)
-    aggs = [(label, _aggregate(rows)) for label, rows in runs]
+    result_runs = [(label, _result_rows(rows)) for label, rows in runs]
+    aggs = [(label, _aggregate(rrows)) for label, rrows in result_runs]
     for k in _KS:
         row = f"| {k:2} | " + " | ".join(f"{agg[f'recall_any@{k}']:.3f}" for _, agg in aggs) + " |"
         lines.append(row)
@@ -302,14 +334,20 @@ def write_comparison_markdown(
     lines.append("")
 
     # Per-type for each run
-    for label, rows in runs:
-        n = len(rows)
-        agg = _aggregate(rows)
-        pt = _per_type(rows)
-        miss_ids = _misses(rows)
+    for (label, rrows), (_, agg) in zip(result_runs, aggs):
+        n = len(rrows)
+        pt = _per_type(rrows)
+        miss_ids = _misses(rrows)
+        meta = next((r for r in runs if r[0] == label), (None, []))[1]
+        meta_row = next((r for r in meta if isinstance(r, dict) and r.get("_meta")), {})
 
         lines.append("---\n")
-        lines.append(f"## Run: `{label}` (n={n})\n")
+        run_time = (
+            f" — {meta_row['elapsed_s']:.1f}s ({meta_row['s_per_question']:.2f}s/q)"
+            if meta_row.get("elapsed_s") is not None
+            else ""
+        )
+        lines.append(f"## Run: `{label}` (n={n}{run_time})\n")
         _md_aggregate_table(lines, agg, n)
         _md_per_type(lines, pt)
         _md_key_findings(lines, agg, pt)
@@ -492,7 +530,7 @@ def _write_pdf(
         for i, qtype in enumerate(qtypes_sorted):
             vals = [pt[qtype].get(f"recall_any@{k}", 0) for k in plot_ks]
             offset = (i - len(qtypes_sorted) / 2 + 0.5) * width
-            bars = ax.bar(x + offset, vals, width * 0.9, label=qtype, color=colors[i], alpha=0.85)
+            ax.bar(x + offset, vals, width * 0.9, label=qtype, color=colors[i], alpha=0.85)
 
         # Overall recall line
         overall = [agg[f"recall_any@{k}"] for k in plot_ks]
@@ -597,7 +635,7 @@ def main() -> None:
 
     labels: list[str] = []
     if args.labels:
-        labels = [l.strip() for l in args.labels.split(",")]
+        labels = [lbl.strip() for lbl in args.labels.split(",")]
         if len(labels) != len(paths):
             sys.exit(f"ERROR: --labels has {len(labels)} entries but {len(paths)} files were given")
     else:
@@ -612,9 +650,10 @@ def main() -> None:
         out_md = Path(args.out) if args.out else bench_dir / "BENCHMARKS_MEMKG.md"
 
         rows = _load(path)
+        meta = _load_meta(path)
         print(f"  Loaded {len(rows)} results from {path.name}")
 
-        md_path = write_markdown(rows, label, path, out_md, git_info)
+        md_path = write_markdown(rows, label, path, out_md, git_info, meta=meta)
         print(f"  Markdown : {md_path}")
 
         if args.pdf:

@@ -22,8 +22,6 @@ from typing import TYPE_CHECKING
 from memory_kg.memorykg import DocEdge, DocNode
 from memory_kg.semantic_extractor import AssertionExtractor, EventExtractor
 from memory_kg.semantic_primitives import (
-    SEMANTIC_EDGE_RELS,
-    SEMANTIC_NODE_KINDS,
     assertion_node_id,
     event_node_id,
 )
@@ -101,13 +99,16 @@ class SemanticMemoryBuilder:
                 for i, event_cand in enumerate(event_candidates):
                     event_id = event_node_id(chunk_id, event_cand.event_type, i)
 
-                    event_text = json.dumps({
-                        "event_type": event_cand.event_type,
-                        "summary": event_cand.summary,
-                        "time_start": event_cand.time_start,
-                        "time_end": event_cand.time_end,
-                        "time_uncertainty": event_cand.time_uncertainty,
-                    }, ensure_ascii=False)
+                    event_text = json.dumps(
+                        {
+                            "event_type": event_cand.event_type,
+                            "summary": event_cand.summary,
+                            "time_start": event_cand.time_start,
+                            "time_end": event_cand.time_end,
+                            "time_uncertainty": event_cand.time_uncertainty,
+                        },
+                        ensure_ascii=False,
+                    )
 
                     self.nodes_to_write[event_id] = DocNode(
                         id=event_id,
@@ -142,16 +143,19 @@ class SemanticMemoryBuilder:
                         chunk_id, assertion_cand.predicate, assertion_cand.subject_entity_id
                     )
 
-                    assertion_text = json.dumps({
-                        "subject": assertion_cand.subject_entity_id,
-                        "predicate": assertion_cand.predicate,
-                        "object": assertion_cand.object_str,
-                        "polarity": assertion_cand.polarity,
-                        "status": "active",
-                        "valid_at_start": None,
-                        "valid_at_end": None,
-                        "confidence": assertion_cand.confidence,
-                    }, ensure_ascii=False)
+                    assertion_text = json.dumps(
+                        {
+                            "subject": assertion_cand.subject_entity_id,
+                            "predicate": assertion_cand.predicate,
+                            "object": assertion_cand.object_str,
+                            "polarity": assertion_cand.polarity,
+                            "status": "active",
+                            "valid_at_start": None,
+                            "valid_at_end": None,
+                            "confidence": assertion_cand.confidence,
+                        },
+                        ensure_ascii=False,
+                    )
 
                     self.nodes_to_write[assertion_id] = DocNode(
                         id=assertion_id,
@@ -185,19 +189,19 @@ class SemanticMemoryBuilder:
                         stats.edges_added += 1
 
                     key = (assertion_cand.subject_entity_id, assertion_cand.predicate)
-                    self.assertions_by_key[key].append({
-                        "assertion_id": assertion_id,
-                        "char_start": chunk.get("char_start", 0),
-                        "object_str": assertion_cand.object_str,
-                    })
+                    self.assertions_by_key[key].append(
+                        {
+                            "assertion_id": assertion_id,
+                            "char_start": chunk.get("char_start", 0),
+                            "object_str": assertion_cand.object_str,
+                        }
+                    )
 
                     stats.assertions_added += 1
                     stats.edges_added += 2
 
         if detect_supersession and enable_assertions:
-            stats.supersession_edges, stats.assertions_superseded = (
-                self._detect_supersession()
-            )
+            stats.supersession_edges, stats.assertions_superseded = self._detect_supersession()
 
         if not quiet:
             logger.info(f"Semantic memory: upserting {len(self.nodes_to_write)} nodes...")
@@ -227,12 +231,12 @@ class SemanticMemoryBuilder:
                 older = sorted_assertions[i]
                 newer = sorted_assertions[i + 1]
 
-                self.edges_to_write[(newer["assertion_id"], "SUPERSEDES", older["assertion_id"])] = (
-                    DocEdge(
-                        src=newer["assertion_id"],
-                        rel="SUPERSEDES",
-                        dst=older["assertion_id"],
-                    )
+                self.edges_to_write[
+                    (newer["assertion_id"], "SUPERSEDES", older["assertion_id"])
+                ] = DocEdge(
+                    src=newer["assertion_id"],
+                    rel="SUPERSEDES",
+                    dst=older["assertion_id"],
                 )
                 supersession_edges += 1
 

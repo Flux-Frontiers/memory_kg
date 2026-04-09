@@ -20,6 +20,8 @@ Supports pickle-based feature caching with file-hash invalidation for
 Author: Eric G. Suchanek, PhD
 """
 
+# pylint: disable=import-outside-toplevel
+
 from __future__ import annotations
 
 import hashlib
@@ -203,8 +205,8 @@ class CorpusSampler:
     ) -> tuple[list[str], list[int]]:
         """K-means clustering then sample from each cluster."""
         try:
-            from sklearn.cluster import (
-                KMeans,  # pylint: disable=import-outside-toplevel
+            from sklearn.cluster import (  # pylint: disable=import-outside-toplevel
+                KMeans,
             )
             from sklearn.preprocessing import (  # pylint: disable=import-outside-toplevel
                 StandardScaler,

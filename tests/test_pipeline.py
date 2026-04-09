@@ -272,7 +272,7 @@ def test_pipeline_run_psv_contains_pipe_delimited_entries(tmp_path):
 
     content = result.output_path.read_text(encoding="utf-8")
     # Non-comment lines that contain pipe characters are data entries
-    data_lines = [l for l in content.splitlines() if "|" in l and not l.startswith("#")]
+    data_lines = [ln for ln in content.splitlines() if "|" in ln and not ln.startswith("#")]
     assert len(data_lines) > 0
 
 

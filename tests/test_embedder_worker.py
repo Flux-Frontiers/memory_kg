@@ -1,12 +1,8 @@
 """Tests for embedder_worker.py — PIPELINE_MODEL, EmbeddingCache, save/load roundtrip."""
 
 import json
-from pathlib import Path
-
-import pytest
 
 from memory_kg.embedder_worker import PIPELINE_MODEL, CorpusEmbedder, EmbeddingCache
-
 
 # ---------------------------------------------------------------------------
 # PIPELINE_MODEL constant

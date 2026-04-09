@@ -38,6 +38,7 @@ import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Literal, cast
 
 from memory_kg.relations import (
     cooccur_pairs,
@@ -302,7 +303,7 @@ def parse_corpus(
     edges: dict[tuple[str, str, str], DocEdge] = {}
 
     chunker = chunker_for(
-        chunk_strategy,
+        cast(Literal["semantic", "sentence_group", "fixed", "heading"], chunk_strategy),
         chunk_size=chunk_size,
         chunk_overlap=chunk_overlap,
         similarity_threshold=similarity_threshold,

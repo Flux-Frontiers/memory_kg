@@ -12,7 +12,7 @@ Architecture:
     run      →  500 queries against the pre-built KG
 
 Every unique haystack session across all 500 questions is written once as
-``<session_id>.md`` under ``benchmarks/data/longmemeval_corpus/``. The KG
+``<session_id>.md`` under ``benchmarks/longmemeval/data/longmemeval_corpus/``. The KG
 runs a single time, producing a persistent SQLite graph + LanceDB vector index
 plus full relational structure: document/section/chunk hierarchy, SIMILAR_TO
 edges (cosine ≥ 0.85), HAS_TOPIC, MENTIONS_ENTITY, HAS_KEYWORD.
@@ -30,28 +30,28 @@ Usage
 
 Step 0 — download the dataset (one time, ~50 MB):
 
-    python benchmarks/longmemeval_memkg.py prepare /tmp/longmemeval-data/longmemeval_s_cleaned.json --download
+    python benchmarks/longmemeval/longmemeval_memkg.py prepare /tmp/longmemeval-data/longmemeval_s_cleaned.json --download
 
 Step 1 — prepare corpus + build the KG (one time):
 
-    python benchmarks/longmemeval_memkg.py prepare /tmp/longmemeval-data/longmemeval_s_cleaned.json
+    python benchmarks/longmemeval/longmemeval_memkg.py prepare /tmp/longmemeval-data/longmemeval_s_cleaned.json
 
     # Rebuild from scratch (after corpus / code changes):
-    python benchmarks/longmemeval_memkg.py prepare <data.json> --wipe
+    python benchmarks/longmemeval/longmemeval_memkg.py prepare <data.json> --wipe
 
 Step 2 — run the benchmark (many times — KG is reused):
 
-    python benchmarks/longmemeval_memkg.py run <data.json>
-    python benchmarks/longmemeval_memkg.py run <data.json> --limit 20
-    python benchmarks/longmemeval_memkg.py run <data.json> --k 50 --hop 2 --max-nodes 500
-    python benchmarks/longmemeval_memkg.py run <data.json> --rels CONTAINS,NEXT,SIMILAR_TO,HAS_TOPIC,MENTIONS_ENTITY,HAS_KEYWORD,CO_OCCURS_WITH
+    python benchmarks/longmemeval/longmemeval_memkg.py run <data.json>
+    python benchmarks/longmemeval/longmemeval_memkg.py run <data.json> --limit 20
+    python benchmarks/longmemeval/longmemeval_memkg.py run <data.json> --k 50 --hop 2 --max-nodes 500
+    python benchmarks/longmemeval/longmemeval_memkg.py run <data.json> --rels CONTAINS,NEXT,SIMILAR_TO,HAS_TOPIC,MENTIONS_ENTITY,HAS_KEYWORD,CO_OCCURS_WITH
 
     # Seed from document nodes only (session-root seeding — reduces chunk noise):
-    python benchmarks/longmemeval_memkg.py run data.json --seed-kinds document
+    python benchmarks/longmemeval/longmemeval_memkg.py run data.json --seed-kinds document
 
 All-in-one convenience:
 
-    python benchmarks/longmemeval_memkg.py all <data.json> --limit 20
+    python benchmarks/longmemeval/longmemeval_memkg.py all <data.json> --limit 20
 
 Author: Eric G. Suchanek, PhD
 Last Revision: 2026-04-08 19:58:49
@@ -75,7 +75,7 @@ from pathlib import Path
 from typing import Any
 
 # Make `src/` importable when running from a source checkout
-REPO_ROOT = Path(__file__).resolve().parent.parent
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(REPO_ROOT / "src"))
 
 
@@ -83,10 +83,10 @@ sys.path.insert(0, str(REPO_ROOT / "src"))
 # PATHS
 # =============================================================================
 
-CORPUS_DIR = REPO_ROOT / "benchmarks" / "data" / "longmemeval_corpus"
-DOCKG_DB = REPO_ROOT / "benchmarks" / "data" / ".dockg" / "graph.sqlite"
-DOCKG_LANCEDB = REPO_ROOT / "benchmarks" / "data" / ".dockg" / "lancedb"
-DOCKG_EMB_CACHE = REPO_ROOT / "benchmarks" / "data" / ".dockg" / "embeddings.json"
+CORPUS_DIR = REPO_ROOT / "benchmarks" / "longmemeval" / "data" / "longmemeval_corpus"
+DOCKG_DB = REPO_ROOT / "benchmarks" / "longmemeval" / "data" / ".dockg" / "graph.sqlite"
+DOCKG_LANCEDB = REPO_ROOT / "benchmarks" / "longmemeval" / "data" / ".dockg" / "lancedb"
+DOCKG_EMB_CACHE = REPO_ROOT / "benchmarks" / "longmemeval" / "data" / ".dockg" / "embeddings.json"
 
 
 # =============================================================================
@@ -143,7 +143,9 @@ def _format_session_markdown(sess_id: str, date: str, turns: list[dict]) -> str:
 
 
 _PREF_PATTERNS: list[re.Pattern] = [
-    re.compile(r"i(?:'ve| have) been having (?:trouble|issues?|problems?) with (.+?)(?:\.|$)", re.I),
+    re.compile(
+        r"i(?:'ve| have) been having (?:trouble|issues?|problems?) with (.+?)(?:\.|$)", re.I
+    ),
     re.compile(r"i(?:'ve| have) been feeling (.+?)(?:\.|$)", re.I),
     re.compile(r"i(?:'ve| have) been (?:struggling|dealing) with (.+?)(?:\.|$)", re.I),
     re.compile(r"i(?:'m| am) (?:worried|concerned) about (.+?)(?:\.|$)", re.I),
@@ -612,9 +614,7 @@ def _ollama_rerank(
         if m:
             pick = int(m.group()) - 1
             if 0 <= pick < len(candidates):
-                reranked = [candidates[pick]] + [
-                    h for j, h in enumerate(candidates) if j != pick
-                ]
+                reranked = [candidates[pick]] + [h for j, h in enumerate(candidates) if j != pick]
                 return reranked + rest
     except (urllib.error.URLError, OSError, KeyError, ValueError):
         pass  # Ollama unavailable — fall back silently
@@ -658,8 +658,13 @@ def query_sessions(
     :return: Tuple of (session-level hits sorted by ascending rank, raw QueryResult).
     """
     result = kg.query(
-        question, k=k, hop=hop, rels=rels, max_nodes=max_nodes,
-        seed_kinds=seed_kinds, haystack_files=haystack_files,
+        question,
+        k=k,
+        hop=hop,
+        rels=rels,
+        max_nodes=max_nodes,
+        seed_kinds=seed_kinds,
+        haystack_files=haystack_files,
     )
 
     best_per_session: dict[str, SessionHit] = {}
@@ -770,10 +775,13 @@ def cmd_run(args: argparse.Namespace) -> None:
                 rels=rels,
                 max_nodes=args.max_nodes,
                 haystack=haystack,
-                seed_kinds=tuple(args.seed_kinds.split(",")) if getattr(args, "seed_kinds", None) else None,
+                seed_kinds=tuple(args.seed_kinds.split(","))
+                if getattr(args, "seed_kinds", None)
+                else None,
                 haystack_files=(
                     frozenset(f"{sid}.md" for sid in entry["haystack_session_ids"])
-                    if getattr(args, "haystack_filter", False) else None
+                    if getattr(args, "haystack_filter", False)
+                    else None
                 ),
             )
             t_q = time.time() - t_q0
@@ -910,7 +918,17 @@ def cmd_run(args: argparse.Namespace) -> None:
     if args.out:
         out_path = Path(args.out)
         out_path.parent.mkdir(parents=True, exist_ok=True)
+        meta = {
+            "_meta": True,
+            "elapsed_s": round(elapsed, 1),
+            "n_questions": len(data),
+            "s_per_question": round(elapsed / max(len(data), 1), 2),
+            "k": args.k,
+            "hop": args.hop,
+            "haystack_filter": getattr(args, "haystack_filter", False),
+        }
         with open(out_path, "w") as fh:
+            fh.write(json.dumps(meta) + "\n")
             for row in results_log:
                 fh.write(json.dumps(row) + "\n")
         print(f"  Results saved to: {out_path}")
@@ -921,14 +939,14 @@ def cmd_run(args: argparse.Namespace) -> None:
 
             _spec = _ilu.spec_from_file_location(
                 "render_results",
-                Path(__file__).parent / "render_results.py",
+                Path(__file__).parent.parent / "render_results.py",
             )
             _rr = _ilu.module_from_spec(_spec)  # type: ignore[arg-type]
             _spec.loader.exec_module(_rr)  # type: ignore[union-attr]
 
             _existing = sorted(p for p in out_path.parent.glob("results_*.jsonl") if p != out_path)
             _runs = [(p.stem, _rr._load(p)) for p in _existing]
-            _runs.append((out_path.stem, results_log))
+            _runs.append((out_path.stem, [meta] + results_log))
 
             if len(_runs) > 1:
                 _report = out_path.parent / "BENCHMARKS_COMPARISON.md"
@@ -936,7 +954,14 @@ def cmd_run(args: argparse.Namespace) -> None:
                 print(f"  Comparison report: {_report}")
             else:
                 _report = out_path.parent / "BENCHMARKS_MEMKG.md"
-                _rr.write_markdown(results_log, out_path.stem, out_path, _report, _rr._git_info())
+                _rr.write_markdown(
+                    [meta] + results_log,
+                    out_path.stem,
+                    out_path,
+                    _report,
+                    _rr._git_info(),
+                    meta=meta,
+                )
                 print(f"  Report: {_report}")
         except Exception as _e:
             print(f"  (auto-render skipped: {_e})")
@@ -960,8 +985,8 @@ def _add_run_args(p: argparse.ArgumentParser) -> None:
     p.add_argument(
         "--k",
         type=int,
-        default=150,
-        help="Semantic seed count (LanceDB top-K before graph expansion). Default: 150.",
+        default=50,
+        help="Semantic seed count (LanceDB top-K before graph expansion). Default: 50.",
     )
     p.add_argument(
         "--hop",
@@ -1003,7 +1028,14 @@ def _add_run_args(p: argparse.ArgumentParser) -> None:
     p.add_argument(
         "--haystack-filter",
         action="store_true",
-        help="Restrict LanceDB seeding to the per-question haystack files only (apples-to-apples with MemPalace).",
+        default=True,
+        help="Restrict LanceDB seeding to the per-question haystack files only (default: on).",
+    )
+    p.add_argument(
+        "--no-haystack-filter",
+        dest="haystack_filter",
+        action="store_false",
+        help="Search the full corpus instead of per-question haystack sessions.",
     )
     p.add_argument(
         "--ollama",

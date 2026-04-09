@@ -13,6 +13,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
+
 from memory_kg.snapshots import (
     Snapshot,
     SnapshotDelta,
@@ -323,9 +324,7 @@ def test_snapshot_manager_capture_with_hotspots_and_issues(snapshot_dir: Path) -
     assert snap.issues == issues
 
 
-def test_snapshot_manager_save_and_load(
-    snapshot_dir: Path, sample_snapshot: Snapshot
-) -> None:
+def test_snapshot_manager_save_and_load(snapshot_dir: Path, sample_snapshot: Snapshot) -> None:
     """Test saving and loading snapshots."""
     mgr = SnapshotManager(snapshot_dir)
 
@@ -339,9 +338,7 @@ def test_snapshot_manager_save_and_load(
     assert loaded.version == sample_snapshot.version
 
 
-def test_snapshot_manager_manifest_created(
-    snapshot_dir: Path, sample_snapshot: Snapshot
-) -> None:
+def test_snapshot_manager_manifest_created(snapshot_dir: Path, sample_snapshot: Snapshot) -> None:
     """manifest.json is created with key field (not commit)."""
     mgr = SnapshotManager(snapshot_dir)
     mgr.save_snapshot(sample_snapshot)
@@ -486,9 +483,7 @@ def test_list_snapshots_limit_zero_returns_all(snapshot_dir: Path) -> None:
     mgr = SnapshotManager(snapshot_dir)
     for i in range(3):
         mgr.save_snapshot(
-            _make_memorykg_snapshot(
-                f"hash{i}", f"2026-03-0{i + 1}T12:00:00+00:00", nodes=10 + i
-            )
+            _make_memorykg_snapshot(f"hash{i}", f"2026-03-0{i + 1}T12:00:00+00:00", nodes=10 + i)
         )
     assert len(mgr.list_snapshots(limit=0)) == 3
 
@@ -760,9 +755,7 @@ def test_capture_none_graph_stats_defaults_to_empty(snapshot_dir: Path) -> None:
             "memory_kg.snapshots.SnapshotManager._get_current_branch",
             return_value="main",
         ):
-            snap = mgr.capture(
-                version="0.3.0", graph_stats_dict=None, coverage_score=0.9
-            )
+            snap = mgr.capture(version="0.3.0", graph_stats_dict=None, coverage_score=0.9)
     assert snap.metrics.total_nodes == 0
     assert snap.tree_hash == "treehashX"
 
@@ -791,9 +784,7 @@ def test_capture_vs_previous_none_for_new_key(snapshot_dir: Path) -> None:
     capture the new key is not saved yet, so vs_previous is always None.
     """
     mgr = SnapshotManager(snapshot_dir)
-    mgr.save_snapshot(
-        _make_memorykg_snapshot("prev_hash", "2026-01-01T00:00:00+00:00", nodes=40)
-    )
+    mgr.save_snapshot(_make_memorykg_snapshot("prev_hash", "2026-01-01T00:00:00+00:00", nodes=40))
 
     snap = mgr.capture(
         version="0.3.1",
@@ -814,12 +805,8 @@ def test_capture_vs_previous_none_for_new_key(snapshot_dir: Path) -> None:
 def test_capture_vs_baseline_points_to_oldest(snapshot_dir: Path) -> None:
     """vs_baseline always reflects the oldest saved snapshot, not the nearest prior."""
     mgr = SnapshotManager(snapshot_dir)
-    mgr.save_snapshot(
-        _make_memorykg_snapshot("base_hash", "2026-01-01T00:00:00+00:00", nodes=10)
-    )
-    mgr.save_snapshot(
-        _make_memorykg_snapshot("mid_hash", "2026-02-01T00:00:00+00:00", nodes=30)
-    )
+    mgr.save_snapshot(_make_memorykg_snapshot("base_hash", "2026-01-01T00:00:00+00:00", nodes=10))
+    mgr.save_snapshot(_make_memorykg_snapshot("mid_hash", "2026-02-01T00:00:00+00:00", nodes=30))
 
     snap = mgr.capture(
         version="0.3.2",
@@ -841,9 +828,7 @@ def test_capture_computes_vs_previous_when_prior_snapshot_exists(
 ) -> None:
     """capture sets vs_previous delta when a snapshot with matching key exists."""
     mgr = SnapshotManager(snapshot_dir)
-    existing = _make_memorykg_snapshot(
-        "prevhash", "2026-03-07T10:00:00+00:00", nodes=100
-    )
+    existing = _make_memorykg_snapshot("prevhash", "2026-03-07T10:00:00+00:00", nodes=100)
     mgr.save_snapshot(existing)
 
     with patch(
@@ -899,9 +884,7 @@ def test_load_snapshot_backfills_missing_vs_previous(snapshot_dir: Path) -> None
 
 def test_snapshot_manifest_creation() -> None:
     """Test SnapshotManifest creation."""
-    manifest = SnapshotManifest(
-        format_version="1.0", last_update="2026-03-12T12:00:00+00:00"
-    )
+    manifest = SnapshotManifest(format_version="1.0", last_update="2026-03-12T12:00:00+00:00")
     assert manifest.format_version == "1.0"
     assert len(manifest.snapshots) == 0
 
@@ -940,9 +923,7 @@ def test_snapshot_manifest_from_dict_missing_keys() -> None:
     assert restored.snapshots == []
 
 
-def test_manifest_last_update_set_after_save(
-    snapshot_dir: Path, sample_snapshot: Snapshot
-) -> None:
+def test_manifest_last_update_set_after_save(snapshot_dir: Path, sample_snapshot: Snapshot) -> None:
     """last_update is set after saving a snapshot."""
     mgr = SnapshotManager(snapshot_dir)
     mgr.save_snapshot(sample_snapshot)
@@ -950,9 +931,7 @@ def test_manifest_last_update_set_after_save(
     assert manifest.last_update != ""
 
 
-def test_manifest_entry_has_file_key(
-    snapshot_dir: Path, sample_snapshot: Snapshot
-) -> None:
+def test_manifest_entry_has_file_key(snapshot_dir: Path, sample_snapshot: Snapshot) -> None:
     """Manifest entry includes the snapshot filename."""
     mgr = SnapshotManager(snapshot_dir)
     mgr.save_snapshot(sample_snapshot)
@@ -962,9 +941,7 @@ def test_manifest_entry_has_file_key(
     assert entry["file"] == f"{sample_snapshot.key}.json"
 
 
-def test_manifest_entry_has_deltas_key(
-    snapshot_dir: Path, sample_snapshot: Snapshot
-) -> None:
+def test_manifest_entry_has_deltas_key(snapshot_dir: Path, sample_snapshot: Snapshot) -> None:
     """Manifest entry includes deltas sub-dict."""
     mgr = SnapshotManager(snapshot_dir)
     mgr.save_snapshot(sample_snapshot)
@@ -1004,9 +981,7 @@ def test_get_current_tree_hash_git_failure_returns_empty(snapshot_dir: Path) -> 
 def test_get_current_branch_git_failure_returns_unknown(snapshot_dir: Path) -> None:
     """_get_current_branch returns 'unknown' when git is unavailable."""
     mgr = SnapshotManager(snapshot_dir)
-    with patch(
-        "subprocess.check_output", side_effect=subprocess.CalledProcessError(1, "git")
-    ):
+    with patch("subprocess.check_output", side_effect=subprocess.CalledProcessError(1, "git")):
         result = mgr._get_current_branch()
     assert result == "unknown"
 
@@ -1030,9 +1005,7 @@ def test_get_current_branch_returns_nonempty_string() -> None:
 # ---------------------------------------------------------------------------
 
 
-def _make_metrics(
-    nodes: int = 10, coverage: float = 0.5, issues: int = 0
-) -> SnapshotMetrics:
+def _make_metrics(nodes: int = 10, coverage: float = 0.5, issues: int = 0) -> SnapshotMetrics:
     return SnapshotMetrics(
         total_nodes=nodes,
         total_edges=nodes * 2,
@@ -1045,9 +1018,7 @@ def _make_metrics(
     )
 
 
-def _make_memorykg_snapshot(
-    tree_hash: str, timestamp: str, nodes: int = 10
-) -> Snapshot:
+def _make_memorykg_snapshot(tree_hash: str, timestamp: str, nodes: int = 10) -> Snapshot:
     return Snapshot(
         branch="main",
         timestamp=timestamp,

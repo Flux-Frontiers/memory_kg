@@ -555,14 +555,16 @@ class HeadingChunker:
 
             if len(section_text) <= self.max_section_chars:
                 refs = _extract_links(section_text)
-                chunks.append({
-                    "text": section_text,
-                    "section_title": section["title"],
-                    "section_level": section["level"],
-                    "char_start": section["char_start"],
-                    "char_end": section["char_start"] + len(section_text),
-                    "references": refs,
-                })
+                chunks.append(
+                    {
+                        "text": section_text,
+                        "section_title": section["title"],
+                        "section_level": section["level"],
+                        "char_start": section["char_start"],
+                        "char_end": section["char_start"] + len(section_text),
+                        "references": refs,
+                    }
+                )
             else:
                 # Overflow: sentence-group fallback within the section
                 sentences = _split_sentences(section_text)
@@ -578,14 +580,16 @@ class HeadingChunker:
                 )
                 for sc in sub_chunks:
                     refs = _extract_links(sc["text"])
-                    chunks.append({
-                        "text": sc["text"],
-                        "section_title": section["title"],
-                        "section_level": section["level"],
-                        "char_start": sc["char_start"],
-                        "char_end": sc["char_end"],
-                        "references": refs,
-                    })
+                    chunks.append(
+                        {
+                            "text": sc["text"],
+                            "section_title": section["title"],
+                            "section_level": section["level"],
+                            "char_start": sc["char_start"],
+                            "char_end": sc["char_end"],
+                            "references": refs,
+                        }
+                    )
 
         return chunks
 
@@ -598,7 +602,7 @@ class HeadingChunker:
 def chunker_for(
     strategy: Literal["semantic", "sentence_group", "fixed", "heading"] = "semantic",
     **kwargs,
-) -> "TextChunker | SentenceGroupChunker | HeadingChunker":
+) -> TextChunker | SentenceGroupChunker | HeadingChunker:
     """Factory: create the appropriate chunker for *strategy*.
 
     :param strategy: ``"semantic"`` (embedding-based), ``"sentence_group"``
