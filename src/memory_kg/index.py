@@ -153,18 +153,24 @@ class SentenceTransformerEmbedder(Embedder):
         local_path = _local_model_path(model_name)
         _prev_tqdm = os.environ.get("TQDM_DISABLE")
         os.environ["TQDM_DISABLE"] = "1"
+        device = os.environ.get("DOCKG_DEVICE", "mps")
         try:
             if local_path.exists():
-                self.model = SentenceTransformer(str(local_path), trust_remote_code=trust_remote)
+                self.model = SentenceTransformer(
+                    str(local_path), trust_remote_code=trust_remote, device=device
+                )
             else:
                 try:
                     self.model = SentenceTransformer(
                         model_name,
                         local_files_only=True,
                         trust_remote_code=trust_remote,
+                        device=device,
                     )
                 except OSError:
-                    self.model = SentenceTransformer(model_name, trust_remote_code=trust_remote)
+                    self.model = SentenceTransformer(
+                        model_name, trust_remote_code=trust_remote, device=device
+                    )
         finally:
             if _prev_tqdm is None:
                 os.environ.pop("TQDM_DISABLE", None)
@@ -275,7 +281,7 @@ class SemanticIndex:
         store: GraphStore,
         *,
         wipe: bool = False,
-        batch_size: int = 256,
+        batch_size: int = 1024,
         quiet: bool = True,
         discover_similar: bool = True,
         similar_k: int = 5,

@@ -439,7 +439,7 @@ class MemoryKG:
     # ------------------------------------------------------------------
 
     def build(
-        self, *, wipe: bool = False, batch_size: int = 256, discover_similar: bool = True
+        self, *, wipe: bool = False, batch_size: int = 1024, discover_similar: bool = True
     ) -> BuildStats:
         """Full pipeline: corpus parsing → SQLite → LanceDB + SIMILAR_TO edges.
 
@@ -486,7 +486,7 @@ class MemoryKG:
         )
 
     def build_index(
-        self, *, wipe: bool = False, batch_size: int = 256, discover_similar: bool = True
+        self, *, wipe: bool = False, batch_size: int = 1024, discover_similar: bool = True
     ) -> BuildStats:
         """SQLite → LanceDB only (graph must already exist).
 
@@ -556,9 +556,9 @@ class MemoryKG:
             kind_pri = _KIND_PRIORITY.get(n["kind"], 99)
             semantic_boost = _semantic_rank_boost(nid, all_edges)
             n["_rank_key"] = (
+                base_dist,
                 prov.best_hop,
                 -semantic_boost,
-                base_dist,
                 kind_pri,
                 n["id"],
             )
@@ -634,9 +634,9 @@ class MemoryKG:
             kind_pri = _KIND_PRIORITY.get(n["kind"], 99)
             semantic_boost = _semantic_rank_boost(nid, all_edges)
             n["_rank_key"] = (
+                base_dist,
                 prov.best_hop,
                 -semantic_boost,
-                base_dist,
                 kind_pri,
                 n["id"],
             )

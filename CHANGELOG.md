@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `benchmarks/BENCHMARKS_COMPARISON.md`: Multi-run LongMemEval comparison across baseline, `k150+fixes`, and `k150+kw+temporal` runs — shows +10pp Recall@1 and +6pp Recall@10 improvement from the ranking fix
+
+### Changed
+- `index.py`: `SentenceTransformerEmbedder` now reads `DOCKG_DEVICE` env var (default `"mps"`) and passes it to every `SentenceTransformer(...)` constructor call — enables explicit CPU/GPU/MPS device selection without code changes
+- `index.py`, `kg.py`: Default `batch_size` raised from 256 → 1024 in `SemanticIndex`, `MemoryKG.build()`, and `MemoryKG.build_index()` for faster embedding throughput on Apple Silicon
+- `benchmarks/BENCHMARKS_MEMKG.md`: Updated to reflect `k150_fixes` run results (Recall@1 70.8% → 80.8%, Recall@10 81.8% → 87.8%, misses@10 91 → 61)
+
+### Fixed
+- `kg.py`: Ranking sort key corrected — `base_dist` (vector distance) is now the primary sort key ahead of `prov.best_hop`; previously `best_hop` dominated, causing higher-hop but semantically closer nodes to outrank better semantic matches
+
 ### Renamed
 - **Package restructuring:** `src/doc_kg/` → `src/memory_kg/` — major branding update from "DocKG" to "MemoryKG" across all skills, documentation, CLI, and internal references. All 113 files updated for the new naming convention.
 

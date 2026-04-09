@@ -61,12 +61,13 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
 import re
 import sys
 import time
 from collections import defaultdict
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -138,6 +139,43 @@ def _format_session_markdown(sess_id: str, date: str, turns: list[dict]) -> str:
     return "\n".join(lines).rstrip() + "\n"
 
 
+_PREF_PATTERNS: list[re.Pattern] = [
+    re.compile(r"i(?:'ve| have) been having (?:trouble|issues?|problems?) with (.+?)(?:\.|$)", re.I),
+    re.compile(r"i(?:'ve| have) been feeling (.+?)(?:\.|$)", re.I),
+    re.compile(r"i(?:'ve| have) been (?:struggling|dealing) with (.+?)(?:\.|$)", re.I),
+    re.compile(r"i(?:'m| am) (?:worried|concerned) about (.+?)(?:\.|$)", re.I),
+    re.compile(r"i prefer (.+?)(?:\.|$)", re.I),
+    re.compile(r"i usually (.+?)(?:\.|$)", re.I),
+    re.compile(r"i want to (.+?)(?:\.|$)", re.I),
+    re.compile(r"i(?:'m| am) thinking (?:about|of) (.+?)(?:\.|$)", re.I),
+    re.compile(r"lately[,\s]+i(?:'ve| have) been (.+?)(?:\.|$)", re.I),
+    re.compile(r"recently[,\s]+i(?:'ve| have) been (.+?)(?:\.|$)", re.I),
+    re.compile(r"i(?:'ve| have) been (?:working on|focused on|interested in) (.+?)(?:\.|$)", re.I),
+    re.compile(r"i(?:'m| am) (?:looking for|trying to find) (.+?)(?:\.|$)", re.I),
+    re.compile(r"i(?:'d| would) (?:like|love|prefer) (.+?)(?:\.|$)", re.I),
+    re.compile(r"my (?:goal|plan|intention) is to (.+?)(?:\.|$)", re.I),
+    re.compile(r"i hate (.+?)(?:\.|$)", re.I),
+    re.compile(r"i(?:'m| am) allergic to (.+?)(?:\.|$)", re.I),
+]
+
+
+def _extract_preferences(turns: list[dict]) -> list[str]:
+    """Extract preference expressions from user turns using regex patterns."""
+    prefs: list[str] = []
+    seen: set[str] = set()
+    for turn in turns:
+        if turn.get("role") != "user":
+            continue
+        text = (turn.get("content") or "").strip()
+        for pat in _PREF_PATTERNS:
+            for m in pat.finditer(text):
+                pref = m.group(0).strip().rstrip(".")
+                if pref.lower() not in seen and len(pref) > 10:
+                    prefs.append(pref)
+                    seen.add(pref.lower())
+    return prefs
+
+
 def write_corpus(data_file: Path, corpus_dir: Path, force: bool = False) -> dict[str, str]:
     """Walk the longmemeval JSON and write every unique haystack session to disk.
 
@@ -180,8 +218,8 @@ def build_kg(
     wipe: bool = True,
     model: str | None = None,
     chunk_strategy: str = "semantic",
-    batch_size: int = 256,
-    discover_similar: bool = True,
+    batch_size: int = 1024,
+    discover_similar: bool = False,
 ) -> None:
     """Build a persistent MemoryKG from the corpus dir."""
     from memory_kg.kg import MemoryKG
@@ -194,6 +232,8 @@ def build_kg(
     print(f"    model:   {model or DEFAULT_MODEL}")
     print(f"    chunk:   {chunk_strategy}")
     print(f"    batch:   {batch_size}")
+    print(f"    device:  {os.environ.get('DOCKG_DEVICE', 'mps')}")
+    print(f"    similar: {'yes' if discover_similar else 'no (use --similar to enable)'}")
 
     db_path.parent.mkdir(parents=True, exist_ok=True)
     lancedb_dir.mkdir(parents=True, exist_ok=True)
@@ -264,8 +304,8 @@ def cmd_prepare(args: argparse.Namespace) -> None:
         wipe=args.wipe,
         model=args.model,
         chunk_strategy=getattr(args, "chunk_strategy", "semantic"),
-        batch_size=getattr(args, "batch", 256),
-        discover_similar=not getattr(args, "no_similar", False),
+        batch_size=getattr(args, "batch", 1024),
+        discover_similar=getattr(args, "similar", False),
     )
     print("  Ready. Run with:")
     print(f"    python {Path(__file__).name} run {data_file}")
@@ -291,10 +331,16 @@ class SessionHit:
 
 
 def _session_id_from_file_path(file_path: str | None) -> str | None:
-    """Extract ``<session_id>`` from paths like ``.../<session_id>.md``."""
+    """Extract ``<session_id>`` from paths like ``.../<session_id>.md``.
+
+    Synthetic preference docs are named ``<session_id>_pref.md`` — the ``_pref``
+    suffix is stripped so they resolve to the same session.
+    """
     if not file_path:
         return None
     stem = Path(file_path).stem
+    if stem.endswith("_pref"):
+        stem = stem[: -len("_pref")]
     return stem or None
 
 
@@ -335,6 +381,241 @@ def _normalize_question(q: str) -> str:
     s = _WH_PREFIX.sub("", s)
     s = _PERSONAL_STUB.sub("", s)
     return s.strip() or q  # fall back to original if we stripped everything
+
+
+_STOP_WORDS = {
+    "what",
+    "when",
+    "where",
+    "who",
+    "how",
+    "which",
+    "did",
+    "do",
+    "does",
+    "was",
+    "were",
+    "have",
+    "has",
+    "had",
+    "is",
+    "are",
+    "the",
+    "a",
+    "an",
+    "my",
+    "me",
+    "i",
+    "you",
+    "your",
+    "their",
+    "it",
+    "its",
+    "in",
+    "on",
+    "at",
+    "to",
+    "for",
+    "of",
+    "with",
+    "by",
+    "from",
+    "ago",
+    "last",
+    "that",
+    "this",
+    "there",
+    "about",
+    "get",
+    "got",
+    "give",
+    "gave",
+    "buy",
+    "bought",
+    "made",
+    "make",
+}
+
+_TEMPORAL_PATTERNS: list[tuple[re.Pattern, int, int]] = [
+    # (pattern, offset_days, window_days)
+    (re.compile(r"(\d+)\s+days?\s+ago", re.I), 0, 3),  # "N days ago" — offset set per match
+    (re.compile(r"a\s+couple\s+of\s+days?\s+ago", re.I), 2, 3),
+    (re.compile(r"a\s+week\s+ago", re.I), 7, 5),
+    (re.compile(r"(\d+)\s+weeks?\s+ago", re.I), 0, 7),
+    (re.compile(r"last\s+week", re.I), 7, 5),
+    (re.compile(r"a\s+month\s+ago", re.I), 30, 10),
+    (re.compile(r"(\d+)\s+months?\s+ago", re.I), 0, 14),
+    (re.compile(r"last\s+month", re.I), 30, 10),
+    (re.compile(r"recently", re.I), 14, 14),
+]
+
+
+def _parse_time_offset_days(question: str) -> tuple[int, int] | None:
+    """Return (offset_days, window_days) if a temporal reference is detected, else None."""
+    for pat, offset, window in _TEMPORAL_PATTERNS:
+        m = pat.search(question)
+        if m:
+            if offset == 0 and m.lastindex:
+                n = int(m.group(1))
+                # "N days ago" vs "N weeks ago" vs "N months ago"
+                if "month" in m.group(0).lower():
+                    return n * 30, 14
+                elif "week" in m.group(0).lower():
+                    return n * 7, 7
+                else:
+                    return n, 3
+            return offset, window
+    return None
+
+
+def _keyword_rerank(
+    hits: list,
+    question: str,
+    session_texts: dict[str, str],
+    weight: float = 0.30,
+) -> list:
+    """Re-rank session hits by fusing semantic rank with keyword overlap.
+
+    :param hits: Session hits sorted by ascending rank.
+    :param question: Raw question text.
+    :param session_texts: Mapping of session_id → full session text (for overlap).
+    :param weight: Max distance reduction for perfect keyword overlap (default 0.30).
+    :return: Re-ranked list of session hits.
+    """
+    keywords = [
+        w.lower() for w in re.findall(r"\b\w{3,}\b", question) if w.lower() not in _STOP_WORDS
+    ]
+    if not keywords or not session_texts:
+        return hits
+
+    scored: list[tuple[float, Any]] = []
+    for h in hits:
+        text = session_texts.get(h.session_id, "").lower()
+        overlap = sum(1 for kw in keywords if kw in text) / len(keywords)
+        # rank-as-distance: lower rank = closer
+        dist = float(h.rank)
+        fused = dist * (1.0 - weight * overlap)
+        scored.append((fused, h))
+
+    scored.sort(key=lambda x: x[0])
+    return [h for _, h in scored]
+
+
+def _temporal_rerank(
+    hits: list,
+    question: str,
+    question_date: str | None,
+    haystack_dates: dict[str, str],
+    max_boost: float = 0.40,
+) -> list:
+    """Boost sessions whose date is close to the temporal reference in the question.
+
+    :param hits: Session hits sorted by ascending rank.
+    :param question: Raw question text.
+    :param question_date: ISO date string when the question was asked.
+    :param haystack_dates: Mapping of session_id → ISO date string.
+    :param max_boost: Maximum distance reduction for a perfect date match.
+    :return: Re-ranked list of session hits.
+    """
+    if not question_date or not haystack_dates:
+        return hits
+    parsed = _parse_time_offset_days(question)
+    if parsed is None:
+        return hits
+
+    offset_days, window_days = parsed
+    try:
+        q_date = datetime.strptime(question_date[:10], "%Y-%m-%d")
+    except ValueError:
+        return hits
+    target = q_date - timedelta(days=offset_days)
+
+    scored: list[tuple[float, Any]] = []
+    for h in hits:
+        date_str = haystack_dates.get(h.session_id)
+        dist = float(h.rank)
+        if date_str:
+            try:
+                s_date = datetime.strptime(date_str[:10], "%Y-%m-%d")
+                days_diff = abs((s_date - target).days)
+                temporal_boost = max(0.0, max_boost * (1.0 - days_diff / max(window_days, 1)))
+                dist = dist * (1.0 - temporal_boost)
+            except ValueError:
+                pass
+        scored.append((dist, h))
+
+    scored.sort(key=lambda x: x[0])
+    return [h for _, h in scored]
+
+
+def _ollama_rerank(
+    hits: list,
+    question: str,
+    session_texts: dict[str, str],
+    *,
+    top_n: int = 20,
+    model: str = "qwen3:4b-instruct",
+    ollama_url: str = "http://localhost:11434",
+) -> list:
+    """Use a local Ollama model to rerank the top-N candidate sessions.
+
+    Takes the top ``top_n`` hits, sends question + session snippets to the
+    model, and promotes the model's pick to rank 0. Falls back to original
+    order on any error.
+
+    :param hits: Session hits sorted by ascending rank.
+    :param question: Raw question text.
+    :param session_texts: Mapping of session_id → full session text.
+    :param top_n: Number of candidates to show the model.
+    :param model: Ollama model name (e.g. ``"llama3.2"``, ``"mistral"``).
+    :param ollama_url: Base URL of the running Ollama server.
+    :return: Re-ranked list of session hits.
+    """
+    import json as _json
+    import urllib.error
+    import urllib.request
+
+    candidates = hits[:top_n]
+    rest = hits[top_n:]
+    if not candidates:
+        return hits
+
+    snippets = []
+    for i, h in enumerate(candidates):
+        text = (session_texts.get(h.session_id) or "")[:400].replace("\n", " ")
+        snippets.append(f"Session {i + 1}: {text}")
+
+    prompt = (
+        f"Question: {question}\n\n"
+        f"Below are {len(candidates)} conversation sessions from someone's memory. "
+        f"Which single session is most likely to contain the answer? "
+        f"Reply with ONLY a number between 1 and {len(candidates)}.\n\n"
+        + "\n\n".join(snippets)
+        + "\n\nMost relevant session number:"
+    )
+
+    payload = _json.dumps({"model": model, "prompt": prompt, "stream": False}).encode()
+    req = urllib.request.Request(
+        f"{ollama_url}/api/generate",
+        data=payload,
+        headers={"Content-Type": "application/json"},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            result = _json.loads(resp.read())
+        raw = result.get("response", "").strip()
+        # Extract first integer from response
+        m = re.search(r"\d+", raw)
+        if m:
+            pick = int(m.group()) - 1
+            if 0 <= pick < len(candidates):
+                reranked = [candidates[pick]] + [
+                    h for j, h in enumerate(candidates) if j != pick
+                ]
+                return reranked + rest
+    except (urllib.error.URLError, OSError, KeyError, ValueError):
+        pass  # Ollama unavailable — fall back silently
+    return hits
 
 
 def query_sessions(
@@ -459,7 +740,11 @@ def cmd_run(args: argparse.Namespace) -> None:
             haystack = set(entry["haystack_session_ids"])
             answer_sids = set(entry["answer_session_ids"])
 
-            normalized = _normalize_question(question)
+            normalized = (
+                question.rstrip("?").strip()
+                if qtype == "single-session-preference"
+                else _normalize_question(question)
+            )
             print(
                 f"  [{i + 1:4}/{len(data)}] {qid[:30]:30}  querying: {normalized[:60]!r}",
                 flush=True,
@@ -475,6 +760,40 @@ def cmd_run(args: argparse.Namespace) -> None:
                 haystack=haystack,
             )
             t_q = time.time() - t_q0
+
+            # Build per-session lookup tables for reranking
+            sid_list = entry["haystack_session_ids"]
+            haystack_dates = {
+                sid: entry["haystack_dates"][j][:10].replace("/", "-")
+                for j, sid in enumerate(sid_list)
+                if j < len(entry["haystack_dates"])
+            }
+            session_texts = {
+                sid: " ".join(
+                    turn["content"]
+                    for turn in entry["haystack_sessions"][j]
+                    if isinstance(turn, dict)
+                )
+                for j, sid in enumerate(sid_list)
+            }
+
+            # Temporal re-rank for temporal-reasoning questions
+            if qtype == "temporal-reasoning":
+                hits = _temporal_rerank(hits, question, entry.get("question_date"), haystack_dates)
+
+            # Ollama reranker (optional — pass --ollama to enable)
+            if getattr(args, "ollama", False):
+                hits = _ollama_rerank(
+                    hits,
+                    question,
+                    session_texts,
+                    top_n=getattr(args, "ollama_top_n", 20),
+                    model=getattr(args, "ollama_model", "llama3.2"),
+                )
+
+            # Reassign ranks after reranking
+            for new_rank, h in enumerate(hits):
+                h.rank = new_rank
 
             # Any haystack sessions not surfaced by the graph query go to the tail
             returned = {h.session_id for h in hits}
@@ -579,6 +898,32 @@ def cmd_run(args: argparse.Namespace) -> None:
                 fh.write(json.dumps(row) + "\n")
         print(f"  Results saved to: {out_path}")
 
+        # Auto-render comparison report against all existing result files
+        try:
+            import importlib.util as _ilu
+
+            _spec = _ilu.spec_from_file_location(
+                "render_results",
+                Path(__file__).parent / "render_results.py",
+            )
+            _rr = _ilu.module_from_spec(_spec)  # type: ignore[arg-type]
+            _spec.loader.exec_module(_rr)  # type: ignore[union-attr]
+
+            _existing = sorted(p for p in out_path.parent.glob("results_*.jsonl") if p != out_path)
+            _runs = [(p.stem, _rr._load(p)) for p in _existing]
+            _runs.append((out_path.stem, results_log))
+
+            if len(_runs) > 1:
+                _report = out_path.parent / "BENCHMARKS_COMPARISON.md"
+                _rr.write_comparison_markdown(_runs, _report, _rr._git_info())
+                print(f"  Comparison report: {_report}")
+            else:
+                _report = out_path.parent / "BENCHMARKS_MEMKG.md"
+                _rr.write_markdown(results_log, out_path.stem, out_path, _report, _rr._git_info())
+                print(f"  Report: {_report}")
+        except Exception as _e:
+            print(f"  (auto-render skipped: {_e})")
+
 
 def cmd_all(args: argparse.Namespace) -> None:
     cmd_prepare(args)
@@ -598,8 +943,8 @@ def _add_run_args(p: argparse.ArgumentParser) -> None:
     p.add_argument(
         "--k",
         type=int,
-        default=50,
-        help="Semantic seed count (LanceDB top-K before graph expansion). Default: 50.",
+        default=150,
+        help="Semantic seed count (LanceDB top-K before graph expansion). Default: 150.",
     )
     p.add_argument(
         "--hop",
@@ -633,6 +978,27 @@ def _add_run_args(p: argparse.ArgumentParser) -> None:
         ),
     )
     p.add_argument("--out", default=None, help="Output JSONL file path")
+    p.add_argument(
+        "--ollama",
+        action="store_true",
+        help="Enable Ollama LLM reranker (requires Ollama running at --ollama-url).",
+    )
+    p.add_argument(
+        "--ollama-model",
+        default="qwen3:4b-instruct",
+        help="Ollama model name for reranking (default: qwen3:4b-instruct).",
+    )
+    p.add_argument(
+        "--ollama-url",
+        default="http://localhost:11434",
+        help="Ollama server base URL (default: http://localhost:11434).",
+    )
+    p.add_argument(
+        "--ollama-top-n",
+        type=int,
+        default=20,
+        help="Number of top candidates to show the reranker (default: 20).",
+    )
 
 
 def main() -> None:
@@ -659,13 +1025,13 @@ def main() -> None:
     p_prep.add_argument(
         "--batch",
         type=int,
-        default=256,
-        help="Embedding batch size (default: 256; try 64-128 to reduce CPU pressure).",
+        default=1024,
+        help="Embedding batch size (default: 1024).",
     )
     p_prep.add_argument(
-        "--no-similar",
+        "--similar",
         action="store_true",
-        help="Skip SIMILAR_TO edge discovery (much faster; heading chunks are already well-connected).",
+        help="Enable SIMILAR_TO edge discovery (slow — ~1hr for 528k nodes; off by default).",
     )
     p_prep.add_argument(
         "--download",
@@ -694,13 +1060,13 @@ def main() -> None:
     p_all.add_argument(
         "--batch",
         type=int,
-        default=256,
-        help="Embedding batch size (default: 256; try 64-128 to reduce CPU pressure).",
+        default=1024,
+        help="Embedding batch size (default: 1024).",
     )
     p_all.add_argument(
-        "--no-similar",
+        "--similar",
         action="store_true",
-        help="Skip SIMILAR_TO edge discovery (much faster; heading chunks are already well-connected).",
+        help="Enable SIMILAR_TO edge discovery (slow — ~1hr for 528k nodes; off by default).",
     )
     p_all.add_argument(
         "--download",

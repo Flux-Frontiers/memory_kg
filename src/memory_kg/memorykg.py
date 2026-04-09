@@ -55,7 +55,7 @@ from memory_kg.topics import TopicExtractor
 #: Default sentence-transformer model for general text (not code).
 #: Mirrors personal_agent's sentence-transformer default.
 #: Override via the ``DOCKG_MODEL`` environment variable.
-DEFAULT_MODEL: str = os.environ.get("DOCKG_MODEL", "all-MiniLM-L6-v2")
+DEFAULT_MODEL: str = os.environ.get("DOCKG_MODEL", "BAAI/bge-small-en-v1.5")
 
 # ============================================================================
 # Graph primitives (LOCKED v0 CONTRACT)
