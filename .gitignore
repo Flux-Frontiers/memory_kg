@@ -224,6 +224,8 @@ __marimo__/
 .pycodekg/*.sqlite-shm
 .pycodekg/*.sqlite-wal
 .pycodekg/models
+# Also ignore .pycodekg/ nested under subdirectories
+**/.pycodekg/
 # DocKG generated artifacts
 .dockg/lancedb/
 .dockg/lancedb-*
@@ -231,6 +233,8 @@ __marimo__/
 .dockg/*.sqlite-shm
 .dockg/*.sqlite-wal
 .dockg/models
+# Also ignore .dockg/ nested under subdirectories
+#**/.dockg
 
 # MemoryKG generated artifacts — same pattern as CodeKG; snapshots will be tracked once added
 .memorykg/lancedb*
