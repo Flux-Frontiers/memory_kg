@@ -1,5 +1,7 @@
 """MemoryKG — hybrid semantic + structural knowledge graph for document corpora."""
 
+__version__ = "0.3.1"
+
 from memory_kg.kg import MemoryKG
 from memory_kg.semantic_builder import SemanticBuildStats, SemanticMemoryBuilder
 from memory_kg.semantic_extractor import (
@@ -19,17 +21,17 @@ from memory_kg.semantic_primitives import (
 )
 
 __all__ = [
-    "MemoryKG",
-    "SemanticMemoryBuilder",
-    "SemanticBuildStats",
-    "EventExtractor",
-    "EventCandidate",
-    "AssertionExtractor",
-    "AssertionCandidate",
-    "SEMANTIC_NODE_KINDS",
-    "SEMANTIC_EDGE_RELS",
     "ASSERTION_SCHEMA",
     "EVENT_SCHEMA",
+    "SEMANTIC_EDGE_RELS",
+    "SEMANTIC_NODE_KINDS",
+    "AssertionCandidate",
+    "AssertionExtractor",
+    "EventCandidate",
+    "EventExtractor",
+    "MemoryKG",
+    "SemanticBuildStats",
+    "SemanticMemoryBuilder",
     "assertion_node_id",
     "event_node_id",
     "slugify",

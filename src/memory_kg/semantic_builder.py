@@ -221,7 +221,7 @@ class SemanticMemoryBuilder:
         supersession_edges = 0
         superseded_count = 0
 
-        for key, assertions in self.assertions_by_key.items():
+        for assertions in self.assertions_by_key.values():
             if len(assertions) < 2:
                 continue
 

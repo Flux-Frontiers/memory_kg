@@ -25,18 +25,18 @@ from memory_kg.store import GraphStore
 from memory_kg.topics import TopicExtractor
 
 __all__ = [
-    "MemoryKG",
+    "DEFAULT_MODEL",
+    "BuildStats",
+    "DocEdge",
     "DocGraph",
+    "DocNode",
+    "Embedder",
     "GraphStore",
+    "MemoryKG",
+    "QueryResult",
     "SemanticIndex",
     "SentenceTransformerEmbedder",
-    "Embedder",
-    "DocNode",
-    "DocEdge",
-    "BuildStats",
-    "QueryResult",
     "TextPack",
-    "DEFAULT_MODEL",
     "TopicExtractor",
 ]
 

@@ -226,8 +226,7 @@ class TextPack:
 
         out.append("\n---\n")
         out.append("## Edges\n")
-        for e in self.edges:
-            out.append(f"- `{e['src']}` -[{e['rel']}]-> `{e['dst']}`")
+        out.extend(f"- `{e['src']}` -[{e['rel']}]-> `{e['dst']}`" for e in self.edges)
         out.append("")
         return "\n".join(out)
 

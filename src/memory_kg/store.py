@@ -76,13 +76,13 @@ DEFAULT_RELS: tuple[str, ...] = (
 
 # Semantic memory layer edge types (assertions + events)
 MEMORY_RELS: tuple[str, ...] = (
-    "SUPPORTS",       # chunk → assertion
-    "ABOUT",          # assertion → entity (subject)
-    "REFERS_TO",      # assertion → entity (object)
-    "INVOLVES",       # event → entity
-    "DESCRIBES",      # chunk → event
-    "SUPERSEDES",     # assertion → assertion
-    "DERIVED_FROM",   # assertion → event
+    "SUPPORTS",  # chunk → assertion
+    "ABOUT",  # assertion → entity (subject)
+    "REFERS_TO",  # assertion → entity (object)
+    "INVOLVES",  # event → entity
+    "DESCRIBES",  # chunk → event
+    "SUPERSEDES",  # assertion → assertion
+    "DERIVED_FROM",  # assertion → event
 )
 
 
@@ -389,13 +389,7 @@ class GraphStore:
                 ).fetchall()
                 for src, dst in rows:
                     for cand in (src, dst):
-                        if cand not in meta:
-                            meta[cand] = ProvMeta(
-                                best_hop=h,
-                                via_seed=meta[nid].via_seed,
-                            )
-                            nxt.add(cand)
-                        elif h < meta[cand].best_hop:
+                        if cand not in meta or h < meta[cand].best_hop:
                             meta[cand] = ProvMeta(
                                 best_hop=h,
                                 via_seed=meta[nid].via_seed,

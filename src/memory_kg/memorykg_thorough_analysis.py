@@ -300,35 +300,33 @@ class MemoryKGAnalyzer:
         lines.append("")
         lines.append("| File | Chunks | Sections | References | Semantic Links |")
         lines.append("|---|---:|---:|---:|---:|")
-        for m in result["document_metrics"][:15]:
-            lines.append(
-                f"| `{m['file_path']}` | {m['chunks']} | {m['sections']}"
-                f" | {m['refs_out']} | {m['semantic_links']} |"
-            )
+        lines.extend(
+            f"| `{m['file_path']}` | {m['chunks']} | {m['sections']}"
+            f" | {m['refs_out']} | {m['semantic_links']} |"
+            for m in result["document_metrics"][:15]
+        )
         lines.append("")
 
         lines.append("## Hot Chunks")
         lines.append("")
         lines.append("| Chunk ID | File | Semantic Links | References |")
         lines.append("|---|---|---:|---:|")
-        for c in result["hot_chunks"]:
-            lines.append(
-                f"| `{c['id']}` | `{c['file_path']}` | {c['semantic_links']} | {c['references']} |"
-            )
+        lines.extend(
+            f"| `{c['id']}` | `{c['file_path']}` | {c['semantic_links']} | {c['references']} |"
+            for c in result["hot_chunks"]
+        )
         lines.append("")
 
         if result["issues"]:
             lines.append("## Issues")
             lines.append("")
-            for item in result["issues"]:
-                lines.append(f"- {item}")
+            lines.extend(f"- {item}" for item in result["issues"])
             lines.append("")
 
         if result["strengths"]:
             lines.append("## Strengths")
             lines.append("")
-            for item in result["strengths"]:
-                lines.append(f"- {item}")
+            lines.extend(f"- {item}" for item in result["strengths"])
             lines.append("")
 
         p.write_text("\n".join(lines), encoding="utf-8")

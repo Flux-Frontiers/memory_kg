@@ -314,7 +314,7 @@ class CorpusSampler:
             return None
         try:
             with open(path, "rb") as f:
-                cached = pickle.load(f)  # noqa: S301
+                cached = pickle.load(f)
             if isinstance(cached, DocFeatures) and cached.file_hash == content_hash:
                 return cached
         except (pickle.UnpicklingError, EOFError, AttributeError, OSError):
