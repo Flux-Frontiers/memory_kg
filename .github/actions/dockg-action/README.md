@@ -267,8 +267,7 @@ memory_kg/
 │   │       └── README.md                         # This file
 │   └── workflows/
 │       ├── ci.yml
-│       ├── publish.yml
-│       └── snapshots.yml
+│       └── publish.yml
 └── src/
     └── ...
 ```
