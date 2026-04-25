@@ -1,0 +1,144 @@
+{
+  "key": "009883082a72989b07139c3dc5d01458dd33cfc4",
+  "branch": "develop",
+  "timestamp": "2026-04-25T15:17:53.314858+00:00",
+  "version": "0.11.0",
+  "metrics": {
+    "db_path": ".pycodekg/graph.sqlite",
+    "total_nodes": 4417,
+    "meaningful_nodes": 346,
+    "total_edges": 4201,
+    "node_counts": {
+      "class": 46,
+      "function": 95,
+      "method": 166,
+      "module": 39,
+      "symbol": 4071
+    },
+    "edge_counts": {
+      "ATTR_ACCESS": 1320,
+      "CALLS": 1454,
+      "CONTAINS": 307,
+      "IMPORTS": 307,
+      "INHERITS": 3,
+      "RESOLVES_TO": 810
+    },
+    "module_count": 39,
+    "class_count": 46,
+    "function_count": 95,
+    "method_count": 166,
+    "docstring_coverage": 0.78,
+    "snapshot_count": 0,
+    "critical_issues": 2,
+    "complexity_median": 4,
+    "module_node_counts": {
+      "src/__init__.py": 3,
+      "src/memory_kg/__init__.py": 2,
+      "src/memory_kg/__main__.py": 1,
+      "src/memory_kg/app.py": 148,
+      "src/memory_kg/chunker.py": 236,
+      "src/memory_kg/cli/__init__.py": 1,
+      "src/memory_kg/cli/cmd_analyze.py": 8,
+      "src/memory_kg/cli/cmd_build.py": 128,
+      "src/memory_kg/cli/cmd_hooks.py": 74,
+      "src/memory_kg/cli/cmd_mcp.py": 13,
+      "src/memory_kg/cli/cmd_model.py": 14,
+      "src/memory_kg/cli/cmd_pipeline.py": 100,
+      "src/memory_kg/cli/cmd_query.py": 62,
+      "src/memory_kg/cli/cmd_semantic_analyze.py": 8,
+      "src/memory_kg/cli/cmd_snapshot.py": 168,
+      "src/memory_kg/cli/cmd_viz.py": 21,
+      "src/memory_kg/cli/group.py": 2,
+      "src/memory_kg/cli/main.py": 1,
+      "src/memory_kg/cli/options.py": 10,
+      "src/memory_kg/config.py": 16,
+      "src/memory_kg/embedder_worker.py": 127,
+      "src/memory_kg/entry_chunk.py": 21,
+      "src/memory_kg/graph.py": 71,
+      "src/memory_kg/index.py": 274,
+      "src/memory_kg/kg.py": 324,
+      "src/memory_kg/manifold.py": 143,
+      "src/memory_kg/mcp_server.py": 73,
+      "src/memory_kg/memorykg.py": 183,
+      "src/memory_kg/memorykg_semantic_analysis.py": 278,
+      "src/memory_kg/memorykg_thorough_analysis.py": 170,
+      "src/memory_kg/pipeline.py": 187,
+      "src/memory_kg/relations.py": 46,
+      "src/memory_kg/sampler.py": 208,
+      "src/memory_kg/semantic_builder.py": 106,
+      "src/memory_kg/semantic_extractor.py": 80,
+      "src/memory_kg/semantic_primitives.py": 23,
+      "src/memory_kg/snapshots.py": 150,
+      "src/memory_kg/store.py": 133,
+      "src/memory_kg/topics.py": 126
+    }
+  },
+  "hotspots": [
+    {
+      "name": "m:src/memory_kg/kg.py:MemoryKG.close",
+      "callers": 11,
+      "callees": 1,
+      "risk_level": "low"
+    },
+    {
+      "name": "m:src/memory_kg/store.py:GraphStore.close",
+      "callers": 11,
+      "callees": 1,
+      "risk_level": "low"
+    },
+    {
+      "name": "m:src/memory_kg/store.py:GraphStore.con",
+      "callers": 9,
+      "callees": 4,
+      "risk_level": "low"
+    },
+    {
+      "name": "m:src/memory_kg/kg.py:MemoryKG.store",
+      "callers": 6,
+      "callees": 1,
+      "risk_level": "low"
+    },
+    {
+      "name": "fn:src/memory_kg/snapshots.py:_rewrap",
+      "callers": 5,
+      "callees": 3,
+      "risk_level": "low"
+    },
+    {
+      "name": "fn:src/memory_kg/chunker.py:_extract_links",
+      "callers": 5,
+      "callees": 5,
+      "risk_level": "low"
+    },
+    {
+      "name": "m:src/memory_kg/graph.py:DocGraph.extract",
+      "callers": 4,
+      "callees": 1,
+      "risk_level": "low"
+    },
+    {
+      "name": "fn:src/memory_kg/chunker.py:_groups_to_chunks",
+      "callers": 4,
+      "callees": 4,
+      "risk_level": "low"
+    },
+    {
+      "name": "fn:src/memory_kg/mcp_server.py:_get_kg",
+      "callers": 4,
+      "callees": 1,
+      "risk_level": "low"
+    },
+    {
+      "name": "m:src/memory_kg/index.py:SentenceTransformerEmbedder.embed_texts",
+      "callers": 4,
+      "callees": 3,
+      "risk_level": "low"
+    }
+  ],
+  "issues": [
+    "[WARN] Moderate docstring coverage (78.0%) \u2014 semantic retrieval quality is degraded for undocumented nodes; BM25 is as effective as embeddings without docstrings",
+    "[WARN] 2 orphaned functions found (`main`, `_silent_init`) -- consider archiving or documenting"
+  ],
+  "vs_previous": null,
+  "vs_baseline": null
+}
