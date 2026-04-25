@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `kg.py`: `MemoryKG.__init__` gains `embedder: Embedder | None = None` parameter — when provided, pre-seeds `_embedder` so the lazy `SentenceTransformerEmbedder` init never fires; useful for injecting a custom or pre-loaded embedding backend
+
+### Fixed
+- `index.py`: `SentenceTransformerEmbedder` dimension probe now tries `get_embedding_dimension()` before falling back to `get_sentence_embedding_dimension()`, then defaults to 384 — ensures compatibility across SentenceTransformer API versions
+
+### Added
 - `--workers` / `n_workers` parameter throughout the build pipeline — `MemoryKG`, `DocGraph`, `SemanticIndex.build()`, `cmd_build.py` (`build` and `build-index` commands), and benchmark scripts now accept `--workers N` for parallel Phase 1 file parsing (default: 8)
 - `memorykg.py`: `parse_corpus()` parallelized via `ThreadPoolExecutor` — each worker thread gets its own thread-local chunker and topic extractor; per-file local nodes/edges are merged after all futures complete, eliminating shared-state races
 - `benchmarks/convomem/convomem_bench.py`: New ConvoMem benchmark harness — evaluates retrieval against the Salesforce ConvoMem dataset (75,336 QA pairs across 6 evidence categories: user facts, assistant facts, changing facts, abstention, preferences, implicit connections); downloads evidence files from HuggingFace on first run; supports `--limit`, `--top-k`, `--category`, `--mode` (raw/aaak), and `--out` options
