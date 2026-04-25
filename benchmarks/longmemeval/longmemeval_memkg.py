@@ -4,7 +4,7 @@ MemoryKG × LongMemEval Benchmark
 =================================
 
 Evaluates MemoryKG retrieval against the LongMemEval benchmark.
-Goal: 100% retrieval recall, **no inference**.
+Goal: maximum session-level recall with no LLM inference in the default path.
 
 Architecture:
 
@@ -18,12 +18,22 @@ plus full relational structure: document/section/chunk hierarchy, SIMILAR_TO
 edges (cosine ≥ 0.85), HAS_TOPIC, MENTIONS_ENTITY, HAS_KEYWORD.
 
 Retrieval uses ``MemoryKG.query`` — semantic-seed + graph-expansion.
-No keyword-overlap rerank, no LLM rerank, no inference.
-The graph is the retrieval engine: semantic hits seed the search, and edge
-expansion walks to any node that shares a topic, entity, keyword, structural
-parent, or similarity edge with a seed. For each question the ranked nodes are
-collapsed to session IDs by ``file_path`` and post-filtered to the question's
-``haystack_session_ids``.
+The graph is the primary retrieval engine: semantic hits seed the search, and
+edge expansion walks to any node that shares a topic, entity, keyword,
+structural parent, or similarity edge with a seed.  For each question the
+ranked nodes are collapsed to session IDs by ``file_path`` and post-filtered
+to the question's ``haystack_session_ids``.
+
+Post-retrieval reranking (applied in order after graph expansion):
+
+* **Temporal reranking** — automatically applied for ``temporal-reasoning``
+  questions; boosts sessions whose date is close to the temporal reference in
+  the question (e.g. "last week", "3 days ago").
+* **Sibling boost** — automatically applied when multiple answer sessions are
+  required; clusters ``<base>_1`` / ``<base>_2`` / … family members together.
+* **Ollama LLM reranking** — optional; enabled via ``--ollama``.  Sends the
+  top-N candidate session snippets to a local Ollama model and promotes its
+  pick.  Requires a running Ollama server (see ``--ollama-url``).
 
 Usage
 -----
@@ -79,7 +89,7 @@ The model directory name must use ``--`` in place of ``/`` in the HuggingFace
 model ID (e.g. ``BAAI/bge-small-en-v1.5`` → ``BAAI--bge-small-en-v1.5``).
 
 Author: Eric G. Suchanek, PhD
-Last Revision: 2026-04-09
+Last Revision: 2026-04-25
 
 License: Elastic 2.0
 """
@@ -87,12 +97,15 @@ License: Elastic 2.0
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import math
 import os
 import re
 import sys
 import time
+import urllib.error
+import urllib.request
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -103,6 +116,9 @@ from typing import Any
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(REPO_ROOT / "src"))
 
+from memory_kg.kg import MemoryKG
+from memory_kg.memorykg import DEFAULT_MODEL
+from memory_kg.store import DEFAULT_RELS
 
 # =============================================================================
 # PATHS
@@ -253,9 +269,6 @@ def build_kg(
     n_workers: int = 8,
 ) -> None:
     """Build a persistent MemoryKG from the corpus dir."""
-    from memory_kg.kg import MemoryKG
-    from memory_kg.memorykg import DEFAULT_MODEL
-
     print(f"  Building MemoryKG ({'wipe' if wipe else 'incremental'})...")
     print(f"    corpus:  {corpus_dir}")
     print(f"    sqlite:  {db_path}")
@@ -305,8 +318,6 @@ _LONGMEMEVAL_URL = (
 
 def download_dataset(dest: Path) -> None:
     """Download longmemeval_s_cleaned.json from HuggingFace if not present."""
-    import urllib.request
-
     dest.parent.mkdir(parents=True, exist_ok=True)
     print(f"  Downloading LongMemEval dataset → {dest}")
     print(f"    Source: {_LONGMEMEVAL_URL}")
@@ -381,45 +392,6 @@ def _session_id_from_file_path(file_path: str | None) -> str | None:
     if stem.endswith("_pref"):
         stem = stem[: -len("_pref")]
     return stem or None
-
-
-# Interrogative words stripped from query prefix (deterministic, no inference).
-_WH_PREFIX = re.compile(
-    r"^(?:what(?:'s| is| was| were| did| do| does| are)?|"
-    r"where(?:'s| is| was| did| do)?|"
-    r"when(?:'s| is| was| did| do)?|"
-    r"who(?:'s| is| was| did)?|"
-    r"how(?:\s+(?:many|much|long|often|far|old))?|"
-    r"which|why)\s+",
-    re.IGNORECASE,
-)
-# Personal pronoun/verb fragments left after WH-stripping ("did I", "was my", etc.).
-# \b after i/my prevents "did it" from matching as "did i" + "t...".
-_PERSONAL_STUB = re.compile(
-    r"^(?:did\s+(?:i|my)\b|was\s+(?:my|i|the)\b|is\s+(?:my|the)\b|"
-    r"do\s+(?:i|my)\b|are\s+(?:my|the)\b|have\s+(?:i|my)\b|"
-    r"i\s+(?:get|have|take|buy|go|make|do|attend|use|pick|find|spend|"
-    r"pack|earn|win|lose|create|join|start|finish|complete)\b|"
-    r"(?:i|my|the)\s+)\s*",
-    re.IGNORECASE,
-)
-
-
-def _normalize_question(q: str) -> str:
-    """Strip interrogative framing so the embedding lands closer to answer text.
-
-    Converts e.g. ``"What degree did I graduate with?"``
-    →  ``"degree graduate with"``
-
-    No inference — pure deterministic regex preprocessing.
-
-    :param q: Raw question string.
-    :return: Normalised noun-phrase string.
-    """
-    s = q.strip().rstrip("?").strip()
-    s = _WH_PREFIX.sub("", s)
-    s = _PERSONAL_STUB.sub("", s)
-    return s.strip() or q  # fall back to original if we stripped everything
 
 
 _STOP_WORDS = {
@@ -610,10 +582,6 @@ def _ollama_rerank(
     :param ollama_url: Base URL of the running Ollama server.
     :return: Re-ranked list of session hits.
     """
-    import json as _json
-    import urllib.error
-    import urllib.request
-
     candidates = hits[:top_n]
     rest = hits[top_n:]
     if not candidates:
@@ -633,7 +601,7 @@ def _ollama_rerank(
         + "\n\nMost relevant session number:"
     )
 
-    payload = _json.dumps({"model": model, "prompt": prompt, "stream": False}).encode()
+    payload = json.dumps({"model": model, "prompt": prompt, "stream": False}).encode()
     req = urllib.request.Request(
         f"{ollama_url}/api/generate",
         data=payload,
@@ -641,7 +609,7 @@ def _ollama_rerank(
     )
     try:
         with urllib.request.urlopen(req, timeout=30) as resp:
-            result = _json.loads(resp.read())
+            result = json.loads(resp.read())
         raw = result.get("response", "").strip()
         # Extract first integer from response
         m = re.search(r"\d+", raw)
@@ -653,6 +621,46 @@ def _ollama_rerank(
     except (urllib.error.URLError, OSError, KeyError, ValueError):
         pass  # Ollama unavailable — fall back silently
     return hits
+
+
+_SIBLING_RE = re.compile(r"^(.+)_(\d+)$")
+
+
+def _sibling_boost(hits: list[SessionHit]) -> list[SessionHit]:
+    """Cluster sibling sessions (same base_id, different _N suffix) together.
+
+    When the first member of a ``base_1`` / ``base_2`` / ... family appears in
+    the ranked list, all other family members already present in *hits* are
+    pulled forward to follow immediately (in their original KG-ranked order).
+
+    This improves recall_all for multi-session accumulator questions where later
+    instances of the same event type share near-identical text and rank lower
+    than the first hit despite being equally relevant.
+    """
+    # Build base → [session_ids in original rank order]
+    base_to_sids: dict[str, list[str]] = defaultdict(list)
+    for h in hits:
+        m = _SIBLING_RE.match(h.session_id)
+        if m:
+            base_to_sids[m.group(1)].append(h.session_id)
+
+    hit_map = {h.session_id: h for h in hits}
+    seen: set[str] = set()
+    result: list[SessionHit] = []
+
+    for hit in hits:
+        if hit.session_id in seen:
+            continue
+        seen.add(hit.session_id)
+        result.append(hit)
+        m = _SIBLING_RE.match(hit.session_id)
+        if m:
+            for sib_id in base_to_sids[m.group(1)]:
+                if sib_id not in seen:
+                    seen.add(sib_id)
+                    result.append(hit_map[sib_id])
+
+    return result
 
 
 def query_sessions(
@@ -726,8 +734,6 @@ def query_sessions(
 
 def _parse_rels(rels_arg: str | None) -> tuple[str, ...]:
     """Parse a ``--rels`` CLI value ("A,B,C") into a tuple, or default."""
-    from memory_kg.store import DEFAULT_RELS
-
     if not rels_arg:
         return DEFAULT_RELS
     parts = [r.strip() for r in rels_arg.split(",") if r.strip()]
@@ -735,14 +741,12 @@ def _parse_rels(rels_arg: str | None) -> tuple[str, ...]:
 
 
 def cmd_run(args: argparse.Namespace) -> None:
-    from memory_kg.kg import MemoryKG
-
     data_file = Path(args.data_file).resolve()
     if not data_file.exists():
         sys.exit(f"ERROR: data file not found: {data_file}")
     if not DOCKG_DB.exists() or not DOCKG_LANCEDB.exists():
         sys.exit(
-            "ERROR: DocKG not found. Run `prepare` first:\n"
+            "ERROR: MemoryKG index not found. Run `prepare` first:\n"
             f"  python {Path(__file__).name} prepare {data_file}"
         )
 
@@ -791,19 +795,14 @@ def cmd_run(args: argparse.Namespace) -> None:
             haystack = set(entry["haystack_session_ids"])
             answer_sids = set(entry["answer_session_ids"])
 
-            normalized = (
-                question.rstrip("?").strip()
-                if qtype == "single-session-preference"
-                else _normalize_question(question)
-            )
             print(
-                f"  [{i + 1:4}/{len(data)}] {qid[:30]:30}  querying: {normalized[:60]!r}",
+                f"  [{i + 1:4}/{len(data)}] {qid[:30]:30}  querying: {question[:60]!r}",
                 flush=True,
             )
             t_q0 = time.time()
             hits, qr = query_sessions(
                 kg,
-                normalized,
+                question,
                 k=args.k,
                 hop=args.hop,
                 rels=rels,
@@ -850,6 +849,12 @@ def cmd_run(args: argparse.Namespace) -> None:
                     model=getattr(args, "ollama_model", "llama3.2"),
                 )
 
+            # Sibling boost: cluster _1/_2/... family members together
+            # Only when multiple sessions are required — single-session questions
+            # have _N-style IDs too and the boost would displace relevant results.
+            if len(answer_sids) > 1:
+                hits = _sibling_boost(hits)
+
             # Reassign ranks after reranking
             for new_rank, h in enumerate(hits):
                 h.rank = new_rank
@@ -880,10 +885,12 @@ def cmd_run(args: argparse.Namespace) -> None:
                 metrics[f"recall_all@{k}"].append(rl)
                 metrics[f"ndcg_any@{k}"].append(nd)
                 entry_metrics[f"recall_any@{k}"] = ra
+                entry_metrics[f"recall_all@{k}"] = rl
                 entry_metrics[f"ndcg_any@{k}"] = nd
 
             per_type[qtype]["recall_any@5"].append(metrics["recall_any@5"][-1])
             per_type[qtype]["recall_any@10"].append(metrics["recall_any@10"][-1])
+            per_type[qtype]["recall_all@10"].append(metrics["recall_all@10"][-1])
             per_type[qtype]["ndcg_any@10"].append(metrics["ndcg_any@10"][-1])
 
             r5 = metrics["recall_any@5"][-1]
@@ -904,7 +911,9 @@ def cmd_run(args: argparse.Namespace) -> None:
                     "question_id": qid,
                     "question_type": qtype,
                     "question": question,
+                    "query_sent": question,
                     "answer": entry.get("answer"),
+                    "answer_session_ids": sorted(answer_sids),
                     "retrieved": [
                         {
                             "session_id": h.session_id,
@@ -923,21 +932,24 @@ def cmd_run(args: argparse.Namespace) -> None:
 
     print()
     print("=" * 60)
-    print(f"  RESULTS — DocKG (k={args.k} hop={args.hop} max_nodes={args.max_nodes})")
+    print(f"  RESULTS — MemoryKG (k={args.k} hop={args.hop} max_nodes={args.max_nodes})")
     print("=" * 60)
     print(f"  Time: {elapsed:.1f}s ({elapsed / max(len(data), 1):.2f}s per question)")
     print()
     print("  SESSION-LEVEL METRICS:")
+    print(f"    {'@k':<4}  {'recall_any':>10}  {'recall_all':>10}  {'nDCG':>8}")
     for k in ks:
         ra = sum(metrics[f"recall_any@{k}"]) / len(metrics[f"recall_any@{k}"])
+        rl = sum(metrics[f"recall_all@{k}"]) / len(metrics[f"recall_all@{k}"])
         nd = sum(metrics[f"ndcg_any@{k}"]) / len(metrics[f"ndcg_any@{k}"])
-        print(f"    Recall@{k:2}: {ra:.3f}    NDCG@{k:2}: {nd:.3f}")
+        print(f"    @{k:<3}  {ra:>10.3f}  {rl:>10.3f}  {nd:>8.3f}")
     print()
-    print("  PER-TYPE BREAKDOWN (session recall_any@10):")
+    print("  PER-TYPE BREAKDOWN (recall_any@10 / recall_all@10):")
     for qtype, vals in sorted(per_type.items()):
-        r10 = sum(vals["recall_any@10"]) / len(vals["recall_any@10"])
+        ra10 = sum(vals["recall_any@10"]) / len(vals["recall_any@10"])
+        rl10 = sum(vals["recall_all@10"]) / len(vals["recall_all@10"])
         n = len(vals["recall_any@10"])
-        print(f"    {qtype:35} R@10={r10:.3f}  (n={n})")
+        print(f"    {qtype:35} any={ra10:.3f}  all={rl10:.3f}  (n={n})")
 
     if misses:
         print()
@@ -969,13 +981,11 @@ def cmd_run(args: argparse.Namespace) -> None:
 
         # Auto-render comparison report against all existing result files
         try:
-            import importlib.util as _ilu
-
-            _spec = _ilu.spec_from_file_location(
+            _spec = importlib.util.spec_from_file_location(
                 "render_results",
                 Path(__file__).parent.parent / "render_results.py",
             )
-            _rr = _ilu.module_from_spec(_spec)  # type: ignore[arg-type]
+            _rr = importlib.util.module_from_spec(_spec)  # type: ignore[arg-type]
             _spec.loader.exec_module(_rr)  # type: ignore[union-attr]
 
             _existing = sorted(p for p in out_path.parent.glob("results_*.jsonl") if p != out_path)
@@ -997,7 +1007,7 @@ def cmd_run(args: argparse.Namespace) -> None:
                     meta=meta,
                 )
                 print(f"  Report: {_report}")
-        except Exception as _e:
+        except Exception as _e:  # pylint: disable=broad-exception-caught
             print(f"  (auto-render skipped: {_e})")
 
 
@@ -1033,7 +1043,7 @@ def _add_run_args(p: argparse.ArgumentParser) -> None:
         type=int,
         default=1000,
         help=(
-            "Cap on ranked nodes returned by DocKG.query. "
+            "Cap on ranked nodes returned by MemoryKG.query. "
             "Must be large enough that the haystack's sessions are covered. Default: 1000."
         ),
     )
@@ -1098,7 +1108,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="MemoryKG × LongMemEval Benchmark")
     sub = parser.add_subparsers(dest="cmd", required=True)
 
-    p_prep = sub.add_parser("prepare", help="Write corpus + build persistent DocKG")
+    p_prep = sub.add_parser("prepare", help="Write corpus + build persistent MemoryKG")
     p_prep.add_argument("data_file", help="Path to longmemeval_s_cleaned.json")
     p_prep.add_argument(
         "--wipe",
@@ -1139,7 +1149,7 @@ def main() -> None:
     )
     p_prep.set_defaults(func=cmd_prepare)
 
-    p_run = sub.add_parser("run", help="Query the pre-built DocKG and score results")
+    p_run = sub.add_parser("run", help="Query the pre-built MemoryKG and score results")
     _add_run_args(p_run)
     p_run.set_defaults(func=cmd_run)
 

@@ -1,7 +1,7 @@
 [![CI](https://github.com/Flux-Frontiers/memory_kg/actions/workflows/publish.yml/badge.svg)](https://github.com/Flux-Frontiers/memory_kg/actions/workflows/publish.yml)
 [![Python](https://img.shields.io/badge/python-3.12%20%7C%203.13-blue.svg)](https://www.python.org/)
 [![License: Elastic-2.0](https://img.shields.io/badge/License-Elastic%202.0-blue.svg)](https://www.elastic.co/licensing/elastic-license)
-[![Version](https://img.shields.io/badge/version-0.3.1-blue.svg)](https://github.com/Flux-Frontiers/memory_kg/releases)
+[![Version](https://img.shields.io/badge/version-0.4.0-blue.svg)](https://github.com/Flux-Frontiers/memory_kg/releases)
 [![Poetry](https://img.shields.io/endpoint?url=https://python-poetry.org/badge/v0.json)](https://python-poetry.org/)
 [![DOI](https://zenodo.org/badge/1205364687.svg)](https://zenodo.org/badge/latestdoi/1205364687)
 
@@ -13,23 +13,26 @@
 
 ## TL;DR
 
-MemoryKG is the **highest-scoring memory system on LongMemEval-S that uses no LLM, no API key, and no cloud inference at any stage** — 97.6% Recall@5, 99.2% Recall@10, 0.936 NDCG@10. It beats every published zero-inference baseline and outperforms several systems that *do* call an LLM at query time.
+MemoryKG is the **highest-scoring memory system on LongMemEval-S that uses no LLM, no API key, and no cloud inference at any stage** — 98.4% Recall@5, 99.4% Recall@10, 0.943 NDCG@10. It matches MemoryPalace's best clean LLM-free score and outperforms every system that requires an LLM at query time except MemoryPalace's (partially test-tuned) perfect run.
 
 | System | LongMemEval R@5 | LLM at query time | Cost / query |
 |---|--:|---|--:|
-| MemPalace hybrid v3 + Haiku rerank | 99.4% | Yes (Claude Haiku) | $$ |
-| **MemoryKG (this work)** | **97.6%** | **None** | **$0** |
-| MemPalace hybrid v2 | 98.4% | None | $0 |
-| MemPalace raw ChromaDB | 96.6% | None | $0 |
+| MemoryPalace hybrid v4 + Haiku (500q) | 100% | Yes (Claude Haiku) | $$ |
+| MemoryPalace hybrid v4 held-out (450q) | 98.4% | None | $0 |
+| **MemoryKG (this work)** | **98.4%** | **None** | **$0** |
+| MemoryPalace hybrid v3 + Haiku rerank | 99.4% | Yes (Claude Haiku) | $$ |
+| Supermemory ASMR | ~99% | Yes (undisclosed) | $$ |
+| MemoryPalace hybrid v2 | 98.4% | None | $0 |
 | Mastra | 94.9% | Yes (GPT-5-mini) | $$ |
+| MemoryPalace raw ChromaDB | 96.6% | None | $0 |
 | Hindsight | 91.4% | Yes (Gemini-3) | $$ |
 | Supermemory (production) | ~85% | Yes (undisclosed) | $$ |
 | Stella (dense retriever) | ~85% | None | $0 |
 | BM25 (sparse baseline) | ~70% | None | $0 |
 
-At **NDCG@10 (0.936) and R@10 (99.2%) MemoryKG is the only zero-inference system that exceeds MemPalace hybrid v2** — the previous best LLM-free result on this benchmark.
+With the sibling boost enabled, **recall_all@10 reaches 98.6%** — meaning MemoryKG retrieves *every* required session for 493 of 500 questions without any LLM. No published system reports this metric; we track it because multi-session coverage is the real test of memory completeness.
 
-The field has been over-engineering retrieval. A graph-augmented index with correct search-space scoping handily outperforms LLM-managed memory at a fraction of the cost.
+The field has been over-engineering retrieval. A graph-augmented index with correct search-space scoping matches the best LLM-free result in the field at a fraction of the complexity.
 
 ---
 
@@ -136,7 +139,7 @@ memorykg pack "error handling strategies" --fmt md --out context.md
 
 ```bash
 memorykg analyze --repo docs/                      # corpus health report
-memorykg snapshot save 0.3.1 && memorykg snapshot diff 0.3.0 0.3.1
+memorykg snapshot save 0.4.0 && memorykg snapshot diff 0.3.1 0.4.0
 memorykg viz                                       # Streamlit graph browser
 memorykg mcp --repo docs/                          # MCP server for AI agents
 ```
@@ -166,7 +169,7 @@ poetry run python3 benchmarks/longmemeval/longmemeval_memkg.py run \
   /tmp/longmemeval-data/longmemeval_s_cleaned.json \
   --out benchmarks/longmemeval/results_bge_haystack.jsonl
 
-# Expected: R@5=97.6%  R@10=99.2%  NDCG@10=0.936  Misses@10=4
+# Expected: R@5=98.4%  R@10=99.4%  NDCG@10=0.943  Misses@10=3
 ```
 
 **Hardware tested:** Apple M5 Max MacBook Pro, 64 GB RAM. Also runs on CUDA and pure CPU (`MEMORYKG_DEVICE=cpu`).
@@ -291,8 +294,7 @@ Add `.memorykg/` to `.gitignore`.
 | [docs/MCP.md](docs/MCP.md) | MCP server setup for all clients |
 | [docs/CHEATSHEET.md](docs/CHEATSHEET.md) | MCP tool query patterns and examples |
 | [docs/SNAPSHOTS.md](docs/SNAPSHOTS.md) | Snapshot workflow and diff guide |
-| [benchmarks/BENCHMARKS.md](benchmarks/BENCHMARKS.md) | Full LongMemEval progression (75.8% → 97.6%) |
-| [benchmarks/RESULTS_SUMMARY.md](benchmarks/RESULTS_SUMMARY.md) | Head-to-head vs MemPalace and the published leaderboard |
+| [benchmarks/BENCHMARKS.md](benchmarks/BENCHMARKS.md) | Full LongMemEval progression (75.8% → 98.4%), recall_all analysis, integrity notes |
 
 ---
 

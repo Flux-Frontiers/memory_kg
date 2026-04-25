@@ -54,7 +54,7 @@ packages = [{ include = "memory_kg", from = "src" }]
 # ---------------------------------------------------------------------------
 [project]
 name = "memory-kg"
-version = "0.3.1"
+version = "0.4.0"
 description = "A tool to build a semantically searchable knowledge graph from memories"
 readme = "README.md"
 license = "Elastic-2.0"
@@ -171,7 +171,7 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 # Benchmarks, scripts, and tests are research/eval/glue code — looser rules.
-"benchmarks/**"     = ["B", "SIM", "PERF", "FURB", "PLW", "RET", "C4", "RUF005", "RUF059"]
+"benchmarks/**"     = ["B", "SIM", "PERF", "FURB", "PLW", "RET", "C4", "RUF005", "RUF059", "E402"]
 "scripts/**"        = ["B", "SIM", "PERF", "FURB", "PLW", "RET", "C4", "RUF005"]
 "tests/**"          = ["B", "SIM", "PERF", "FURB", "PLW", "RET", "RUF059"]
 "generate_wiki.py"  = ["B", "SIM", "PERF", "FURB", "PLW", "RET", "C4", "RUF005"]

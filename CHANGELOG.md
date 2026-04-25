@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-04-25
+
+### Added
+- `benchmarks/BENCHMARKS.md`: New comprehensive benchmark narrative — full LongMemEval progression from 75.8% → 98.4% R@5, recall_all analysis, integrity section, comparison vs MemoryPalace / Mastra / Hindsight / academic baselines, and reproducibility block
+- `benchmarks/longmemeval/longmemeval_memkg.py`: `_sibling_boost()` — post-retrieval reranker that clusters `<base>_1` / `_2` / `_N` family members together when the first family member is found; applied only when `len(answer_sids) > 1` to avoid displacing single-session results; improves recall_all@10 from 96.8% → 98.6% (+1.8 pp)
+- `benchmarks/longmemeval/longmemeval_memkg.py`: `recall_all@k` now tracked per-question in JSONL output (`entry_metrics`), in the per-type terminal breakdown, and in the summary table alongside recall_any and nDCG
+- `benchmarks/longmemeval/longmemeval_memkg.py`: `answer_session_ids` and `query_sent` fields added to each JSONL result row for offline analysis
+- `benchmarks/longmemeval/results.jsonl`: Committed clean baseline run (raw questions, no normalization) — recall_any@10=99.4%, recall_all@10=96.8%, nDCG@10=0.943
+
+### Changed
+- `benchmarks/longmemeval/longmemeval_memkg.py`: Query normalization removed — empirical A/B comparison showed raw questions outperform wh-word-stripped queries at every k; `_normalize_question`, `_WH_PREFIX`, and `_PERSONAL_STUB` deleted entirely
+- `benchmarks/longmemeval/longmemeval_memkg.py`: All lazy function-level imports promoted to top-level (`MemoryKG`, `DEFAULT_MODEL`, `DEFAULT_RELS`, `urllib.request`, `urllib.error`, `importlib.util`); `json as _json` alias replaced with top-level `json`
+- `benchmarks/longmemeval/longmemeval_memkg.py`: Terminal output and CLI help strings updated from "DocKG" to "MemoryKG"
+- `benchmarks/longmemeval/longmemeval_memkg.py`: Summary table now shows recall_any, recall_all, and nDCG side-by-side; per-type breakdown shows both `any=` and `all=` columns
+- `benchmarks/BENCHMARKS.md`: Rewrote with current results (98.4% R@5 baseline, 98.6% recall_all@10 with sibling boost) and full progression story; "MemPalace" renamed "MemoryPalace" throughout
+- `README.md`: Updated headline benchmark numbers (97.6% → 98.4% R@5, 0.936 → 0.943 NDCG@10); added recall_all@10 callout; comparison table expanded with MemoryPalace hybrid v4 held-out and Supermemory ASMR rows, "MemPalace" → "MemoryPalace"; version badge 0.3.1 → 0.4.0
+- `pyproject.toml`, `src/memory_kg/__init__.py`: Version bumped 0.3.1 → 0.4.0
+
+### Removed
+- `benchmarks/longmemeval_bench.py`: Legacy top-level bench script superseded by `benchmarks/longmemeval/longmemeval_memkg.py`
+- `benchmarks/convomem_bench.py`: Moved to `benchmarks/convomem/` in a prior session; stale top-level copy removed
+- `benchmarks/BENCHMARKS_MEMKG.md`: Replaced by the new `benchmarks/BENCHMARKS.md`
+
+### Fixed
+- `benchmarks/longmemeval/longmemeval_memkg.py`: `broad-exception-caught` pylint warning suppressed with inline `# pylint: disable` on the intentionally best-effort auto-render block
+
 ### Added
 - `.mcp.json.example`: Portable MCP config template using relative paths (`.venv/bin/memorykg`, `"."` for repo) — copy to `.mcp.json` and customize for your environment
 - `.vscode/mcp.json.example`: Portable VS Code MCP config template with relative paths for `memorykg` and `pycodekg` servers

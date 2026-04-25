@@ -260,7 +260,7 @@ commit.txt
 
 # Benchmark data (large corpus files and raw results, not tracked)
 benchmarks/longmemeval/data/
-benchmarks/longmemeval/results_*.jsonl
+benchmarks/longmemeval/results*.jsonl
 
 # Large asset files (> 1MB)
 assets/*-1024x1024.png
