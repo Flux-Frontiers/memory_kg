@@ -47,23 +47,6 @@ Most "memory" systems flatten a session into a single embedding and lean on an L
 
 ---
 
-## Per-Type Breakdown vs MemPalace (R@5, LongMemEval-S, n=500)
-
-| Question Type | n | MemPalace raw | MemPalace + Haiku rerank | **MemoryKG (no LLM)** |
-|---|--:|--:|--:|--:|
-| knowledge-update | 78 | 99.0% | 100.0% | **100.0%** |
-| multi-session | 133 | 98.5% | 100.0% | 97.7% |
-| single-session-assistant | 56 | 92.9% | 98.2% | **100.0%** |
-| single-session-preference | 30 | 93.3% | 96.7% | **100.0%** |
-| single-session-user | 70 | 95.7% | 100.0% | 97.1% |
-| temporal-reasoning | 133 | 96.2% | 99.2% | 94.7% |
-
-MemoryKG **beats MemPalace's raw baseline on 5 of 6 categories** and **beats their LLM-reranked result on 3 of 6** — without a single inference call. The remaining 4 misses at k=10 are all multi-hop temporal arithmetic (`gpt4_*` variants) that require *reasoning*, not retrieval.
-
-See [benchmarks/BENCHMARKS.md](benchmarks/BENCHMARKS.md) for the full progression from 75.8% baseline to 97.6%, and [benchmarks/RESULTS_SUMMARY.md](benchmarks/RESULTS_SUMMARY.md) for the head-to-head writeup.
-
----
-
 ## What MemoryKG Is
 
 A **deterministic, explainable knowledge graph** built from conversational logs and document corpora (Markdown, plain text). MemoryKG semantically chunks text, extracts topics/entities/keywords, links them through typed edges, stores everything in SQLite, and adds a LanceDB vector index as an *acceleration layer* — not the source of truth.
@@ -99,7 +82,7 @@ memorykg build --repo docs/
 memorykg query "authentication flow"
 
 # Source-grounded passage pack — paste straight into an LLM prompt
-memorykg pack "configuration reference" --format md --out context.md
+memorykg pack "configuration reference" --fmt md --out context.md
 ```
 
 ---
@@ -146,7 +129,7 @@ memorykg query "deployment configuration"
 memorykg query "API authentication" --k 12 --hop 2
 
 # Pack as Markdown for LLM context injection
-memorykg pack "error handling strategies" --format md --out context.md
+memorykg pack "error handling strategies" --fmt md --out context.md
 ```
 
 ### Analyze, snapshot, visualize

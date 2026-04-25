@@ -8,6 +8,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `.mcp.json.example`: Portable MCP config template using relative paths (`.venv/bin/memorykg`, `"."` for repo) — copy to `.mcp.json` and customize for your environment
+- `.vscode/mcp.json.example`: Portable VS Code MCP config template with relative paths for `memorykg` and `pycodekg` servers
+
+### Changed
+- `.gitignore`: Permanently exclude `.mcp.json`, `.vscode/mcp.json`, and `.claude/claude_code_config.json` — all contain machine-specific absolute paths unsuitable for a public repo
+- `.pre-commit-config.yaml`: Move `ruff` and `detect-secrets` before the local `pylint`/`mypy`/`pytest` hooks so fast linters run first and catch issues cheaply; add `pass_filenames: false` and `always_run: true` to ruff hooks to match the behavior of the local hooks
+- `.github/workflows/ci.yml`: Re-enable CI on `push` and `pull_request` to `main`; expand from a no-op `workflow_dispatch`-only stub to a full 3-job pipeline — `lint` (ruff format + check, `--only dev` deps to avoid the kgrag git dep), `type-check` (mypy, full install), `test` (pytest, full install)
+- `.claude/skills/memorykg/SKILL.md`: Fix package name `doc-kg` → `memory-kg`; remove nonexistent `[mcp]` extra from install command (`mcp` is a core dep, no extra needed); update build command syntax to `--repo` flag style; fix `--format` → `--fmt` for `pack`; correct embedding model reference to `BAAI/bge-small-en-v1.5 (384-d)`; remove stale offline-setup section
+
+### Fixed
+- `README.md`: Fix `--format` → `--fmt` in two `memorykg pack` examples
+
+### Removed
+- `.mcp.json`: Machine-specific config with hardcoded `/Users/egs/...` paths; replaced by `.mcp.json.example`
+- `.vscode/mcp.json`: Machine-specific VS Code MCP config with hardcoded absolute paths; replaced by `.vscode/mcp.json.example`
+- `.claude/claude_code_config.json`: Machine-specific copilot MCP config with hardcoded `~/.claude/copilot/` paths; no public value
+
+### Added
 - `analysis/MemoryKG_Agent_instructions.md`: New agent prompt for MemoryKG tool assessment — replaces the old DocKG-targeted version; correctly describes MemoryKG purpose (document corpora), GitHub URL, MCP tools (`query_docs`, `pack_docs`, `get_node`, `graph_stats`), lineage from DocKG, and differentiating features (semantic layer, manifold analysis, pipeline, Claude Code hooks)
 - `analysis/memory_kg_analysis_20260425.md`: PyCodeKG thorough analysis report for the memory_kg codebase — baseline metrics, fan-in ranking, SIR, docstring coverage, orphan audit, CodeRank, concern-based hybrid ranking
 

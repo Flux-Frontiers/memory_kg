@@ -1,6 +1,6 @@
 ---
 name: memorykg
-description: Expert knowledge for installing, configuring, and using MemoryKG — a hybrid semantic + structural knowledge graph for document corpora (.md and .txt files). Use this skill when the user asks about: setting up MemoryKG in a project, adding doc-kg as a Poetry dependency, building the SQLite or LanceDB knowledge graph from documents, running the multipass analysis pipeline (memorykg pipeline run/embed/manifold), configuring .mcp.json for Claude Code or Kilo Code, configuring .vscode/mcp.json for GitHub Copilot, configuring claude_desktop_config.json for Claude Desktop, using the memorykg CLI (memorykg build, memorykg build-graph, memorykg build-index, memorykg query, memorykg pack, memorykg analyze, memorykg semantic-analyze, memorykg pipeline, memorykg viz, memorykg mcp, memorykg snapshot), using the graph_stats / query_docs / pack_docs / get_node MCP tools, or troubleshooting MemoryKG errors.
+description: Expert knowledge for installing, configuring, and using MemoryKG — a hybrid semantic + structural knowledge graph for document corpora (.md and .txt files). Use this skill when the user asks about: setting up MemoryKG in a project, adding memory-kg as a Poetry dependency, building the SQLite or LanceDB knowledge graph from documents, running the multipass analysis pipeline (memorykg pipeline run/embed/manifold), configuring .mcp.json for Claude Code or Kilo Code, configuring .vscode/mcp.json for GitHub Copilot, configuring claude_desktop_config.json for Claude Desktop, using the memorykg CLI (memorykg build, memorykg build-graph, memorykg build-index, memorykg query, memorykg pack, memorykg analyze, memorykg semantic-analyze, memorykg pipeline, memorykg viz, memorykg mcp, memorykg snapshot), using the graph_stats / query_docs / pack_docs / get_node MCP tools, or troubleshooting MemoryKG errors.
 ---
 
 # MemoryKG Skill
@@ -14,28 +14,29 @@ MemoryKG indexes `.md` and `.txt` document corpora into a hybrid knowledge graph
 ## Installation (Poetry)
 
 ```bash
-# With MCP server support
-poetry add "doc-kg[mcp] @ git+https://github.com/Flux-Frontiers/memory_kg.git"
+# MCP server support is included in the core install — no extra needed
+poetry add "memory-kg @ git+https://github.com/Flux-Frontiers/memory_kg.git"
 ```
 
 Adds to `pyproject.toml`:
 ```toml
-doc-kg = { git = "https://github.com/Flux-Frontiers/memory_kg.git", extras = ["mcp"] }
+memory-kg = { git = "https://github.com/Flux-Frontiers/memory_kg.git" }
 ```
 
 ## Build the Knowledge Graph
 
-MemoryKG uses a **single build command** that runs corpus parsing, SQLite persistence, and LanceDB vector indexing in one step:
+MemoryKG uses a **single build command** that runs corpus parsing, SQLite persistence, and LanceDB vector indexing in one step. **Wipe is the default** — use `--update` to keep existing data instead.
 
 ```bash
-# Build from a corpus directory
-memorykg build docs --wipe
+# Build from a corpus directory (wipes and rebuilds by default)
+memorykg build --repo docs/
 
 # Build from an absolute path
-memorykg build /absolute/path/to/corpus --wipe
-```
+memorykg build --repo /absolute/path/to/corpus
 
-Add `--wipe` to rebuild from scratch. Omit it for incremental upserts.
+# Incremental update — keep existing data instead of wiping
+memorykg build --repo docs/ --update
+```
 
 ### Granular build steps (advanced)
 
@@ -43,10 +44,14 @@ For large corpora you can run steps independently:
 
 ```bash
 # Step 1 — parse corpus and write SQLite graph
-memorykg build-graph docs --wipe
+memorykg build-graph --repo docs/
 
 # Step 2 — build LanceDB vector index from existing SQLite
-memorykg build-index --wipe
+memorykg build-index
+
+# Incremental variants
+memorykg build-graph --repo docs/ --update
+memorykg build-index --update
 ```
 
 ### Excluding directories
@@ -59,7 +64,7 @@ exclude = ["archive", "vendor", "generated"]
 
 **Via CLI flags (per-command override):**
 ```bash
-memorykg build docs --wipe --exclude-dir archive --exclude-dir vendor
+memorykg build --repo docs/ --exclude-dir archive --exclude-dir vendor
 ```
 
 Both are additive — CLI flags extend `pyproject.toml` excludes. Excluded names are matched at every depth.
@@ -72,12 +77,12 @@ The knowledge graph is a snapshot of the corpus at build time. It does **not** u
 
 | Change | Action |
 |---|---|
-| Added / deleted documents | Full rebuild (`--wipe`) |
-| Large content updates across many files | Full rebuild (`--wipe`) |
-| Minor edits within existing documents | Incremental (no `--wipe`) is usually sufficient |
-| New file added | Incremental is sufficient |
+| Added / deleted documents | Full rebuild (default, no `--update`) |
+| Large content updates across many files | Full rebuild (default, no `--update`) |
+| Minor edits within existing documents | `--update` is usually sufficient |
+| New file added | `--update` is sufficient |
 
-> **Why `--wipe` matters:** Deleted or renamed documents remain as phantom entries without it. `--wipe` clears orphan nodes from both SQLite and LanceDB.
+> **Why full rebuild matters:** Deleted or renamed documents remain as phantom entries with `--update`. The default wipe clears orphan nodes from both SQLite and LanceDB.
 
 ## Additional CLI Commands
 
@@ -93,6 +98,15 @@ The knowledge graph is a snapshot of the corpus at build time. It does **not** u
 | `memorykg snapshot show <commit>` | Full details for a single snapshot |
 | `memorykg snapshot diff <a> <b>` | Compare two snapshots side-by-side |
 | `memorykg mcp` | Start the MCP server (stdio transport) |
+
+### pack output format
+
+`memorykg pack` uses `--fmt` (not `--format`):
+
+```bash
+memorykg pack "configuration reference" --fmt md --out context.md
+memorykg pack "configuration reference" --fmt json --out context.json
+```
 
 ## Multipass Analysis Pipeline
 
@@ -118,10 +132,10 @@ MemoryKG includes a diary_kg-style multipass analysis pipeline for deep NLP tran
 
 ```bash
 # Run full pipeline on a corpus (samples 20 docs by default)
-memorykg pipeline run --repo docs --batch 20 --strategy sentence_group
+memorykg pipeline run --repo docs/ --batch 20 --strategy sentence_group
 
 # Embed full corpus for manifold analysis
-memorykg pipeline embed --repo docs --workers 4
+memorykg pipeline embed --repo docs/ --workers 4
 
 # Analyze embedding geometry
 memorykg pipeline manifold
@@ -150,8 +164,8 @@ Output files are written to `.memorykg/pipeline/`:
 
 | Pipeline | Model | Dims | Notes |
 |---|---|---|---|
-| Core build (`memorykg build`) | `all-mpnet-base-v2` | 768 | General-text, SIMILAR_TO discovery |
-| Multipass (`memorykg pipeline`) | `nomic-ai/nomic-embed-text-v1` | 768 | Asymmetric retrieval with `search_document:` prefix, matches diary_kg |
+| Core build (`memorykg build`) | `BAAI/bge-small-en-v1.5` | 384 | Fast, general-text, SIMILAR_TO discovery |
+| Multipass (`memorykg pipeline`) | `nomic-ai/nomic-embed-text-v1` | 768 | Asymmetric retrieval with `search_document:` prefix |
 
 ## Configure Claude Code / Kilo Code (.mcp.json)
 
@@ -316,7 +330,7 @@ Config path: `~/Library/Application Support/Claude/claude_desktop_config.json` (
 
 - `k=8, hop=1, rels="CONTAINS,NEXT,REFERENCES,SIMILAR_TO,HAS_TOPIC,MENTIONS_ENTITY,HAS_KEYWORD,CO_OCCURS_WITH"`
 - `max_chars=2000` (pack_docs), `max_nodes=15` (pack_docs), `max_nodes=25` (query_docs)
-- Core build embedding model: `all-mpnet-base-v2` (768-d)
+- Core build embedding model: `BAAI/bge-small-en-v1.5` (384-d)
 - Pipeline embedding model: `nomic-ai/nomic-embed-text-v1` (768-d)
 - Storage: `.memorykg/graph.sqlite` (SQLite) + `.memorykg/lancedb/` (LanceDB)
 - Pipeline output: `.memorykg/pipeline/` (`.psv` runs, `embeddings.json` cache)
@@ -331,29 +345,16 @@ Config path: `~/Library/Application Support/Claude/claude_desktop_config.json` (
 
 The `.memorykg/` directory holds the SQLite graph, LanceDB vector index, snapshots, pipeline outputs, feature caches, and embedding caches. All are local reproducible artifacts. Add this to `.gitignore` when installing MemoryKG in a new repo.
 
-## Offline Setup
-
-To pre-download the embedding model for air-gapped or CI environments:
-
-```bash
-memorykg build docs --wipe  # model is cached on first run
-```
-
-Set `DOCKG_MODEL_DIR` to cache elsewhere:
-```bash
-export DOCKG_MODEL_DIR=/path/to/shared/models
-```
-
 ## Troubleshooting
 
 | Error | Fix |
 |---|---|
-| `WARNING: SQLite database not found` | Run `memorykg build <corpus_root>` first |
+| `WARNING: SQLite database not found` | Run `memorykg build --repo <corpus_root>` first |
 | `mcp package not found` | `poetry install` (ensure `[mcp]` extra is included) |
 | No tools visible in MCP client | Use absolute paths in config; restart the client |
-| Empty query results | Run `memorykg build <corpus_root> --wipe` |
+| Empty query results | Run `memorykg build --repo <corpus_root>` |
 | Wrong corpus queried | Verify `--repo`, `--db`, and `--lancedb` all point to the same repo |
-| Stale nodes after deleting files | Always use `--wipe` after deletions or renames |
+| Stale nodes after deleting files | Run full rebuild (no `--update`) after deletions or renames |
 
 ## Full Reference
 

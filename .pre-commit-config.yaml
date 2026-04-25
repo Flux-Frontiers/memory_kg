@@ -12,6 +12,25 @@ repos:
         exclude: '^(src|docs|article)/.*\.(png|jpg|jpeg|gif|pdf)$|^\.codekg/'
       - id: debug-statements
 
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.10
+    hooks:
+      - id: ruff
+        args: [--fix]
+        exclude: '^\.claude/'
+        pass_filenames: false
+        always_run: true
+      - id: ruff-format
+        exclude: '^\.claude/'
+        pass_filenames: false
+        always_run: true
+
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline', '--exclude-files', '\.codekg/snapshots/.*', '--exclude-files', '\.memorykg/snapshots/.*', '--exclude-files', '\.memorykg/.*', '--exclude-files', '\.pycodekg/.*']
+
   - repo: local
     hooks:
       - id: pylint
@@ -33,18 +52,3 @@ repos:
         language: system
         pass_filenames: false
         always_run: true
-
-  - repo: https://github.com/Yelp/detect-secrets
-    rev: v1.5.0
-    hooks:
-      - id: detect-secrets
-        args: ['--baseline', '.secrets.baseline', '--exclude-files', '\.codekg/snapshots/.*', '--exclude-files', '\.memorykg/snapshots/.*', '--exclude-files', '\.memorykg/.*', '--exclude-files', '\.pycodekg/.*']
-
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.9.10
-    hooks:
-      - id: ruff
-        args: [--fix]
-        exclude: '^\.claude/'
-      - id: ruff-format
-        exclude: '^\.claude/'

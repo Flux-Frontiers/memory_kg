@@ -249,8 +249,10 @@ __marimo__/
 
 .agentkg/
 
-# Local MCP configuration (contains absolute paths)
-#.mcp.json
+# Local MCP configuration (contains absolute paths — use .mcp.json.example as a starting point)
+.mcp.json
+.vscode/mcp.json
+.claude/claude_code_config.json
 
 # MacOS
 .DS_Store

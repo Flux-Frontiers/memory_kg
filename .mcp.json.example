@@ -1,0 +1,28 @@
+{
+  "mcpServers": {
+    "memorykg": {
+      "command": ".venv/bin/memorykg",
+      "args": [
+        "mcp",
+        "--repo",
+        "."
+      ]
+    },
+    "pycodekg": {
+      "command": ".venv/bin/pycodekg",
+      "args": [
+        "mcp",
+        "--repo",
+        "."
+      ]
+    },
+    "dockg": {
+      "command": ".venv/bin/dockg",
+      "args": [
+        "mcp",
+        "--repo",
+        "."
+      ]
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "servers": {
+    "memorykg": {
+      "type": "stdio",
+      "command": ".venv/bin/memorykg",
+      "args": [
+        "mcp",
+        "--repo",
+        "."
+      ]
+    },
+    "pycodekg": {
+      "type": "stdio",
+      "command": ".venv/bin/pycodekg",
+      "args": [
+        "mcp",
+        "--repo",
+        "."
+      ]
+    }
+  }
+}
