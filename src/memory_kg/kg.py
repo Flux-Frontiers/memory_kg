@@ -226,8 +226,7 @@ class TextPack:
 
         out.append("\n---\n")
         out.append("## Edges\n")
-        for e in self.edges:
-            out.append(f"- `{e['src']}` -[{e['rel']}]-> `{e['dst']}`")
+        out.extend(f"- `{e['src']}` -[{e['rel']}]-> `{e['dst']}`" for e in self.edges)
         out.append("")
         return "\n".join(out)
 
@@ -323,6 +322,9 @@ class MemoryKG:
     :param topic_threshold: Topic confidence threshold.
     :param topics_file: Optional topic catalog file (JSON/YAML).
     :param n_workers: Parallel threads for Phase 1 file parsing (default: 8).
+    :param embedder: Optional embedding backend.  When provided, pre-sets ``_embedder``
+                     so the lazy-init never fires ``SentenceTransformerEmbedder``.
+                     Defaults to ``None`` (preserves existing behaviour).
     """
 
     def __init__(
@@ -346,6 +348,7 @@ class MemoryKG:
         topics_file: str | None = None,
         exclude: set[str] | None = None,
         n_workers: int = 8,
+        embedder: Embedder | None = None,
     ) -> None:
         self.corpus_root = Path(corpus_root).resolve()
         self.exclude: set[str] = exclude or set()
@@ -378,7 +381,7 @@ class MemoryKG:
         self._graph: DocGraph | None = None
         self._store: GraphStore | None = None
         self._index: SemanticIndex | None = None
-        self._embedder: Embedder | None = None
+        self._embedder: Embedder | None = embedder
 
     # ------------------------------------------------------------------
     # Layer accessors (lazy init)

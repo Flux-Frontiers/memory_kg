@@ -276,7 +276,8 @@ class ManifoldAnalyzer:
             "",
             "MRL Truncation Quality (MRR@10):",
         ]
-        for dim in sorted(report.mrl_mrr):
-            lines.append(f"  {dim:>4d}-dim: {report.mrl_mrr[dim]:.4f}")
+        lines.extend(
+            f"  {dim:>4d}-dim: {report.mrl_mrr[dim]:.4f}" for dim in sorted(report.mrl_mrr)
+        )
 
         return "\n".join(lines)

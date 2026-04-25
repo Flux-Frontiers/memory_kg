@@ -182,7 +182,7 @@ def build(
     db_path = Path(sqlite) if sqlite else repo_root / ".memorykg" / "graph.sqlite"
     lancedb_dir = Path(lancedb) if lancedb else repo_root / ".memorykg" / "lancedb"
     wipe = not update
-    extensions = set(e if e.startswith(".") else f".{e}" for e in ext)
+    extensions = {e if e.startswith(".") else f".{e}" for e in ext}
     exclude = load_exclude_dirs(repo_root) | set(exclude_dir)
 
     kg = MemoryKG(
@@ -372,7 +372,7 @@ def build_graph(
     repo_root = Path(repo).resolve()
     db_path = Path(sqlite) if sqlite else repo_root / ".memorykg" / "graph.sqlite"
     wipe = not update
-    extensions = set(e if e.startswith(".") else f".{e}" for e in ext)
+    extensions = {e if e.startswith(".") else f".{e}" for e in ext}
     exclude = load_exclude_dirs(repo_root) | set(exclude_dir)
 
     kg = MemoryKG(

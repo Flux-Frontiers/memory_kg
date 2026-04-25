@@ -46,21 +46,21 @@ from typing import Any
 # Re-export shared base types (backwards-compat public API)
 # ---------------------------------------------------------------------------
 from kg_snapshot.snapshots import (
-    PruneResult,  # noqa: F401  re-exported
-    SnapshotManifest,  # noqa: F401  re-exported
+    PruneResult,
+    SnapshotManifest,
 )
 from kg_snapshot.snapshots import Snapshot as _BaseSnapshot
 from kg_snapshot.snapshots import SnapshotManager as _BaseSnapshotManager
 
 __all__ = [
-    "SnapshotMetrics",
-    "SnapshotDelta",
-    "Snapshot",
-    "SnapshotManifest",
-    "SnapshotManager",
     "PruneResult",
-    "metrics_to_dict",
+    "Snapshot",
+    "SnapshotDelta",
+    "SnapshotManager",
+    "SnapshotManifest",
+    "SnapshotMetrics",
     "metrics_from_dict",
+    "metrics_to_dict",
 ]
 
 

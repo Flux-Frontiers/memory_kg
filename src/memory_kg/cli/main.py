@@ -20,8 +20,8 @@ Author: Eric G. Suchanek, PhD
 
 from __future__ import annotations
 
-# Import subcommands so they register against `cli`.
-# pylint: disable=unused-import
+# Side-effect imports: each module registers its subcommands against the shared
+# `cli` group at import time. `cli` itself is re-exported as the entry point.
 from memory_kg.cli import (  # noqa: F401
     cmd_analyze,
     cmd_build,
@@ -34,4 +34,6 @@ from memory_kg.cli import (  # noqa: F401
     cmd_snapshot,
     cmd_viz,
 )
-from memory_kg.cli.group import cli  # noqa: F401  # pylint: disable=unused-import
+from memory_kg.cli.group import cli
+
+__all__ = ["cli"]

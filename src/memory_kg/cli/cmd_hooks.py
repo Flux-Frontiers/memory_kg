@@ -220,7 +220,7 @@ _HOOK_TIMEOUTS: dict[str, int | None] = {
 def _write_claude_hook_scripts(hooks_dir: Path) -> None:
     """Write the three agent-kg shell scripts to hooks_dir."""
     hooks_dir.mkdir(parents=True, exist_ok=True)
-    for _event, (filename, content) in _CLAUDE_HOOK_SCRIPTS.items():
+    for filename, content in _CLAUDE_HOOK_SCRIPTS.values():
         script_path = hooks_dir / filename
         script_path.write_text(content)
         mode = script_path.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
@@ -235,7 +235,7 @@ def _merge_claude_settings(settings_path: Path, hooks_dir: Path, force: bool) ->
     :param force: Overwrite existing hook entries.
     :return: True if settings were updated.
     """
-    import json  # noqa: PLC0415  # pylint: disable=import-outside-toplevel
+    import json  # pylint: disable=import-outside-toplevel
 
     settings_path.parent.mkdir(parents=True, exist_ok=True)
     existing: dict = {}

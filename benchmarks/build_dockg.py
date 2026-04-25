@@ -244,8 +244,7 @@ def build_kg(
             if wipe or not db_path.exists():
                 graph_stats = kg.build_graph(wipe=wipe)
                 print(
-                    f"  Graph:   {graph_stats.total_nodes} nodes, "
-                    f"{graph_stats.total_edges} edges"
+                    f"  Graph:   {graph_stats.total_nodes} nodes, {graph_stats.total_edges} edges"
                 )
             else:
                 print(f"  Graph:   reusing existing SQLite at {db_path}")
@@ -257,9 +256,7 @@ def build_kg(
 
             # Always wipe LanceDB — embeddings are recomputed fresh so
             # incremental deletes are wasteful and slow.
-            stats = kg.build_index_from_cache(
-                cache_path, wipe=True, discover_similar=similar
-            )
+            stats = kg.build_index_from_cache(cache_path, wipe=True, discover_similar=similar)
         else:
             stats = kg.build(wipe=wipe, discover_similar=similar)
     finally:

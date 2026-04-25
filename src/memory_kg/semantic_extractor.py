@@ -25,13 +25,13 @@ YEAR_PATTERN = re.compile(r"\b((19|20)\d{2})\b")
 MONTH_YEAR_PATTERN = re.compile(
     r"\b(January|February|March|April|May|June|July|August|September|October|November|December"
     r"|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)\s+(20\d{2}|19\d{2})\b",
-    re.IGNORECASE
+    re.IGNORECASE,
 )
 RELATIVE_TEMPORAL_PATTERN = re.compile(
     r"\b(last|this|next)\s+(year|month|week|decade)\b"
     r"|in\s+(20\d{2}|19\d{2})\b"
     r"|during\s+\d{4}\b",
-    re.IGNORECASE
+    re.IGNORECASE,
 )
 
 # ============================================================================
@@ -61,7 +61,7 @@ VERB_PATTERN = re.compile(
     r"\b(moved|relocated|joined|started|began|hired|left|quit|resigned|fired|"
     r"married|divorced|published|released|launched)"
     r"(?:\s+to)?\b",
-    re.IGNORECASE
+    re.IGNORECASE,
 )
 
 # ============================================================================

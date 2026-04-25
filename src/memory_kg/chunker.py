@@ -258,7 +258,7 @@ class TextChunker:
                         break
                     overlap_sents.insert(0, prev)
                     carried += len(prev)
-                groups.append(overlap_sents + [sent])
+                groups.append([*overlap_sents, sent])
             else:
                 groups[-1].append(sent)
 
@@ -394,11 +394,8 @@ def _extract_links(text: str) -> list[str]:
     :param text: Chunk text (Markdown).
     :return: List of raw href strings.
     """
-    hrefs: list[str] = []
-    for m in _LINK.finditer(text):
-        hrefs.append(m.group(2).strip())
-    for m in _REF_LINK.finditer(text):
-        hrefs.append(m.group(1).strip())
+    hrefs: list[str] = [m.group(2).strip() for m in _LINK.finditer(text)]
+    hrefs.extend(m.group(1).strip() for m in _REF_LINK.finditer(text))
     return hrefs
 
 

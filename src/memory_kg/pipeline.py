@@ -342,7 +342,7 @@ class AnalysisPipeline:
             embeddings = embedder.embed_texts(texts)
 
             # Store embeddings on chunks for later use
-            for chunk, emb in zip(chunks, embeddings):
+            for chunk, emb in zip(chunks, embeddings, strict=True):
                 chunk["_embedding"] = emb
 
             # Fit clusters

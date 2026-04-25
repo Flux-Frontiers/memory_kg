@@ -1,0 +1,31 @@
+cff-version: "1.2.0"
+message: "If you use this software, please cite it using the metadata below."
+type: software
+title: "MemoryKG: Hybrid Semantic Knowledge Graph for Document Corpora and Conversational Memory"
+abstract: >
+  MemoryKG builds a hybrid semantic + structural knowledge graph from Markdown
+  and plain-text document corpora. It chunks text semantically, discovers
+  structural and semantic relationships between sections and chunks, stores them
+  in SQLite, and augments retrieval with vector embeddings via LanceDB. It also
+  supports a conversational memory layer — ingesting and indexing agent turns,
+  consolidating them into summaries, and enabling semantic recall across sessions
+  via MCP-based AI integration.
+authors:
+  - family-names: Suchanek
+    given-names: "Eric G., PhD"
+    orcid: "https://orcid.org/0009-0009-0891-1507"
+    email: suchanek@flux-frontiers.com
+    affiliation: "Flux-Frontiers"
+version: "0.3.0"
+date-released: "2026-04-25"
+license-url: "https://www.elastic.co/licensing/elastic-license"
+repository-code: "https://github.com/Flux-Frontiers/memory_kg"
+url: "https://github.com/Flux-Frontiers/memory_kg"
+keywords:
+  - knowledge-graph
+  - document-analysis
+  - conversational-memory
+  - markdown
+  - semantic-search
+  - lancedb
+  - mcp

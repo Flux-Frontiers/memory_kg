@@ -179,7 +179,10 @@ class SentenceTransformerEmbedder(Embedder):
             else:
                 os.environ["TQDM_DISABLE"] = _prev_tqdm
         self.model_name = model_name
-        self.dim: int = self.model.get_sentence_embedding_dimension() or 384
+        get_dim = getattr(self.model, "get_embedding_dimension", None) or getattr(
+            self.model, "get_sentence_embedding_dimension", None
+        )
+        self.dim: int = (get_dim() if get_dim is not None else None) or 384
 
     def embed_texts(self, texts: list[str]) -> list[list[float]]:
         """Embed a list of strings into float32 vectors."""
@@ -314,10 +317,11 @@ class SemanticIndex:
         tbl = self._open_table(wipe=wipe)
 
         indexed = 0
-        # Only accumulate vectors in memory when SIMILAR_TO discovery is needed.
-        # Skipping this saves ~800 MB RAM for a 528K-node corpus at 384 dims.
-        all_ids: list[str] = [] if discover_similar else []
-        all_vecs: list[list[float]] = [] if discover_similar else []
+        # Accumulators for SIMILAR_TO discovery; only populated when discover_similar.
+        # Skipping the .extend() calls below saves ~800 MB RAM for a 528K-node
+        # corpus at 384 dims.
+        all_ids: list[str] = []
+        all_vecs: list[list[float]] = []
 
         # NOTE: n_workers is accepted but Phase 2 embedding runs single-process.
         # Multi-process spawn (CorpusEmbedder) deadlocks on macOS with MPS; the
@@ -365,11 +369,10 @@ class SemanticIndex:
 
                 ids = [n["id"] for n in chunk]
 
-                if not wipe:
+                if not wipe and ids:
                     # Incremental: delete stale vectors before re-adding
-                    if ids:
-                        pred = " OR ".join([f"id = '{_escape(nid)}'" for nid in ids])
-                        tbl.delete(pred)
+                    pred = " OR ".join([f"id = '{_escape(nid)}'" for nid in ids])
+                    tbl.delete(pred)
 
                 rows = [
                     {
@@ -381,7 +384,7 @@ class SemanticIndex:
                         "text": text,
                         "vector": vec,
                     }
-                    for n, text, vec in zip(chunk, texts, vecs)
+                    for n, text, vec in zip(chunk, texts, vecs, strict=True)
                 ]
 
                 if wipe:
@@ -487,7 +490,7 @@ class SemanticIndex:
             transient=True,
         ) as prog:
             task = prog.add_task("  SIMILAR_TO", total=len(chunk_ids))
-            for ci, (nid, qvec) in enumerate(zip(chunk_ids, chunk_vecs)):
+            for ci, (nid, qvec) in enumerate(zip(chunk_ids, chunk_vecs, strict=True)):
                 raw = tbl.search(qvec.tolist()).limit(k + 1).to_list()
                 for row in raw:
                     candidate = row["id"]

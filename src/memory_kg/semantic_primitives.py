@@ -27,15 +27,17 @@ SEMANTIC_NODE_KINDS = frozenset(("assertion", "event"))
 # Edge relations for semantic memory layer
 # ============================================================================
 
-SEMANTIC_EDGE_RELS = frozenset((
-    "SUPPORTS",       # chunk → assertion: chunk provides evidence for assertion
-    "ABOUT",          # assertion → entity: assertion is about (subject) entity
-    "REFERS_TO",      # assertion → entity: assertion refers to (object) entity
-    "INVOLVES",       # event → entity: entity participated in event
-    "DESCRIBES",      # chunk → event: chunk describes event
-    "SUPERSEDES",     # assertion → assertion: newer assertion supersedes older
-    "DERIVED_FROM",   # assertion → event: assertion derived from event
-))
+SEMANTIC_EDGE_RELS = frozenset(
+    (
+        "SUPPORTS",  # chunk → assertion: chunk provides evidence for assertion
+        "ABOUT",  # assertion → entity: assertion is about (subject) entity
+        "REFERS_TO",  # assertion → entity: assertion refers to (object) entity
+        "INVOLVES",  # event → entity: entity participated in event
+        "DESCRIBES",  # chunk → event: chunk describes event
+        "SUPERSEDES",  # assertion → assertion: newer assertion supersedes older
+        "DERIVED_FROM",  # assertion → event: assertion derived from event
+    )
+)
 """Edge relations introduced by the semantic memory layer."""
 
 # ============================================================================
@@ -43,20 +45,20 @@ SEMANTIC_EDGE_RELS = frozenset((
 # ============================================================================
 
 ASSERTION_SCHEMA = {
-    "subject": str,                  # entity name or entity_id
-    "predicate": str,                # normalized relation (lives_in, works_at, etc.)
-    "object": str,                   # literal value (location, org, etc.)
-    "polarity": str,                 # affirmed | negated | uncertain
-    "status": str,                   # active | superseded | contradicted | deprecated
-    "valid_at_start": str | None,    # ISO date or year or None
-    "valid_at_end": str | None,      # ISO date or year or None
-    "confidence": float | None,      # 0-1 extraction confidence
+    "subject": str,  # entity name or entity_id
+    "predicate": str,  # normalized relation (lives_in, works_at, etc.)
+    "object": str,  # literal value (location, org, etc.)
+    "polarity": str,  # affirmed | negated | uncertain
+    "status": str,  # active | superseded | contradicted | deprecated
+    "valid_at_start": str | None,  # ISO date or year or None
+    "valid_at_end": str | None,  # ISO date or year or None
+    "confidence": float | None,  # 0-1 extraction confidence
 }
 
 EVENT_SCHEMA = {
-    "event_type": str,               # relocation | employment_start | employment_end | publication | etc.
-    "summary": str,                  # human-readable event description
-    "time_start": str | None,        # ISO date / year / fuzzy temporal phrase
+    "event_type": str,  # relocation | employment_start | employment_end | publication | etc.
+    "summary": str,  # human-readable event description
+    "time_start": str | None,  # ISO date / year / fuzzy temporal phrase
     "time_end": str | None,
     "time_uncertainty": str | None,  # year-only | month-only | fuzzy | None
 }

@@ -74,7 +74,7 @@ The standard ingestion path. Parses a corpus into a hybrid SQLite + LanceDB know
 │                                                             │
 │  1. Read all nodes from SQLite                              │
 │  2. Batch-embed via SentenceTransformerEmbedder             │
-│     Model: all-mpnet-base-v2 (768-dim)                      │
+│     Model: BAAI/bge-small-en-v1.5 (384-dim, default)        │
 │  3. Write vectors to LanceDB                                │
 │  4. SIMILAR_TO edge discovery:                              │
 │     - k-NN search per chunk                                 │
@@ -124,17 +124,19 @@ The standard ingestion path. Parses a corpus into a hybrid SQLite + LanceDB know
 ### Usage
 
 ```bash
-# Full build (parse + index + SIMILAR_TO)
-memorykg build docs --wipe
+# Full build (parse + index + SIMILAR_TO) — wipe is the default
+memorykg build --repo docs
 
 # Granular steps
-memorykg build-graph docs --wipe     # Step 1: parse → SQLite only
-memorykg build-index --wipe          # Step 2: SQLite → LanceDB + SIMILAR_TO
+memorykg build-graph --repo docs     # Step 1: parse → SQLite only
+memorykg build-index                 # Step 2: SQLite → LanceDB + SIMILAR_TO
+
+# Incremental update — keep existing data
+memorykg build --repo docs --update
 
 # With custom options
-memorykg build docs --wipe \
+memorykg build --repo docs \
     --chunk-size 512 \
-    --model all-mpnet-base-v2 \
     --enable-topics --enable-entities --enable-keywords \
     --topics-file custom_topics.yaml \
     --exclude-dir archive --exclude-dir vendor
@@ -144,8 +146,8 @@ memorykg build docs --wipe \
 
 | Model | Dims | Context | Notes |
 |-------|------|---------|-------|
-| `all-mpnet-base-v2` | 768 | General text | Default for core build |
-| `BAAI/bge-small-en-v1.5` | 384 | Code + metadata | Canonical for CodeKG |
+| `BAAI/bge-small-en-v1.5` | 384 | Code + general text | Default (`DOCKG_MODEL` env override) |
+| `all-mpnet-base-v2` | 768 | General text | Higher-quality alternative |
 
 Override via `--model` or `DOCKG_MODEL` environment variable.
 
@@ -425,7 +427,7 @@ Output: Markdown report + JSON at `~/.claude/memorykg_semantic_latest.json`
 
 | Need | Pipeline | Command |
 |------|----------|---------|
-| Build searchable graph for MCP/CLI queries | Core Build | `memorykg build docs --wipe` |
+| Build searchable graph for MCP/CLI queries | Core Build | `memorykg build --repo docs` |
 | Deep NLP analysis with diversity sampling | Multipass | `memorykg pipeline run --repo docs` |
 | Corpus embedding for manifold analysis | Multipass | `memorykg pipeline embed --repo docs` |
 | Intrinsic dimensionality / MRL quality | Multipass | `memorykg pipeline manifold` |
@@ -452,7 +454,7 @@ The core build pipeline is always needed for MCP server, `query`, and `pack`. Th
 │   ├── PipelineRun_<id>_<ts>.psv
 │   └── embeddings.json    # Corpus embedding cache
 └── models/                # Cached embedding models
-    └── all-mpnet-base-v2/
+    └── BAAI_bge-small-en-v1.5/
 ```
 
 All artifacts under `.memorykg/` are local and reproducible. Add `.memorykg/` to `.gitignore`.
@@ -463,9 +465,9 @@ All artifacts under `.memorykg/` are local and reproducible. Add `.memorykg/` to
 
 | Context | Model | Dims | Why |
 |---------|-------|------|-----|
-| Core build (`memorykg build`) | `all-mpnet-base-v2` | 768 | Strong general-text sentence model |
+| Core build (`memorykg build`) | `BAAI/bge-small-en-v1.5` | 384 | Default (`DOCKG_MODEL` env override); fast, strong for code+text |
+| Core build (alternative) | `all-mpnet-base-v2` | 768 | Higher-quality general-text model; slower |
 | Pipeline embedding (`memorykg pipeline embed`) | `nomic-ai/nomic-embed-text-v1` | 768 | Asymmetric retrieval with task prefix; matches diary_kg |
-| Code knowledge graphs (CodeKG) | `BAAI/bge-small-en-v1.5` | 384 | Benchmark winner for code+metadata |
 
 The core build and pipeline use different models by design:
 - **Core build** embeds short node descriptions (title + name + text[:1024]) for SIMILAR_TO discovery

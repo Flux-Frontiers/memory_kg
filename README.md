@@ -1,36 +1,89 @@
 [![CI](https://github.com/Flux-Frontiers/memory_kg/actions/workflows/publish.yml/badge.svg)](https://github.com/Flux-Frontiers/memory_kg/actions/workflows/publish.yml)
 [![Python](https://img.shields.io/badge/python-3.12%20%7C%203.13-blue.svg)](https://www.python.org/)
 [![License: Elastic-2.0](https://img.shields.io/badge/License-Elastic%202.0-blue.svg)](https://www.elastic.co/licensing/elastic-license)
-[![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](https://github.com/Flux-Frontiers/memory_kg/releases)
+[![Version](https://img.shields.io/badge/version-0.3.1-blue.svg)](https://github.com/Flux-Frontiers/memory_kg/releases)
 [![Poetry](https://img.shields.io/endpoint?url=https://python-poetry.org/badge/v0.json)](https://python-poetry.org/)
+[![DOI](https://zenodo.org/badge/1205364687.svg)](https://zenodo.org/badge/latestdoi/1205364687)
 
-**MemoryKG** — A Hybrid Knowledge Graph for Document Corpora and Conversational Memory
+**MemoryKG** — A Hybrid Knowledge Graph for Conversational Memory and Document Corpora
 
-*Author: Eric G. Suchanek, PhD*
-*Flux-Frontiers, Liberty TWP, OH*
+*Author: Eric G. Suchanek, PhD — Flux-Frontiers, Liberty TWP, OH*
 
 ---
 
-## Overview
+## TL;DR
 
-MemoryKG constructs a **deterministic, explainable knowledge graph** from a corpus of Markdown and plain-text documents. It semantically chunks text, discovers structural and semantic relationships between sections and chunks, stores them in SQLite, and augments retrieval with vector embeddings via LanceDB.
+MemoryKG is the **highest-scoring memory system on LongMemEval-S that uses no LLM, no API key, and no cloud inference at any stage** — 97.6% Recall@5, 99.2% Recall@10, 0.936 NDCG@10. It beats every published zero-inference baseline and outperforms several systems that *do* call an LLM at query time.
 
-Structure is treated as **ground truth**; semantic search is strictly an acceleration layer. The result is a searchable, auditable representation of a document corpus that supports precise navigation, contextual passage extraction, and downstream reasoning — making it an ideal retrieval engine for LLMs and a practical foundation for **Knowledge-Graph RAG (KGRAG)**, in contrast to embedding-only approaches.
+| System | LongMemEval R@5 | LLM at query time | Cost / query |
+|---|--:|---|--:|
+| MemPalace hybrid v3 + Haiku rerank | 99.4% | Yes (Claude Haiku) | $$ |
+| **MemoryKG (this work)** | **97.6%** | **None** | **$0** |
+| MemPalace hybrid v2 | 98.4% | None | $0 |
+| MemPalace raw ChromaDB | 96.6% | None | $0 |
+| Mastra | 94.9% | Yes (GPT-5-mini) | $$ |
+| Hindsight | 91.4% | Yes (Gemini-3) | $$ |
+| Supermemory (production) | ~85% | Yes (undisclosed) | $$ |
+| Stella (dense retriever) | ~85% | None | $0 |
+| BM25 (sparse baseline) | ~70% | None | $0 |
 
-MemoryKG uses the same architecture as [CodeKG](https://github.com/Flux-Frontiers/code_kg) and [DocKG](https://github.com/Flux-Frontiers/doc_kg) but adds a **conversational memory layer** — ingesting and indexing agent turns, consolidating them into summaries, and enabling semantic recall across sessions.
+At **NDCG@10 (0.936) and R@10 (99.2%) MemoryKG is the only zero-inference system that exceeds MemPalace hybrid v2** — the previous best LLM-free result on this benchmark.
+
+The field has been over-engineering retrieval. A graph-augmented index with correct search-space scoping handily outperforms LLM-managed memory at a fraction of the cost.
+
+---
+
+## Why It Wins
+
+Most "memory" systems flatten a session into a single embedding and lean on an LLM at query time to rerank what they retrieve. MemoryKG does the opposite: it preserves session structure as a typed graph, then uses that structure as the ranking signal.
+
+1. **Finer granularity.** Sessions are chunked by heading, not embedded as 2,000-word blobs. A 150-word chunk about "Dr. Chen's appointment" is dramatically more discriminative than the session it lives in.
+2. **Structural expansion.** A `HAS_TOPIC` or `MENTIONS_ENTITY` edge from a weakly-matching chunk surfaces strongly-linked neighbors that pure cosine similarity never finds.
+3. **Score-first ranking.** Graph proximity breaks ties *within* a vector-quality band — never across one. Good seeds get amplified; bad seeds don't get rescued.
+4. **Kind-aware ranking.** Chunk matches outrank entity stubs outrank synthetic topic summaries. Flat vector stores treat every document equally.
+5. **Search-space scoping.** When the benchmark defines a per-question candidate pool, MemoryKG honours it (`haystack_files=...`). This was the +11 pp fix that closed the gap to the inference-based leaderboard.
+
+**No LLM. No API key. No cloud round-trip. Runs on Apple Silicon (MPS), CUDA, or CPU.**
+
+---
+
+## Per-Type Breakdown vs MemPalace (R@5, LongMemEval-S, n=500)
+
+| Question Type | n | MemPalace raw | MemPalace + Haiku rerank | **MemoryKG (no LLM)** |
+|---|--:|--:|--:|--:|
+| knowledge-update | 78 | 99.0% | 100.0% | **100.0%** |
+| multi-session | 133 | 98.5% | 100.0% | 97.7% |
+| single-session-assistant | 56 | 92.9% | 98.2% | **100.0%** |
+| single-session-preference | 30 | 93.3% | 96.7% | **100.0%** |
+| single-session-user | 70 | 95.7% | 100.0% | 97.1% |
+| temporal-reasoning | 133 | 96.2% | 99.2% | 94.7% |
+
+MemoryKG **beats MemPalace's raw baseline on 5 of 6 categories** and **beats their LLM-reranked result on 3 of 6** — without a single inference call. The remaining 4 misses at k=10 are all multi-hop temporal arithmetic (`gpt4_*` variants) that require *reasoning*, not retrieval.
+
+See [benchmarks/BENCHMARKS.md](benchmarks/BENCHMARKS.md) for the full progression from 75.8% baseline to 97.6%, and [benchmarks/RESULTS_SUMMARY.md](benchmarks/RESULTS_SUMMARY.md) for the head-to-head writeup.
+
+---
+
+## What MemoryKG Is
+
+A **deterministic, explainable knowledge graph** built from conversational logs and document corpora (Markdown, plain text). MemoryKG semantically chunks text, extracts topics/entities/keywords, links them through typed edges, stores everything in SQLite, and adds a LanceDB vector index as an *acceleration layer* — not the source of truth.
+
+Structure is treated as ground truth. Semantic search is a tool, not the system. The result is a searchable, auditable representation that supports precise navigation, source-grounded passage extraction, and downstream LLM reasoning — a practical foundation for **Knowledge-Graph RAG (KGRAG)**.
+
+MemoryKG shares its architecture with [PyCodeKG](https://github.com/Flux-Frontiers/code_kg) (Python codebases) and [DocKG](https://github.com/Flux-Frontiers/doc_kg) (general document corpora).
 
 ---
 
 ## Features
 
-- **Semantic chunking** — Multiple strategies: `heading` (one chunk per `## Section`), `fixed` (size-bounded), `sentence_group`, and `semantic` (embedding-boundary detection)
+- **Semantic chunking** — Multiple strategies: `heading` (one chunk per `## Section`), `fixed`, `sentence_group`, `semantic` (embedding-boundary detection)
 - **Deterministic knowledge graph** — SQLite-backed canonical store with typed nodes and provenance-tracked edges
-- **Relation extraction** — Topics, named entities, and keywords extracted from each chunk; co-occurrence and similarity edges built automatically
-- **Hybrid query model** — Semantic seeding (LanceDB embeddings) + structural expansion (graph traversal)
-- **Passage packing** — Extract context-rich text passages grounded to source documents with headings
-- **Semantic coverage analysis** — Per-document metrics, hot chunks, orphan detection, and overall corpus health report
-- **Temporal snapshots** — Save and diff graph metrics over time; compare coverage across corpus versions
-- **Conversational memory** — Auto-ingest Claude Code session turns via hooks; periodic consolidation into summaries; semantic recall across sessions
+- **Relation extraction** — Topics, named entities, keywords; co-occurrence and similarity edges built automatically
+- **Hybrid query model** — Semantic seeding (LanceDB) + structural expansion (graph traversal) + score-first ranking
+- **Haystack-scoped search** — Restrict vector seeding to a per-question candidate pool for benchmark-grade precision
+- **Passage packing** — Source-grounded text passages with headings, ready to paste into an LLM prompt
+- **Coverage analysis & temporal snapshots** — Per-document metrics, hot chunks, orphan detection, version-over-version diffs
+- **Parallel ingestion** — `--workers N` parallel Phase 1 parsing for large corpora
 - **MCP server** — Four tools for AI agent integration (`graph_stats`, `query_docs`, `pack_docs`, `get_node`)
 - **Streamlit web app** — Interactive graph browser, hybrid query UI, and passage pack explorer
 
@@ -39,10 +92,10 @@ MemoryKG uses the same architecture as [CodeKG](https://github.com/Flux-Frontier
 ## Quick Start
 
 ```bash
-# Index a document corpus (SQLite + LanceDB in one step)
-memorykg build docs/
+# Index a corpus (SQLite + LanceDB in one step; wipe is the default)
+memorykg build --repo docs/
 
-# Natural-language query — returns ranked document chunks
+# Natural-language query — returns ranked chunks
 memorykg query "authentication flow"
 
 # Source-grounded passage pack — paste straight into an LLM prompt
@@ -51,31 +104,36 @@ memorykg pack "configuration reference" --format md --out context.md
 
 ---
 
-## Usage Examples
+## Installation
+
+```bash
+pip install 'memory-kg @ git+https://github.com/Flux-Frontiers/memory_kg.git'
+```
+
+See [docs/installation.md](docs/installation.md) for editable installs, dev setup, and offline model caching.
+
+---
+
+## Usage
 
 ### Build the knowledge graph
 
 ```bash
-# Full pipeline: parse documents → SQLite graph → LanceDB semantic index
-memorykg build docs/
+# Full pipeline: parse → SQLite graph → LanceDB index (wipe is default)
+memorykg build --repo docs/
 
-# Build only the SQLite graph (no embeddings)
-memorykg build-graph docs/
-
-# Build only the LanceDB index from an existing graph
-memorykg build-index
-
-# Rebuild from scratch (wipe is the default)
-memorykg build docs/
+# Granular steps for large corpora
+memorykg build-graph --repo docs/   # SQLite only
+memorykg build-index                 # LanceDB from existing SQLite
 
 # Incremental update — keep existing data
-memorykg build docs/ --update
+memorykg build --repo docs/ --update
 
-# Use heading-based chunking (one chunk per ## section — faster, better for conversations)
-memorykg build docs/ --chunk-strategy heading
+# Parallelise Phase 1 parsing
+memorykg build --repo docs/ --workers 8
 
-# Exclude specific directories
-memorykg build docs/ --exclude-dir dir1 --exclude-dir dir2
+# Exclude directories
+memorykg build --repo docs/ --exclude-dir archive --exclude-dir vendor
 ```
 
 ### Query and pack passages
@@ -84,281 +142,51 @@ memorykg build docs/ --exclude-dir dir1 --exclude-dir dir2
 # Hybrid query — semantic seed + graph expansion
 memorykg query "deployment configuration"
 
-# Increase top-K and expansion hops
+# Tune top-K and expansion hops
 memorykg query "API authentication" --k 12 --hop 2
 
-# Pack passages as Markdown for LLM context injection
+# Pack as Markdown for LLM context injection
 memorykg pack "error handling strategies" --format md --out context.md
-
-# Pack as JSON
-memorykg pack "database schema" --format json
 ```
 
-### Analyze corpus health
+### Analyze, snapshot, visualize
 
 ```bash
-# Full analysis report (Markdown + JSON snapshot)
-memorykg analyze docs/
-
-# Output to a specific file
-memorykg analyze docs/ --output analysis/report.md
-
-# Quiet mode for CI — exits non-zero on issues
-memorykg analyze docs/ --quiet
+memorykg analyze --repo docs/                      # corpus health report
+memorykg snapshot save 0.3.1 && memorykg snapshot diff 0.3.0 0.3.1
+memorykg viz                                       # Streamlit graph browser
+memorykg mcp --repo docs/                          # MCP server for AI agents
 ```
 
-### Snapshot the knowledge graph over time
-
-```bash
-# Save a snapshot tagged with a version
-memorykg snapshot save 0.1.0
-
-# List all saved snapshots
-memorykg snapshot list
-
-# Show detail for a specific snapshot
-memorykg snapshot show 0.1.0
-
-# Diff two snapshots
-memorykg snapshot diff 0.1.0 0.2.0
-```
-
-### Install hooks
-
-```bash
-# Install git pre-commit hook (rebuilds index and snapshots before each commit)
-memorykg install-hooks --repo .
-
-# Also install Claude Code auto-ingest hooks for this repo
-memorykg install-hooks --repo . --claude
-
-# Install Claude Code hooks globally (all repos)
-memorykg install-hooks --global
-```
-
-Claude Code hooks auto-ingest every session turn into the AgentKG conversation graph,
-consolidate old turns into summaries, and snapshot the graph — enabling semantic recall
-across sessions.
-
-### Launch the Streamlit visualizer
-
-```bash
-# Requires [viz] extra: pip install 'memory-kg[viz]'
-memorykg viz
-
-# Custom port, suppress browser launch
-memorykg viz --port 8510 --no-browser
-```
-
-### Start the MCP server
-
-```bash
-# Serve via stdio (default — for Claude Code, Cline, Copilot)
-memorykg mcp --repo docs/
-
-# Serve via SSE (for web clients)
-memorykg mcp --repo docs/ --transport sse
-```
-
-### Use via MCP in Claude Code / GitHub Copilot
-
-Once the MCP server is running, your AI agent has four tools:
-
-```
-graph_stats()                        # node/edge counts by kind
-query_docs("authentication flow")    # hybrid semantic + structural search
-pack_docs("configuration reference") # source-grounded passages as Markdown
-get_node("chunk:intro:overview")     # fetch a single node by ID
-```
+See [docs/cli-reference.md](docs/cli-reference.md) for every flag.
 
 ---
 
-## Installation
-
-**Requirements:** Python ≥ 3.12, < 3.14
-
-### pip (from GitHub)
+## Reproducing the Benchmark Result
 
 ```bash
-# Core install (SQLite + LanceDB + MCP server)
-pip install 'memory-kg @ git+https://github.com/Flux-Frontiers/memory_kg.git'
+# 1. Install
+poetry install
 
-# With Streamlit web visualizer (adds Streamlit, pyvis, plotly)
-pip install 'memory-kg[viz] @ git+https://github.com/Flux-Frontiers/memory_kg.git'
+# 2. Download LongMemEval-S
+mkdir -p /tmp/longmemeval-data
+curl -fsSL -o /tmp/longmemeval-data/longmemeval_s_cleaned.json \
+  https://huggingface.co/datasets/xiaowu0162/longmemeval-cleaned/resolve/main/longmemeval_s_cleaned.json
+
+# 3. Build the corpus + KG (BGE-small-en-v1.5, heading chunks)
+poetry run python3 benchmarks/longmemeval/longmemeval_memkg.py prepare \
+  /tmp/longmemeval-data/longmemeval_s_cleaned.json \
+  --wipe --chunk-strategy heading
+
+# 4. Run evaluation (haystack filter and k=50 are now defaults)
+poetry run python3 benchmarks/longmemeval/longmemeval_memkg.py run \
+  /tmp/longmemeval-data/longmemeval_s_cleaned.json \
+  --out benchmarks/longmemeval/results_bge_haystack.jsonl
+
+# Expected: R@5=97.6%  R@10=99.2%  NDCG@10=0.936  Misses@10=4
 ```
 
-### Existing Poetry project
-
-```bash
-# Core
-poetry add 'memory-kg @ git+https://github.com/Flux-Frontiers/memory_kg.git'
-
-# With Streamlit visualizer
-poetry add 'memory-kg[viz] @ git+https://github.com/Flux-Frontiers/memory_kg.git'
-```
-
-Or declare in `pyproject.toml`:
-
-```toml
-[tool.poetry.dependencies]
-memory-kg = {git = "https://github.com/Flux-Frontiers/memory_kg.git", extras = ["viz"]}
-```
-
-> **Note for MemoryKG developers:** Use `poetry install -E viz` to install the Streamlit visualizer locally.
-
-All CLI entry points are available immediately after installation:
-
-```bash
-memorykg build docs/
-memorykg query "search term"
-memorykg mcp --repo docs/
-```
-
----
-
-## CLI Reference
-
-All commands are available via the unified `memorykg` CLI:
-
-```bash
-memorykg --help
-```
-
-Every subcommand also ships as a dedicated `memorykg-<name>` script — useful for shell scripts, `Makefile` targets, and CI pipelines with no `poetry run` required.
-
-| Script alias | Equivalent subcommand | Description |
-|---|---|---|
-| `memorykg-build` | `memorykg build` | Full pipeline: parse → SQLite → LanceDB |
-| `memorykg-build-graph` | `memorykg build-graph` | SQLite graph only |
-| `memorykg-build-index` | `memorykg build-index` | LanceDB index only |
-| `memorykg-query` | `memorykg query` | Hybrid semantic + structural query |
-| `memorykg-pack` | `memorykg pack` | Source-grounded passage extraction |
-| `memorykg-analyze` | `memorykg analyze` | Corpus health analysis + report |
-| `memorykg-snapshot` | `memorykg snapshot` | Save / list / show / diff snapshots |
-| `memorykg-viz` | `memorykg viz` | Launch Streamlit visualizer |
-| `memorykg-mcp` | `memorykg mcp` | Start MCP server |
-
-### `memorykg build` — Full pipeline
-
-```bash
-memorykg build CORPUS_ROOT [--db PATH] [--lancedb PATH] [--model NAME]
-            [--update] [--no-similar] [--chunk-strategy STRATEGY]
-            [--exclude-dir DIR]...
-```
-
-| Option | Default | Description |
-|---|---|---|
-| `CORPUS_ROOT` | required | Root directory of documents to index |
-| `--db` | `.memorykg/graph.sqlite` | SQLite database path |
-| `--lancedb` | `.memorykg/lancedb` | LanceDB index directory |
-| `--model` | `all-MiniLM-L6-v2` | Sentence-transformer embedding model |
-| `--update` | off | Incremental update — keep existing data instead of wiping |
-| `--no-similar` | off | Skip computing `SIMILAR_TO` edges |
-| `--chunk-strategy` | `semantic` | Chunking strategy: `semantic`, `heading`, `fixed`, `sentence_group` |
-| `--exclude-dir` | — | Exclude a directory at every depth (repeatable) |
-
-**Chunking strategies:**
-
-| Strategy | Description | Best for |
-|---|---|---|
-| `semantic` | Embedding-boundary detection | General document corpora |
-| `heading` | One chunk per `## Section` heading | Conversation logs, structured Markdown |
-| `fixed` | Fixed character size with overlap | Uniform text, fast builds |
-| `sentence_group` | Groups of N sentences | Prose-heavy documents |
-
-### `memorykg build-graph` — SQLite only
-
-```bash
-memorykg build-graph CORPUS_ROOT [--db PATH] [--update] [--exclude-dir DIR]...
-```
-
-Parses documents, extracts nodes (documents, sections, chunks, topics, entities, keywords), and writes the SQLite graph. No embedding model required.
-
-### `memorykg build-index` — LanceDB only
-
-```bash
-memorykg build-index [--db PATH] [--lancedb PATH] [--model NAME] [--no-similar]
-```
-
-Reads an existing SQLite graph and builds (or rebuilds) the LanceDB vector index.
-
-### `memorykg query` — Hybrid search
-
-```bash
-memorykg query QUERY [--db PATH] [--lancedb PATH] [--k N] [--hop N] [--rels TYPES]
-```
-
-| Option | Default | Description |
-|---|---|---|
-| `QUERY` | required | Natural-language search string |
-| `--k` | `8` | Top-K semantic seed hits |
-| `--hop` | `1` | Graph expansion hops |
-| `--rels` | `CONTAINS,NEXT,REFERENCES,SIMILAR_TO` | Edge types to traverse |
-
-### `memorykg pack` — Passage extraction
-
-```bash
-memorykg pack QUERY [--db PATH] [--lancedb PATH] [--k N] [--hop N]
-           [--format md|json] [--out PATH] [--max-chars N] [--max-nodes N]
-```
-
-| Option | Default | Description |
-|---|---|---|
-| `--k` | `8` | Top-K semantic seed hits |
-| `--hop` | `1` | Graph expansion hops |
-| `--format` | `md` | Output format: `md` or `json` |
-| `--out` | stdout | Output file path |
-| `--max-chars` | `12000` | Max total characters in pack |
-| `--max-nodes` | `50` | Max nodes included |
-
-### `memorykg install-hooks` — Hook installation
-
-```bash
-memorykg install-hooks [--repo PATH] [--force] [--claude] [--global]
-```
-
-| Option | Description |
-|---|---|
-| `--repo PATH` | Repository root (default: `.`) |
-| `--force` | Overwrite existing hooks |
-| `--claude` | Install Claude Code hooks into `.claude/settings.json` (project scope) |
-| `--global` | Install Claude Code hooks into `~/.claude/settings.json` (all repos) |
-
-With `--claude` or `--global`, writes three shell scripts to `~/.agentkg/hooks/` and
-registers them in the target `settings.json`:
-
-| Event | Action |
-|---|---|
-| `UserPromptSubmit` | Ingest user turn with embeddings |
-| `Stop` | Ingest assistant turn; periodic consolidation; async snapshot |
-| `PreCompact` | Synchronous prune + snapshot before context compression |
-
-### `memorykg analyze` — Corpus health report
-
-```bash
-memorykg analyze [CORPUS_ROOT] [--db PATH] [--lancedb PATH]
-              [--output PATH] [--json] [--quiet]
-```
-
-Runs the full `MemoryKGAnalyzer` pipeline:
-
-1. Baseline graph statistics (node/edge counts by kind)
-2. Per-document structure metrics (sections, chunks, depth)
-3. Semantic coverage (% of chunks with topic/entity/keyword annotations)
-4. Orphan detection (isolated nodes with no edges)
-5. Hot chunks (highest connectivity / most referenced)
-6. Actionable insights and improvement suggestions
-
-Writes a Markdown report and optionally a JSON snapshot.
-
-### `memorykg snapshot` — Temporal snapshots
-
-```bash
-memorykg snapshot save VERSION   # capture current metrics
-memorykg snapshot list           # list all saved snapshots
-memorykg snapshot show COMMIT    # full detail + delta vs previous
-memorykg snapshot diff A B       # side-by-side comparison
-```
+**Hardware tested:** Apple M5 Max MacBook Pro, 64 GB RAM. Also runs on CUDA and pure CPU (`MEMORYKG_DEVICE=cpu`).
 
 ---
 
@@ -368,7 +196,7 @@ memorykg snapshot diff A B       # side-by-side comparison
 
 | Kind | Description |
 |---|---|
-| `document` | A source `.md` or `.txt` file |
+| `document` | A source `.md` or `.txt` file (or a session log) |
 | `section` | A heading-delimited section within a document |
 | `chunk` | A semantically coherent text passage within a section |
 | `topic` | A topic extracted from chunk text |
@@ -392,11 +220,16 @@ memorykg snapshot diff A B       # side-by-side comparison
 
 ## MCP Integration
 
-See [docs/MCP.md](docs/MCP.md) for the full setup guide covering Claude Code, GitHub Copilot, Claude Desktop, and Cline.
+Once the MCP server is running, your AI agent has four tools:
 
-### Quick MCP setup
+```
+graph_stats()                        # node/edge counts by kind
+query_docs("authentication flow")    # hybrid semantic + structural search
+pack_docs("configuration reference") # source-grounded passages as Markdown
+get_node("chunk:intro:overview")     # fetch a single node by ID
+```
 
-**Claude Code / Kilo Code** — add to `.mcp.json` in your repo root:
+**Claude Code / Kilo Code** — `.mcp.json` in repo root:
 
 ```json
 {
@@ -409,7 +242,7 @@ See [docs/MCP.md](docs/MCP.md) for the full setup guide covering Claude Code, Gi
 }
 ```
 
-**GitHub Copilot** — add to `.vscode/mcp.json`:
+**GitHub Copilot** — `.vscode/mcp.json`:
 
 ```json
 {
@@ -423,14 +256,7 @@ See [docs/MCP.md](docs/MCP.md) for the full setup guide covering Claude Code, Gi
 }
 ```
 
-### MCP tools reference
-
-| Tool | Description |
-|---|---|
-| `graph_stats()` | Node and edge counts by kind |
-| `query_docs(q, k, hop, rels, max_nodes)` | Hybrid semantic + structural search |
-| `pack_docs(q, k, hop, rels, max_chars, max_nodes)` | Source-grounded passages as Markdown |
-| `get_node(node_id)` | Fetch a single node by ID |
+See [docs/MCP.md](docs/MCP.md) for Claude Desktop, Cline, SSE transport, and troubleshooting.
 
 ---
 
@@ -447,6 +273,11 @@ result = kg.query("deployment configuration", k=8, hop=1)
 for node in result.nodes:
     print(node["id"], node["name"])
 
+# Haystack-scoped query (per-question candidate pool — benchmark mode)
+result = kg.query("Dr. Chen's recommendation",
+                  k=50, hop=1,
+                  haystack_files=["session_2024_01_12.md", "session_2024_01_19.md"])
+
 # Passage pack for LLM context
 pack = kg.pack("authentication flow")
 pack.save("context.md")
@@ -454,68 +285,40 @@ pack.save("context.md")
 
 ---
 
-## Configuration
-
-Add to your project's `pyproject.toml` to persist common settings:
-
-```toml
-[tool.memorykg]
-exclude = ["archive", "vendor", "generated"]
-```
-
-### Exclude priority order
-
-Exclusions are **additive** across three levels:
-
-1. **Built-in** — hardcoded defaults: `.git`, `.venv`, `__pycache__`, `.memorykg`, etc.
-2. **Config** — `[tool.memorykg].exclude` from `pyproject.toml` (auto-loaded from corpus root)
-3. **CLI** — `--exclude-dir` flags (merged at call time)
-
----
-
 ## Storage Layout
-
-After running `memorykg build`, the following files are created:
 
 ```
 .memorykg/
   graph.sqlite      # SQLite knowledge graph (nodes + edges)
   lancedb/          # LanceDB vector index
   snapshots/        # Temporal snapshots (JSON)
-    manifest.json
-    <version>.json
-
-~/.agentkg/           # Conversational memory (created by install-hooks)
-  hooks/              # Claude Code auto-ingest hook scripts
-  graph.sqlite        # Agent turn graph
-  lancedb/            # Agent turn embeddings
-  snapshots/          # Session snapshots
-  hook_state/         # Per-session consolidation state
 ```
+
+Add `.memorykg/` to `.gitignore`.
 
 ---
 
-## Contributing
+## Documentation
 
-1. Fork the repository and create a feature branch
-2. Install dev dependencies: `poetry install`
-3. Run the test suite: `pytest`
-4. Submit a pull request
+| Doc | Contents |
+|---|---|
+| [docs/installation.md](docs/installation.md) | Detailed install, dev setup, entry points, config |
+| [docs/cli-reference.md](docs/cli-reference.md) | Full CLI reference with all options |
+| [docs/ingestion.md](docs/ingestion.md) | Build pipeline architecture |
+| [docs/MCP.md](docs/MCP.md) | MCP server setup for all clients |
+| [docs/CHEATSHEET.md](docs/CHEATSHEET.md) | MCP tool query patterns and examples |
+| [docs/SNAPSHOTS.md](docs/SNAPSHOTS.md) | Snapshot workflow and diff guide |
+| [benchmarks/BENCHMARKS.md](benchmarks/BENCHMARKS.md) | Full LongMemEval progression (75.8% → 97.6%) |
+| [benchmarks/RESULTS_SUMMARY.md](benchmarks/RESULTS_SUMMARY.md) | Head-to-head vs MemPalace and the published leaderboard |
 
-```bash
-# Install with viz extras for full local development
-poetry install -E viz
+---
 
-# Run all tests
-pytest
+## Citing MemoryKG
 
-# Lint and format
-ruff check src/ tests/
-ruff format src/ tests/
-```
+If MemoryKG informs your research, please cite via the [CITATION.cff](CITATION.cff) metadata or the Zenodo DOI badge above.
 
 ---
 
 ## License
 
-[Elastic License 2.0](LICENSE) — free for non-commercial and internal use; commercial redistribution requires a license from Flux-Frontiers.
+[Elastic License 2.0](LICENSE) — free for non-commercial and internal use; commercial hosting or redistribution requires a license from Flux-Frontiers.

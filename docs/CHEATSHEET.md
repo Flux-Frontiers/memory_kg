@@ -352,7 +352,7 @@ memorykg pipeline manifold
 | Aspect | Core Build (`memorykg build`) | Pipeline (`memorykg pipeline run`) |
 |---|---|---|
 | Purpose | Searchable graph for MCP/CLI | Deep NLP analysis with provenance |
-| Embedding model | `all-mpnet-base-v2` | `nomic-ai/nomic-embed-text-v1` |
+| Embedding model | `BAAI/bge-small-en-v1.5` | `nomic-ai/nomic-embed-text-v1` |
 | Chunking | Semantic (embedding-based) | Sentence-group (4 sentences) |
 | Topic classification | Supervised only | Hybrid: supervised + unsupervised K-means |
 | Sampling | All files | Diversity sampling (K-means on features) |
@@ -375,7 +375,7 @@ See `docs/ingestion.md` for the full ingestion architecture.
 Nodes: 1,500   (document: 12 · section: 48 · chunk: 850 · topic: 120 · entity: 200 · keyword: 270)
 Edges: 2,100   (CONTAINS: 900 · NEXT: 450 · SIMILAR_TO: 350 · HAS_TOPIC: 200 · MENTIONS_ENTITY: 150 · HAS_KEYWORD: 50)
 DB:    .memorykg/graph.sqlite
-Model: all-mpnet-base-v2 (core build) · nomic-ai/nomic-embed-text-v1 (pipeline)
+Model: BAAI/bge-small-en-v1.5 (core build) · nomic-ai/nomic-embed-text-v1 (pipeline)
 ```
 
 *Rebuild after significant content changes: `memorykg build docs`*

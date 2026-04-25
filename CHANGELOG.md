@@ -8,6 +8,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `README.md`: Rewritten to lead with the competitive benchmark story — TL;DR table comparing MemoryKG (97.6% R@5, no LLM) against MemPalace, Mastra, Hindsight, Supermemory, and academic baselines; per-type breakdown vs MemPalace raw and MemPalace + Haiku rerank; "Why It Wins" section covering chunk granularity, structural expansion, score-first ranking, kind-aware ranking, and search-space scoping; reproducibility block with exact LongMemEval-S commands; version badge bumped 0.1.0 → 0.3.1
+- `CITATION.cff`: Citation metadata for academic use; Zenodo DOI badge added to README
+- `docs/installation.md`: Detailed install guide (pip, Poetry, dev setup, offline model caching, MCP integration)
+- `docs/cli-reference.md`: Full CLI reference with every flag for `build`, `query`, `pack`, `analyze`, `snapshot`, `viz`, `mcp`
+- `pyproject.toml`: Expanded ruff lint `select` from 5 → 14 rule families (`B`, `SIM`, `C4`, `RET`, `PIE`, `PERF`, `FURB`, `RUF`, `PLE`, `PLW` added on top of the existing `E`, `F`, `W`, `I`, `UP`); added `[tool.ruff.lint.per-file-ignores]` to keep `benchmarks/`, `scripts/`, `tests/`, and `generate_wiki.py` on a looser ruleset; ignored `RUF001`/`RUF002` (intentional en-dash typography), `SIM113` (manual counter is occasionally clearer), `PLW0603` (MCP server uses an intentional module singleton)
+- `kg.py`: `MemoryKG.__init__` gains `embedder: Embedder | None = None` parameter — when provided, pre-seeds `_embedder` so the lazy `SentenceTransformerEmbedder` init never fires; useful for injecting a custom or pre-loaded embedding backend
+
+### Fixed
+- `src/memory_kg/index.py`, `src/memory_kg/pipeline.py`: Three `zip()` calls now use `strict=True` (chunk/texts/vecs and chunk_ids/chunk_vecs pairs) — silently truncating on length mismatch was a latent-bug risk caught by the new `B905` rule
+- `src/memory_kg/cli/main.py`: Restored `# noqa: F401` on side-effect subcommand imports and added explicit `__all__ = ["cli"]` for the entry-point re-export (previous noqa was inadvertently stripped by an earlier ruff auto-fix)
+- `src/memory_kg/index.py`: Collapsed nested `if not wipe: / if ids:` into a single condition (SIM102); removed two `[] if x else []` no-op conditional initializers (RUF034); kept the explanatory comment about the ~800 MB RAM saving when `discover_similar` is off
+- `src/memory_kg/chunker.py`, `src/memory_kg/kg.py`, `src/memory_kg/manifold.py`, `src/memory_kg/memorykg_thorough_analysis.py`: Replaced eight manual `for ... append()` loops with comprehensions or `list.extend()` calls (PERF401)
+- `src/memory_kg/cli/cmd_build.py`: Two `set(generator)` expressions rewritten as set comprehensions (C401)
+- `src/memory_kg/cli/cmd_hooks.py`, `src/memory_kg/semantic_builder.py`: Replaced `.items()` iteration with `.values()` where the key was unused (PERF102, B007)
+- `src/memory_kg/chunker.py`: List concatenation `overlap_sents + [sent]` rewritten as `[*overlap_sents, sent]` (RUF005)
+- `src/memory_kg/store.py`: Combined identical `if`/`elif` branches in graph traversal using a single condition (SIM114)
+- `src/memory_kg/memorykg_semantic_analysis.py`: `_STOP` frozenset's `"""...""".split()` rewritten as a list literal (SIM905)
+- `src/memory_kg/__init__.py`, `src/__init__.py`, `src/memory_kg/snapshots.py`: `__all__` lists sorted in isort style (RUF022)
+- `src/memory_kg/cli/cmd_hooks.py`, `src/memory_kg/cli/main.py`, `src/memory_kg/sampler.py`, `src/memory_kg/snapshots.py`: Removed six unused `# noqa` directives whose underlying rules are no longer enabled (RUF100)
+- Formatting: `ruff format` applied to `benchmarks/build_dockg.py`, `src/memory_kg/semantic_extractor.py`, `src/memory_kg/semantic_primitives.py`, `src/memory_kg/store.py` (4 files reformatted, 62 already clean)
+
+### Fixed
+- `index.py`: `SentenceTransformerEmbedder` dimension probe now tries `get_embedding_dimension()` before falling back to `get_sentence_embedding_dimension()`, then defaults to 384 — ensures compatibility across SentenceTransformer API versions
+
+### Added
 - `--workers` / `n_workers` parameter throughout the build pipeline — `MemoryKG`, `DocGraph`, `SemanticIndex.build()`, `cmd_build.py` (`build` and `build-index` commands), and benchmark scripts now accept `--workers N` for parallel Phase 1 file parsing (default: 8)
 - `memorykg.py`: `parse_corpus()` parallelized via `ThreadPoolExecutor` — each worker thread gets its own thread-local chunker and topic extractor; per-file local nodes/edges are merged after all futures complete, eliminating shared-state races
 - `benchmarks/convomem/convomem_bench.py`: New ConvoMem benchmark harness — evaluates retrieval against the Salesforce ConvoMem dataset (75,336 QA pairs across 6 evidence categories: user facts, assistant facts, changing facts, abstention, preferences, implicit connections); downloads evidence files from HuggingFace on first run; supports `--limit`, `--top-k`, `--category`, `--mode` (raw/aaak), and `--out` options
