@@ -121,6 +121,7 @@ def cooccur_pairs(items: list[str]) -> list[tuple[str, str]]:
 
 
 def _slug(value: str) -> str:
+    """Convert *value* to a lowercase hyphen-separated slug for use as a node-ID component."""
     value = value.strip().lower()
     value = re.sub(r"[^a-z0-9]+", "-", value)
     value = value.strip("-")

@@ -102,10 +102,12 @@ class ProvMeta:
     __slots__ = ("best_hop", "via_seed")
 
     def __init__(self, best_hop: int, via_seed: str) -> None:
+        """Store provenance metadata for a graph node discovered during expansion."""
         self.best_hop = best_hop
         self.via_seed = via_seed
 
     def __repr__(self) -> str:
+        """Return string representation."""
         return f"ProvMeta(best_hop={self.best_hop}, via_seed={self.via_seed!r})"
 
 
@@ -131,6 +133,7 @@ class GraphStore:
     """
 
     def __init__(self, db_path: str | Path) -> None:
+        """Open or create the SQLite database at *db_path*."""
         self.db_path = Path(db_path)
         self._con: sqlite3.Connection | None = None
 
@@ -157,9 +160,11 @@ class GraphStore:
             self._con = None
 
     def __enter__(self) -> GraphStore:
+        """Support context manager use."""
         return self
 
     def __exit__(self, *_: object) -> None:
+        """Close the SQLite connection on context manager exit."""
         self.close()
 
     # ------------------------------------------------------------------
@@ -191,6 +196,7 @@ class GraphStore:
         self._upsert_edges(edges)
 
     def _upsert_nodes(self, nodes: Iterable[DocNode]) -> None:
+        """Upsert node rows into the ``nodes`` table."""
         rows = [
             (
                 n.id,
@@ -225,6 +231,7 @@ class GraphStore:
         self.con.commit()
 
     def _upsert_edges(self, edges: Iterable[DocEdge]) -> None:
+        """Upsert edge rows into the ``edges`` table."""
         rows = [
             (
                 e.src,
@@ -422,6 +429,7 @@ class GraphStore:
         }
 
     def __repr__(self) -> str:
+        """Return string representation."""
         return f"GraphStore(db_path={self.db_path!r})"
 
 

@@ -114,6 +114,7 @@ class CorpusSampler:
         n_clusters: int = 8,
         seed: int = 42,
     ) -> None:
+        """Configure the sampler; feature caches are stored under *cache_dir*."""
         self.corpus_root = Path(corpus_root)
         self.cache_dir = cache_dir or (self.corpus_root / ".memorykg" / "cache")
         self.n_clusters = n_clusters

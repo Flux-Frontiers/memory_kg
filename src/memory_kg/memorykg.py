@@ -307,6 +307,7 @@ def parse_corpus(
     _tls = threading.local()
 
     def _get_chunker():
+        """Return the thread-local chunker, creating it on first access per thread."""
         if not hasattr(_tls, "chunker"):
             _tls.chunker = chunker_for(
                 cast(Literal["semantic", "sentence_group", "fixed", "heading"], chunk_strategy),
@@ -318,6 +319,7 @@ def parse_corpus(
         return _tls.chunker
 
     def _get_topic_extractor():
+        """Return the thread-local topic extractor, creating it on first access per thread."""
         if not hasattr(_tls, "topic_extractor"):
             _tls.topic_extractor = (
                 TopicExtractor(topics_file=topics_file) if enable_topics else None

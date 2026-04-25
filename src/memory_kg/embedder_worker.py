@@ -108,6 +108,7 @@ class EmbeddingCache:
     created_at: str = ""
 
     def __post_init__(self):
+        """Set ``created_at`` to the current UTC timestamp if not already provided."""
         if not self.created_at:
             self.created_at = datetime.now(tz=UTC).isoformat()
 
@@ -137,6 +138,7 @@ class CorpusEmbedder:
         n_workers: int | None = None,
         batch_size: int = 64,
     ) -> None:
+        """Configure the embedding engine; workers are spawned lazily during :meth:`embed`."""
         self.model_name = model_name
         self.n_workers = n_workers or max(1, (os.cpu_count() or 2) // 2)
         self.batch_size = batch_size

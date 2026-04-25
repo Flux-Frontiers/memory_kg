@@ -43,6 +43,7 @@ class SemanticBuildStats:
     assertions_superseded: int = 0
 
     def __str__(self) -> str:
+        """Format build stats as a multi-line human-readable summary."""
         return (
             f"Semantic memory built:\n"
             f"  events:                {self.events_added}\n"

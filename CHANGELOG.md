@@ -8,6 +8,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `analysis/MemoryKG_Agent_instructions.md`: New agent prompt for MemoryKG tool assessment — replaces the old DocKG-targeted version; correctly describes MemoryKG purpose (document corpora), GitHub URL, MCP tools (`query_docs`, `pack_docs`, `get_node`, `graph_stats`), lineage from DocKG, and differentiating features (semantic layer, manifold analysis, pipeline, Claude Code hooks)
+- `analysis/memory_kg_analysis_20260425.md`: PyCodeKG thorough analysis report for the memory_kg codebase — baseline metrics, fan-in ranking, SIR, docstring coverage, orphan audit, CodeRank, concern-based hybrid ranking
+
+### Changed
+- **Docstring coverage: 71.3% → 98.9%** — added 76 docstrings across 17 modules; all functions and methods now documented; remaining 3 undocumented nodes are property setters whose getters already carry the docstring
+  - `store.py`: `ProvMeta.__init__`/`__repr__`, `GraphStore.__init__`/`__enter__`/`__exit__`/`__repr__`/`_upsert_nodes`/`_upsert_edges`
+  - `kg.py`: `BuildStats.__str__`, `MemoryKG.__init__`/`__enter__`/`__exit__`/`__repr__`
+  - `snapshots.py`: `SnapshotManager.__init__`/`load_snapshot`/`get_previous`/`get_baseline`
+  - `index.py`: `SentenceTransformerEmbedder.__init__`/`__repr__`, `SemanticIndex.__init__`/`_read_nodes`/`_open_table`/`_get_table`/`__repr__`, nested `_silent_init`/`_flush`
+  - `chunker.py`: `TextChunker.__init__`, `SentenceGroupChunker.__init__`, `HeadingChunker.__init__`
+  - `graph.py`: `DocGraph.__init__`/`__repr__`
+  - `app.py`: `_parse_cli_db_arg`, `_init_state`, `_load_store`, `_load_kg`, `_get_store`, `_build_pyvis`, `_render_sidebar`, `_load_all_nodes_edges`
+  - `memorykg_thorough_analysis.py`: all 9 `MemoryKGAnalyzer` methods + `_default_report_path`/`_default_json_path`/`_print_summary`
+  - `memorykg_semantic_analysis.py`: `MemoryKGSemanticAnalyzer.__init__`/`_compile_results`/`_write_report` + module-level helpers
+  - `topics.py`, `relations.py`, `sampler.py`, `pipeline.py`, `manifold.py`, `semantic_builder.py`, `semantic_extractor.py`, `embedder_worker.py`, `memorykg.py`, `cli/cmd_snapshot.py`: remaining undocumented items
+
+### Removed
+- `.dockg/snapshots/` (16 JSON snapshots + manifest): Legacy DocKG snapshot artifacts purged from tracking; superseded by the `.memorykg/` layout
+- `analysis/DocKG_Agent_instructions.md`: Replaced by `MemoryKG_Agent_instructions.md`
+- `analysis/doc_kg_analysis_2026{0308,0314,0320}.md`: Stale DocKG analysis reports removed
+
+### Added
 - `README.md`: Rewritten to lead with the competitive benchmark story — TL;DR table comparing MemoryKG (97.6% R@5, no LLM) against MemPalace, Mastra, Hindsight, Supermemory, and academic baselines; per-type breakdown vs MemPalace raw and MemPalace + Haiku rerank; "Why It Wins" section covering chunk granularity, structural expansion, score-first ranking, kind-aware ranking, and search-space scoping; reproducibility block with exact LongMemEval-S commands; version badge bumped 0.1.0 → 0.3.1
 - `CITATION.cff`: Citation metadata for academic use; Zenodo DOI badge added to README
 - `docs/installation.md`: Detailed install guide (pip, Poetry, dev setup, offline model caching, MCP integration)

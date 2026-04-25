@@ -62,6 +62,7 @@ st.set_page_config(
 
 
 def _parse_cli_db_arg() -> str:
+    """Parse ``--db`` from Streamlit CLI args, ignoring unknown flags."""
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--db", default=None)
     args, _ = parser.parse_known_args()
@@ -69,6 +70,7 @@ def _parse_cli_db_arg() -> str:
 
 
 def _init_state() -> None:
+    """Initialise Streamlit session-state keys with default values on first run."""
     defaults = {
         "db_path": _parse_cli_db_arg() or _DEFAULT_DB,
         "store": None,
@@ -83,6 +85,7 @@ def _init_state() -> None:
 
 @st.cache_resource(show_spinner="Opening SQLite store...")
 def _load_store(db_path: str) -> GraphStore | None:
+    """Open a :class:`~memory_kg.store.GraphStore` at *db_path*, or return ``None`` if absent."""
     p = Path(db_path)
     if not p.exists():
         return None
@@ -91,6 +94,7 @@ def _load_store(db_path: str) -> GraphStore | None:
 
 @st.cache_resource(show_spinner="Loading MemoryKG...")
 def _load_kg(corpus_root: str, db_path: str, lancedb_dir: str, model: str) -> MemoryKG:
+    """Create a cached :class:`~memory_kg.kg.MemoryKG` instance for the given paths and model."""
     return MemoryKG(
         corpus_root=corpus_root,
         db_path=db_path,
@@ -100,6 +104,7 @@ def _load_kg(corpus_root: str, db_path: str, lancedb_dir: str, model: str) -> Me
 
 
 def _get_store() -> GraphStore | None:
+    """Return the active :class:`~memory_kg.store.GraphStore`, reloading if the path changed."""
     db = st.session_state.db_path
     if st.session_state.store_loaded_path != db:
         st.session_state.store = _load_store(db)
@@ -115,6 +120,15 @@ def _build_pyvis(
     seed_ids: set[str] | None = None,
     physics: bool = True,
 ) -> str:
+    """Build a PyVis interactive graph and return its HTML string.
+
+    :param nodes: Node dicts from the store.
+    :param edges: Edge dicts from the store.
+    :param height: Canvas height CSS string (default ``"620px"``).
+    :param seed_ids: Node IDs highlighted as query seeds (gold border).
+    :param physics: Enable Barnes-Hut physics simulation.
+    :return: Self-contained HTML string.
+    """
     net = Network(
         height=height,
         width="100%",
@@ -207,6 +221,7 @@ def _build_pyvis(
 
 
 def _render_sidebar() -> dict:
+    """Render the Streamlit sidebar controls and return the current settings dict."""
     st.sidebar.title("MemoryKG Explorer")
     st.sidebar.markdown("---")
 
@@ -266,6 +281,12 @@ def _render_sidebar() -> dict:
 
 
 def _load_all_nodes_edges(store: GraphStore, max_nodes: int) -> tuple[list[dict], list[dict]]:
+    """Load up to *max_nodes* nodes and their internal edges from *store*.
+
+    :param store: Open :class:`~memory_kg.store.GraphStore`.
+    :param max_nodes: Upper bound on nodes returned (ordered by kind, file, char offset).
+    :return: ``(nodes, edges)`` tuple of node and edge dicts.
+    """
     rows = store.con.execute(
         """
         SELECT id, kind, name, title, file_path, char_start, char_end, heading_level, text

@@ -143,6 +143,7 @@ class AnalysisPipeline:
     """
 
     def __init__(self, config: PipelineConfig) -> None:
+        """Initialise the pipeline from *config*; topic extractor and embedder are lazy."""
         self.config = config
         self._run_id = config.run_id or uuid.uuid4().hex[:12]
         self._topic_extractor: TopicExtractor | None = None

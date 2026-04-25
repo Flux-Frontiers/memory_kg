@@ -69,6 +69,7 @@ class DocGraph:
         topics_file: str | None = None,
         n_workers: int = 8,
     ) -> None:
+        """Configure the corpus extraction pipeline; extraction is deferred until :meth:`extract`."""
         self.corpus_root: Path = Path(corpus_root).resolve()
         self.extensions = extensions
         self.exclude: set[str] = exclude or set()
@@ -158,6 +159,7 @@ class DocGraph:
         }
 
     def __repr__(self) -> str:
+        """Return string representation showing extraction state."""
         extracted = self._nodes is not None
         if extracted:
             return (

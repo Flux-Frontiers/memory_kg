@@ -100,6 +100,7 @@ class EventCandidate:
     confidence: float = 0.8
 
     def __post_init__(self):
+        """Initialise mutable default: replace ``None`` entities list with an empty list."""
         if self.entities_involved is None:
             self.entities_involved = []
 

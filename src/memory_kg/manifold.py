@@ -77,6 +77,7 @@ class ManifoldAnalyzer:
         mrl_dims: list[int] | None = None,
         mrr_k: int = 10,
     ) -> None:
+        """Configure analysis parameters."""
         self.pca_max_components = pca_max_components
         self.mrl_dims = mrl_dims or [32, 64, 128, 256, 512]
         self.mrr_k = mrr_k

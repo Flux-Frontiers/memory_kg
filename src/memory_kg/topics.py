@@ -99,6 +99,7 @@ class TopicExtractor:
     """
 
     def __init__(self, topics_file: str | None = None) -> None:
+        """Load the topic map from *topics_file*, falling back to the built-in defaults."""
         self.topic_map = self._load_topic_map(topics_file)
         self._kmeans: Any = None
         self._cluster_labels: list[str] = []
@@ -168,6 +169,7 @@ class TopicExtractor:
         return [k for k, _ in ordered[:max_keywords]]
 
     def _load_topic_map(self, topics_file: str | None) -> dict[str, list[str]]:
+        """Load and normalise a topic→keywords map from *topics_file*, or return the built-in default."""
         if not topics_file:
             return _DEFAULT_TOPICS
 
@@ -329,4 +331,5 @@ class TopicExtractor:
 
 
 def _tokenize(text: str) -> list[str]:
+    """Extract lowercase word tokens (letters + digits, 2–31 chars) from *text*."""
     return [m.group(0).lower() for m in re.finditer(r"[A-Za-z][A-Za-z0-9_\-]{1,30}", text)]

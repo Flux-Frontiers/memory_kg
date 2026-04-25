@@ -44,6 +44,14 @@
         "--repo",
         "/Users/egs/repos/memory_kg"
       ]
+    },
+    "dockg": {
+      "command": "/Users/egs/repos/memory_kg/.venv/bin/dockg",
+      "args": [
+        "mcp",
+        "--repo",
+        "/Users/egs/repos/memory_kg"
+      ]
     }
   }
 }

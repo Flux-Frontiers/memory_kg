@@ -272,6 +272,7 @@ class SnapshotManager(_BaseSnapshotManager):
         package_name: str = "doc-kg",
         db_path: Any = None,
     ) -> None:
+        """Initialise with *snapshots_dir* and ``doc-kg`` package defaults."""
         super().__init__(snapshots_dir, package_name=package_name, db_path=db_path)
 
     # ------------------------------------------------------------------
@@ -452,14 +453,17 @@ class SnapshotManager(_BaseSnapshotManager):
     # ------------------------------------------------------------------
 
     def load_snapshot(self, key: str) -> Snapshot | None:  # type: ignore[override]
+        """Load a snapshot by *key* and return it as a typed :class:`Snapshot`."""
         snap = super().load_snapshot(key)
         return _rewrap(snap) if snap is not None else None
 
     def get_previous(self, key: str) -> Snapshot | None:  # type: ignore[override]
+        """Return the snapshot preceding *key*, re-wrapped as a typed :class:`Snapshot`."""
         snap = super().get_previous(key)
         return _rewrap(snap) if snap is not None else None
 
     def get_baseline(self) -> Snapshot | None:  # type: ignore[override]
+        """Return the oldest (baseline) snapshot, re-wrapped as a typed :class:`Snapshot`."""
         snap = super().get_baseline()
         return _rewrap(snap) if snap is not None else None
 

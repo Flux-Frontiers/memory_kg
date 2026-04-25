@@ -205,10 +205,14 @@ enable = [
 exclude = ["tests"]
 include = ["src"]
 
+[tool.dockg]
+exclude = [
+    "benchmarks", "bundles", "dist", "src", "scripts", "tests"
+]
+
 [tool.memorykg]
 exclude = [
-    ".memorykg", ".pycodekg", ".git", ".mypy_cache", ".pytest_cache", ".venv",
-    "__pycache__", "benchmarks", "bundles", "dist", "src", "venv",
+    "benchmarks", "bundles", "dist", "src", "scripts", "tests"
 ]
 
 # ---------------------------------------------------------------------------

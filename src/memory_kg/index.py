@@ -82,6 +82,7 @@ def suppress_ingestion_logging() -> None:
         _orig_init = _tqdm.tqdm.__init__
 
         def _silent_init(self, *args, **kwargs):
+            """Patch tqdm.__init__ to always disable progress output."""
             kwargs["disable"] = True
             _orig_init(self, *args, **kwargs)
 
@@ -140,6 +141,7 @@ class SentenceTransformerEmbedder(Embedder):
     """
 
     def __init__(self, model_name: str = DEFAULT_MODEL) -> None:
+        """Load the SentenceTransformer model and determine its embedding dimension."""
         import os  # pylint: disable=import-outside-toplevel
 
         from sentence_transformers import (  # pylint: disable=import-outside-toplevel
@@ -199,6 +201,7 @@ class SentenceTransformerEmbedder(Embedder):
         return np.asarray(vec, dtype="float32").tolist()
 
     def __repr__(self) -> str:
+        """Return string representation."""
         return f"SentenceTransformerEmbedder(model={self.model_name!r}, dim={self.dim})"
 
 
@@ -271,6 +274,7 @@ class SemanticIndex:
         table: str = _DEFAULT_TABLE,
         index_kinds: Sequence[str] = _DEFAULT_KINDS,
     ) -> None:
+        """Configure the LanceDB-backed semantic index; the table is opened lazily."""
         self.lancedb_dir = Path(lancedb_dir)
         self.embedder: Embedder = embedder or SentenceTransformerEmbedder()
         self.table_name = table
@@ -352,6 +356,7 @@ class SemanticIndex:
         pending_rows: list[dict] = []
 
         def _flush(force: bool = False) -> None:
+            """Write pending rows to LanceDB; flushes unconditionally when *force* is True."""
             nonlocal indexed
             if not pending_rows:
                 return
@@ -584,9 +589,11 @@ class SemanticIndex:
     # ------------------------------------------------------------------
 
     def _read_nodes(self, store: GraphStore) -> list[dict]:
+        """Return all nodes of the configured *index_kinds* from *store*."""
         return store.query_nodes(kinds=list(self.index_kinds))
 
     def _open_table(self, *, wipe: bool = False):
+        """Open (or create) the LanceDB table, optionally wiping first."""
         import lancedb  # pylint: disable=import-outside-toplevel
 
         self.lancedb_dir.mkdir(parents=True, exist_ok=True)
@@ -614,6 +621,7 @@ class SemanticIndex:
         return tbl
 
     def _get_table(self):
+        """Return the cached LanceDB table handle, opening it on first access."""
         if self._tbl is None:
             import lancedb  # pylint: disable=import-outside-toplevel
 
@@ -622,6 +630,7 @@ class SemanticIndex:
         return self._tbl
 
     def __repr__(self) -> str:
+        """Return string representation."""
         return (
             f"SemanticIndex(lancedb_dir={self.lancedb_dir!r}, "
             f"table={self.table_name!r}, embedder={self.embedder!r})"

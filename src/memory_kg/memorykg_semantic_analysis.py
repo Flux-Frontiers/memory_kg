@@ -245,6 +245,7 @@ class MemoryKGSemanticAnalyzer:
     """
 
     def __init__(self, kg: MemoryKG, console: Console | None = None) -> None:
+        """Initialise analyzer with an open *kg* instance and optional Rich *console*."""
         self.kg = kg
         self.console = console or Console()
         self.store: GraphStore = kg.store
@@ -586,6 +587,7 @@ class MemoryKGSemanticAnalyzer:
     # ------------------------------------------------------------------
 
     def _compile_results(self, *, elapsed_seconds: float) -> dict:
+        """Assemble all semantic analysis results into a single JSON-serializable dictionary."""
         lang = self.language
         return {
             "timestamp": datetime.datetime.now(datetime.UTC).isoformat(),
@@ -602,6 +604,7 @@ class MemoryKGSemanticAnalyzer:
         }
 
     def _write_report(self, report_path: str, result: dict) -> None:
+        """Write a Markdown semantic analysis report to *report_path* from *result*."""
         p = Path(report_path)
         p.parent.mkdir(parents=True, exist_ok=True)
 
@@ -758,15 +761,18 @@ def _count_syllables(word: str) -> int:
 
 
 def _default_report_path(corpus_root: Path) -> str:
+    """Return the default Markdown report path under ``<corpus_root>/analysis/``."""
     stamp = datetime.datetime.now().strftime("%Y%m%d")
     return str(corpus_root / "analysis" / f"memory_kg_semantic_{stamp}.md")
 
 
 def _default_json_path() -> str:
+    """Return the default JSON output path under the user home ``.claude`` directory."""
     return str(Path.home() / ".claude" / "memorykg_semantic_latest.json")
 
 
 def _print_summary(console: Console, result: dict) -> None:
+    """Print a Rich summary table of key semantic metrics to *console*."""
     lang = result.get("language", {})
     table = Table(title="MemoryKG Semantic Analysis Summary")
     table.add_column("Measure")

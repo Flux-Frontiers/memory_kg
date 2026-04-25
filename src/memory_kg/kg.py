@@ -71,6 +71,7 @@ class BuildStats:
         }
 
     def __str__(self) -> str:
+        """Format build stats as a multi-line human-readable summary."""
         lines = [
             f"corpus_root      : {self.corpus_root}",
             f"db_path          : {self.db_path}",
@@ -350,6 +351,7 @@ class MemoryKG:
         n_workers: int = 8,
         embedder: Embedder | None = None,
     ) -> None:
+        """Initialise configuration; expensive layers are created lazily on first access."""
         self.corpus_root = Path(corpus_root).resolve()
         self.exclude: set[str] = exclude or set()
         self.db_path = (
@@ -741,12 +743,15 @@ class MemoryKG:
             self._store.close()
 
     def __enter__(self) -> MemoryKG:
+        """Support context manager use."""
         return self
 
     def __exit__(self, *_: object) -> None:
+        """Close the underlying store on context manager exit."""
         self.close()
 
     def __repr__(self) -> str:
+        """Return string representation."""
         return (
             f"MemoryKG(corpus_root={self.corpus_root!r}, "
             f"db_path={self.db_path!r}, "

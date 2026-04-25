@@ -43,6 +43,7 @@ class MemoryKGAnalyzer:
     """Thorough analyzer for document knowledge graphs."""
 
     def __init__(self, kg: MemoryKG, console: Console | None = None):
+        """Initialise analyzer with an open *kg* instance and optional Rich *console*."""
         self.kg = kg
         self.console = console or Console()
         self.store: GraphStore = kg.store
@@ -74,10 +75,12 @@ class MemoryKGAnalyzer:
         return result
 
     def _analyze_baseline(self) -> None:
+        """Populate ``self.stats`` with overall node and edge counts."""
         self.console.print("[dim]Analyzing baseline graph stats...[/dim]")
         self.stats = self.kg.stats()
 
     def _analyze_document_metrics(self) -> None:
+        """Compute per-document chunk counts, section counts, and edge statistics."""
         self.console.print("[dim]Computing per-document structure metrics...[/dim]")
         rows = self.store.con.execute(
             """
@@ -131,6 +134,7 @@ class MemoryKGAnalyzer:
         self.document_metrics = metrics
 
     def _analyze_semantic_coverage(self) -> None:
+        """Measure the fraction of chunks with at least one topic, entity, and keyword edge."""
         self.console.print("[dim]Measuring semantic extraction coverage...[/dim]")
         chunk_count = self.store.con.execute(
             "SELECT COUNT(*) FROM nodes WHERE kind = 'chunk'"
@@ -145,6 +149,7 @@ class MemoryKGAnalyzer:
             return
 
         def _covered(rel: str) -> int:
+            """Return the count of distinct chunk nodes with at least one edge of type *rel*."""
             return int(
                 self.store.con.execute(
                     """
@@ -163,6 +168,7 @@ class MemoryKGAnalyzer:
         }
 
     def _analyze_orphans(self) -> None:
+        """Count topic, entity, and keyword nodes with no incoming edges."""
         self.console.print("[dim]Finding orphaned semantic nodes...[/dim]")
         counts: dict[str, int] = {}
         for kind, rel in [
@@ -187,6 +193,7 @@ class MemoryKGAnalyzer:
         self.orphan_semantic_nodes = counts
 
     def _analyze_hot_chunks(self) -> None:
+        """Identify the top 15 chunks by semantic link count and reference degree."""
         self.console.print("[dim]Ranking high-connectivity chunks...[/dim]")
         rows = self.store.con.execute(
             """
@@ -221,6 +228,7 @@ class MemoryKGAnalyzer:
         ]
 
     def _generate_insights(self) -> None:
+        """Populate ``self.strengths`` and ``self.issues`` from computed metrics."""
         node_counts = self.stats.get("node_counts", {})
         chunk_count = int(node_counts.get("chunk", 0))
         doc_count = int(node_counts.get("document", 0))
@@ -258,6 +266,7 @@ class MemoryKGAnalyzer:
             )
 
     def _compile_results(self, *, elapsed_seconds: float) -> dict:
+        """Assemble all analysis results into a single JSON-serializable dictionary."""
         return {
             "timestamp": datetime.datetime.now(datetime.UTC).isoformat(),
             "elapsed_seconds": round(elapsed_seconds, 2),
@@ -271,6 +280,7 @@ class MemoryKGAnalyzer:
         }
 
     def _write_report(self, report_path: str, result: dict) -> None:
+        """Write a Markdown analysis report to *report_path* from *result*."""
         p = Path(report_path)
         p.parent.mkdir(parents=True, exist_ok=True)
 
@@ -333,15 +343,18 @@ class MemoryKGAnalyzer:
 
 
 def _default_report_path(corpus_root: Path) -> str:
+    """Return the default Markdown report path under ``<corpus_root>/analysis/``."""
     stamp = datetime.datetime.now().strftime("%Y%m%d")
     return str(corpus_root / "analysis" / f"memory_kg_analysis_{stamp}.md")
 
 
 def _default_json_path() -> str:
+    """Return the default JSON output path under the user home ``.claude`` directory."""
     return str(Path.home() / ".claude" / "memorykg_analysis_latest.json")
 
 
 def _print_summary(console: Console, result: dict) -> None:
+    """Print a Rich summary table of key analysis metrics to *console*."""
     stats = result.get("stats", {})
     cov = result.get("semantic_coverage", {})
 

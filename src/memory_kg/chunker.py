@@ -92,6 +92,7 @@ class TextChunker:
         embedder: Embedder | None = None,
         min_chunk_chars: int = 1,
     ) -> None:
+        """Configure chunking parameters."""
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
         self.similarity_threshold = similarity_threshold
@@ -424,6 +425,7 @@ class SentenceGroupChunker:
         sentences_per_chunk: int = 4,
         min_chunk_chars: int = 50,
     ) -> None:
+        """Configure sentence-grouping chunker."""
         self.sentences_per_chunk = sentences_per_chunk
         self.min_chunk_chars = min_chunk_chars
 
@@ -532,6 +534,7 @@ class HeadingChunker:
         max_section_chars: int = 4096,
         min_chunk_chars: int = 20,
     ) -> None:
+        """Configure heading-level chunker."""
         self.max_section_chars = max_section_chars
         self.min_chunk_chars = min_chunk_chars
 

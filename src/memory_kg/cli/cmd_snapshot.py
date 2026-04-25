@@ -359,6 +359,7 @@ def diff_snapshots(key_a: str, key_b: str, snapshots_dir: str | None, output_jso
     b = diff_result["b"]
 
     def _fmt_date(ts: str) -> str:
+        """Format an ISO timestamp string as ``YYYY-MM-DD``, or truncate on parse error."""
         try:
             return datetime.fromisoformat(ts).strftime("%Y-%m-%d")
         except (ValueError, TypeError):
