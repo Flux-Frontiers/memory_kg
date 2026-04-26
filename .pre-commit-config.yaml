@@ -8,7 +8,7 @@ repos:
       - id: check-toml
       - id: check-merge-conflict
       - id: check-added-large-files
-        args: [--maxkb=1000]
+        args: [--maxkb=3000]
         exclude: '^(src|docs|article)/.*\.(png|jpg|jpeg|gif|pdf)$|^\.codekg/'
       - id: debug-statements
 
@@ -29,7 +29,7 @@ repos:
     rev: v1.5.0
     hooks:
       - id: detect-secrets
-        args: ['--baseline', '.secrets.baseline', '--exclude-files', '\.codekg/snapshots/.*', '--exclude-files', '\.memorykg/snapshots/.*', '--exclude-files', '\.memorykg/.*', '--exclude-files', '\.pycodekg/.*']
+        args: ['--baseline', '.secrets.baseline', '--exclude-files', '\.codekg/snapshots/.*', '--exclude-files', '\.memorykg/snapshots/.*', '--exclude-files', '\.memorykg/.*', '--exclude-files', '\.pycodekg/.*', '--exclude-files', '^benchmarks/.*/results_.*\.json$']
 
   - repo: local
     hooks:

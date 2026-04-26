@@ -1,27 +1,32 @@
 #!/usr/bin/env python3
 """
-MemPal × ConvoMem Benchmark
+MemoryKG × ConvoMem Benchmark
 ==============================
 
-Evaluates MemPal's retrieval against the ConvoMem benchmark.
+Evaluates MemoryKG retrieval against the ConvoMem benchmark.
 75,336 QA pairs across 6 evidence categories.
 
 For each evidence item:
-1. Ingest all conversations into a fresh MemPal palace (one drawer per message)
-2. Query with the question
-3. Check if any retrieved message matches the evidence messages
+1. Write all conversations to a temp corpus directory (one .md per conversation)
+2. Build a fresh MemoryKG (heading chunks, shared embedder)
+3. Query with the question
+4. Check if any retrieved node text contains the evidence messages
 
 Since ConvoMem has 75K items across many files, we sample a subset for benchmarking.
 Downloads evidence files from HuggingFace on first run.
 
 Usage:
-    python benchmarks/convomem_bench.py                          # sample 100 items
-    python benchmarks/convomem_bench.py --limit 500              # sample 500 items
-    python benchmarks/convomem_bench.py --category user_evidence  # one category only
-    python benchmarks/convomem_bench.py --mode aaak              # test AAAK compression
+    python benchmarks/convomem/convomem_bench.py                          # sample 100 items
+    python benchmarks/convomem/convomem_bench.py --limit 500              # sample 500 items
+    python benchmarks/convomem/convomem_bench.py --category user_evidence  # one category only
+    python benchmarks/convomem/convomem_bench.py --k 20                   # wider retrieval
+    python benchmarks/convomem/convomem_bench.py --hop 0                  # pure semantic only
 """
 
+from __future__ import annotations
+
 import argparse
+import contextlib
 import json
 import os
 import shutil
@@ -33,12 +38,16 @@ from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 
-import chromadb
-
 # Bypass SSL for restricted environments
 ssl._create_default_https_context = ssl._create_unverified_context
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+sys.path.insert(0, str(REPO_ROOT / "src"))
+
+from memory_kg.index import SentenceTransformerEmbedder
+from memory_kg.kg import MemoryKG
+from memory_kg.memorykg import DEFAULT_MODEL
+from memory_kg.store import DEFAULT_RELS
 
 HF_BASE = "https://huggingface.co/datasets/Salesforce/ConvoMem/resolve/main/core_benchmark/evidence_questions"
 
@@ -49,16 +58,6 @@ CATEGORIES = {
     "abstention_evidence": "Abstention",
     "preference_evidence": "Preferences",
     "implicit_connection_evidence": "Implicit Connections",
-}
-
-# Sample files per category (1_evidence = single-message evidence, simplest)
-SAMPLE_FILES = {
-    "user_evidence": "1_evidence/0050e213-5032-42a0-8041-b5eef2f8ab91_Telemarketer.json",
-    "assistant_facts_evidence": None,  # will discover
-    "changing_evidence": None,
-    "abstention_evidence": None,
-    "preference_evidence": None,
-    "implicit_connection_evidence": None,
 }
 
 
@@ -87,10 +86,14 @@ def download_evidence_file(category, subpath, cache_dir):
         return None
 
 
-def discover_files(category, cache_dir):
+def discover_files(category, cache_dir, tier: int = 1):
     """Discover available files for a category via HuggingFace API."""
-    api_url = f"https://huggingface.co/api/datasets/Salesforce/ConvoMem/tree/main/core_benchmark/evidence_questions/{category}/1_evidence"
-    cache_path = os.path.join(cache_dir, f"{category}_filelist.json")
+    tier_dir = f"{tier}_evidence"
+    api_url = (
+        f"https://huggingface.co/api/datasets/Salesforce/ConvoMem/tree/main"
+        f"/core_benchmark/evidence_questions/{category}/{tier_dir}"
+    )
+    cache_path = os.path.join(cache_dir, f"{category}_tier{tier}_filelist.json")
 
     if os.path.exists(cache_path):
         with open(cache_path) as f:
@@ -108,27 +111,20 @@ def discover_files(category, cache_dir):
                 json.dump(paths, f)
             return paths
     except Exception as e:
-        print(f"    Failed to list files for {category}: {e}")
+        print(f"    Failed to list files for {category} tier {tier}: {e}")
         return []
 
 
-def load_evidence_items(categories, limit, cache_dir):
+def load_evidence_items(categories, limit, cache_dir, tier: int = 1):
     """Load evidence items from specified categories."""
     all_items = []
 
     for category in categories:
-        # Discover files
-        files = discover_files(category, cache_dir)
+        files = discover_files(category, cache_dir, tier=tier)
         if not files:
-            # Fallback to known file
-            known = SAMPLE_FILES.get(category)
-            if known:
-                files = [known]
-            else:
-                print(f"  Skipping {category} — no files found")
-                continue
+            print(f"  Skipping {category} — no files found")
+            continue
 
-        # Download files until we have enough items
         items_for_cat = []
         for fpath in files:
             if len(items_for_cat) >= limit:
@@ -146,77 +142,96 @@ def load_evidence_items(categories, limit, cache_dir):
 
 
 # =============================================================================
+# CORPUS FORMATTING
+# =============================================================================
+
+
+def _format_conversation_markdown(conv_idx: int, messages: list[dict]) -> str:
+    """Render a ConvoMem conversation as a Markdown document."""
+    lines: list[str] = [f"# Conversation {conv_idx}", ""]
+    for msg in messages:
+        speaker = msg.get("speaker", "speaker").capitalize()
+        text = (msg.get("text") or "").strip()
+        if not text:
+            continue
+        lines.append(f"## {speaker}")
+        lines.append("")
+        lines.append(text)
+        lines.append("")
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def write_item_corpus(item: dict, corpus_dir: Path) -> None:
+    """Write all conversations for one evidence item as Markdown files."""
+    corpus_dir.mkdir(parents=True, exist_ok=True)
+    for conv_idx, conv in enumerate(item.get("conversations", [])):
+        messages = conv.get("messages", [])
+        if not messages:
+            continue
+        md = _format_conversation_markdown(conv_idx, messages)
+        (corpus_dir / f"conv_{conv_idx:04d}.md").write_text(md, encoding="utf-8")
+
+
+# =============================================================================
 # RETRIEVAL
 # =============================================================================
 
 
-def retrieve_for_item(item, top_k=10, mode="raw"):
+def retrieve_for_item(
+    item: dict,
+    embedder: SentenceTransformerEmbedder,
+    top_k: int = 10,
+    hop: int = 1,
+    rels: tuple[str, ...] = DEFAULT_RELS,
+) -> tuple[float, dict]:
     """
-    Ingest conversations, query, check if evidence was retrieved.
+    Build a per-item MemoryKG, query it, and return recall.
 
-    Returns:
-        recall: float (fraction of evidence messages found in top-k)
-        details: dict with retrieved texts and match info
+    :return: (recall, details_dict)
     """
-    conversations = item.get("conversations", [])
     question = item["question"]
     evidence_messages = item.get("message_evidences", [])
-    evidence_texts = set(e["text"].strip().lower() for e in evidence_messages)
+    evidence_texts = {e["text"].strip().lower() for e in evidence_messages}
 
-    # Build corpus: one doc per message
-    corpus = []
-    corpus_speakers = []
-    for conv in conversations:
-        for msg in conv.get("messages", []):
-            corpus.append(msg["text"])
-            corpus_speakers.append(msg["speaker"])
+    # Count total messages so we know if corpus is empty
+    total_msgs = sum(len(conv.get("messages", [])) for conv in item.get("conversations", []))
+    if total_msgs == 0:
+        return 1.0, {"error": "empty corpus"}
 
-    if not corpus:
-        return 0.0, {"error": "empty corpus"}
-
-    tmpdir = tempfile.mkdtemp(prefix="mempal_convomem_")
-    palace_path = os.path.join(tmpdir, "palace")
+    tmpdir = Path(tempfile.mkdtemp(prefix="memorykg_convomem_"))
+    corpus_dir = tmpdir / "corpus"
+    kg_dir = tmpdir / ".memorykg"
 
     try:
-        client = chromadb.PersistentClient(path=palace_path)
-        collection = client.create_collection("mempal_drawers")
+        write_item_corpus(item, corpus_dir)
 
-        # Optionally compress
-        if mode == "aaak":
-            from mempalace.dialect import Dialect
-
-            dialect = Dialect()
-            docs = [dialect.compress(doc) for doc in corpus]
-        else:
-            docs = corpus
-
-        collection.add(
-            documents=docs,
-            ids=[f"msg_{i}" for i in range(len(corpus))],
-            metadatas=[{"speaker": s, "idx": i} for i, s in enumerate(corpus_speakers)],
+        kg = MemoryKG(
+            corpus_root=corpus_dir,
+            db_path=kg_dir / "graph.sqlite",
+            lancedb_dir=kg_dir / "lancedb",
+            chunk_strategy="heading",
+            enable_topics=False,
+            enable_entities=False,
+            enable_keywords=False,
+            emit_cooccur=False,
+            embedder=embedder,
         )
+        with open(os.devnull, "w") as devnull, contextlib.redirect_stdout(devnull):
+            kg.build(wipe=True, batch_size=512, discover_similar=False, n_workers=1)
 
-        results = collection.query(
-            query_texts=[question],
-            n_results=min(top_k, len(corpus)),
-            include=["documents", "metadatas"],
-        )
-
-        # Check if any retrieved message matches evidence
-        retrieved_indices = [m["idx"] for m in results["metadatas"][0]]
-        retrieved_texts = [corpus[i].strip().lower() for i in retrieved_indices]
+        result = kg.query(question, k=top_k, hop=hop, rels=rels)
 
         found = 0
         for ev_text in evidence_texts:
-            for ret_text in retrieved_texts:
-                if ev_text in ret_text or ret_text in ev_text:
+            for node in result.nodes:
+                node_text = (node.get("text") or "").strip().lower()
+                if ev_text in node_text or node_text in ev_text:
                     found += 1
                     break
 
         recall = found / len(evidence_texts) if evidence_texts else 1.0
-
         return recall, {
-            "retrieved_count": len(retrieved_indices),
+            "retrieved_nodes": result.returned_nodes,
             "evidence_count": len(evidence_texts),
             "found": found,
         }
@@ -230,36 +245,50 @@ def retrieve_for_item(item, top_k=10, mode="raw"):
 # =============================================================================
 
 
-def run_benchmark(categories, limit_per_cat, top_k, mode, cache_dir, out_file):
+def run_benchmark(
+    categories: list[str],
+    limit_per_cat: int,
+    top_k: int,
+    hop: int,
+    rels: tuple[str, ...],
+    cache_dir: str,
+    out_file: str | None,
+    model: str,
+    tier: int = 1,
+) -> None:
     """Run the ConvoMem retrieval benchmark."""
 
     print(f"\n{'=' * 60}")
-    print("  MemPal × ConvoMem Benchmark")
+    print("  MemoryKG × ConvoMem Benchmark")
     print(f"{'=' * 60}")
     print(f"  Categories:  {len(categories)}")
     print(f"  Limit/cat:   {limit_per_cat}")
+    print(f"  Tier:        {tier}_evidence")
     print(f"  Top-k:       {top_k}")
-    print(f"  Mode:        {mode}")
+    print(f"  Hop:         {hop}")
+    print(f"  Model:       {model}")
     print(f"{'─' * 60}")
     print("\n  Loading data from HuggingFace...\n")
 
-    items = load_evidence_items(categories, limit_per_cat, cache_dir)
+    items = load_evidence_items(categories, limit_per_cat, cache_dir, tier=tier)
 
     print(f"\n  Total items: {len(items)}")
-    print(f"{'─' * 60}\n")
+    print(f"{'─' * 60}")
+    print("  Initialising shared embedder...")
+    embedder = SentenceTransformerEmbedder(model)
+    print("  Embedder ready.\n")
 
-    all_recall = []
-    per_category = defaultdict(list)
-    results_log = []
+    all_recall: list[float] = []
+    per_category: dict[str, list[float]] = defaultdict(list)
+    results_log: list[dict] = []
     start_time = datetime.now()
 
     for i, item in enumerate(items):
         question = item["question"]
         answer = item.get("answer", "")
         cat_key = item.get("_category_key", "unknown")
-        CATEGORIES.get(cat_key, cat_key)
 
-        recall, details = retrieve_for_item(item, top_k=top_k, mode=mode)
+        recall, details = retrieve_for_item(item, embedder, top_k=top_k, hop=hop, rels=rels)
         all_recall.append(recall)
         per_category[cat_key].append(recall)
 
@@ -274,16 +303,15 @@ def run_benchmark(categories, limit_per_cat, top_k, mode, cache_dir, out_file):
         )
 
         status = "HIT" if recall >= 1.0 else ("part" if recall > 0 else "miss")
-        if (i + 1) % 20 == 0 or i == len(items) - 1:
-            print(
-                f"  [{i + 1:4}/{len(items)}] avg_recall={sum(all_recall) / len(all_recall):.3f}  last={status}"
-            )
+        if (i + 1) % 10 == 0 or i == len(items) - 1:
+            avg = sum(all_recall) / len(all_recall)
+            print(f"  [{i + 1:4}/{len(items)}] avg_recall={avg:.3f}  last={status}")
 
     elapsed = (datetime.now() - start_time).total_seconds()
     avg_recall = sum(all_recall) / len(all_recall) if all_recall else 0
 
     print(f"\n{'=' * 60}")
-    print(f"  RESULTS — MemPal ({mode} mode, top-{top_k})")
+    print(f"  RESULTS — MemoryKG (top-{top_k}, hop={hop})")
     print(f"{'=' * 60}")
     print(f"  Time:        {elapsed:.1f}s ({elapsed / max(len(items), 1):.2f}s per item)")
     print(f"  Items:       {len(items)}")
@@ -297,6 +325,9 @@ def run_benchmark(categories, limit_per_cat, top_k, mode, cache_dir, out_file):
         perfect = sum(1 for v in vals if v >= 1.0)
         print(f"    {name:25} R={avg:.3f}  perfect={perfect}/{len(vals)}")
 
+    if not all_recall:
+        print("\n  No items evaluated.")
+        return
     perfect_total = sum(1 for r in all_recall if r >= 1.0)
     zero_total = sum(1 for r in all_recall if r == 0)
     print("\n  DISTRIBUTION:")
@@ -316,9 +347,15 @@ def run_benchmark(categories, limit_per_cat, top_k, mode, cache_dir, out_file):
 # =============================================================================
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="MemPal × ConvoMem Benchmark")
+    parser = argparse.ArgumentParser(description="MemoryKG × ConvoMem Benchmark")
     parser.add_argument("--limit", type=int, default=100, help="Items per category (default: 100)")
-    parser.add_argument("--top-k", type=int, default=10, help="Top-k retrieval (default: 10)")
+    parser.add_argument("--k", type=int, default=10, help="Top-k semantic seeds (default: 10)")
+    parser.add_argument("--hop", type=int, default=1, help="Graph expansion hops (default: 1)")
+    parser.add_argument(
+        "--rels",
+        default=None,
+        help="Comma-separated edge types to expand (default: MemoryKG defaults)",
+    )
     parser.add_argument(
         "--category",
         choices=list(CATEGORIES.keys()) + ["all"],
@@ -326,10 +363,15 @@ if __name__ == "__main__":
         help="Category to test (default: all)",
     )
     parser.add_argument(
-        "--mode",
-        choices=["raw", "aaak"],
-        default="raw",
-        help="Retrieval mode",
+        "--model",
+        default=DEFAULT_MODEL,
+        help=f"Sentence-transformer model (default: {DEFAULT_MODEL})",
+    )
+    parser.add_argument(
+        "--tier",
+        type=int,
+        default=1,
+        help="Evidence tier (1–6; changing_evidence starts at 2; default: 1)",
     )
     parser.add_argument("--cache-dir", default="/tmp/convomem_cache", help="Cache directory")
     parser.add_argument("--out", default=None, help="Output JSON file")
@@ -340,7 +382,25 @@ if __name__ == "__main__":
     else:
         categories = [args.category]
 
-    if not args.out:
-        args.out = f"benchmarks/results_convomem_{args.mode}_top{args.top_k}_{datetime.now().strftime('%Y%m%d_%H%M')}.json"
+    if args.rels:
+        rels = tuple(r.strip() for r in args.rels.split(",") if r.strip())
+    else:
+        rels = DEFAULT_RELS
 
-    run_benchmark(categories, args.limit, args.top_k, args.mode, args.cache_dir, args.out)
+    if not args.out:
+        args.out = (
+            f"benchmarks/convomem/results_convomem_tier{args.tier}_top{args.k}_hop{args.hop}"
+            f"_{datetime.now().strftime('%Y%m%d_%H%M')}.json"
+        )
+
+    run_benchmark(
+        categories,
+        args.limit,
+        args.k,
+        args.hop,
+        rels,
+        args.cache_dir,
+        args.out,
+        args.model,
+        tier=args.tier,
+    )

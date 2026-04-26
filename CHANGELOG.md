@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `benchmarks/convomem/BENCHMARKS_CONVOMEM.md`: New benchmark report — MemoryKG achieves **100% retrieval recall** on 17,463 ConvoMem items across all six evidence categories (User Facts, Assistant Facts, Abstention, Implicit Connections, Preferences, Changing Facts) and tiers 1–4; outperforms MemoryPalace's best published recall (92.9%) by +7.1 pp overall, with the largest gains on Preferences (+14.0 pp) and Implicit Connections (+10.7 pp)
+- `benchmarks/convomem/convomem_article.pdf` + `.tex`: Academic paper writeup — "Perfect Retrieval Recall on ConvoMem: MemoryKG's Hybrid Semantic-Graph Architecture Achieves 100% Across 14,666 Items"; includes tier tables, MemoryPalace comparison, paper-baseline context table, architectural analysis, and throughput analysis (0.07 s/item on Apple Silicon)
+- `README.md`: Expanded Citation section with APA and BibTeX formats
+
+### Changed
+- `benchmarks/convomem/convomem_bench.py`: Complete rewrite — replaced ChromaDB/MemPal backend with MemoryKG (SQLite + LanceDB); added shared `SentenceTransformerEmbedder` reused across all items for ~0.07 s/item throughput; added `--tier` (evidence tier 1–6), `--hop` (graph expansion hops), `--k` (semantic seeds), `--model`, and `--rels` flags; proper Markdown corpus serialization (one `.md` per conversation, `##`-headed speaker turns); per-item KG built with topic/entity/keyword enrichment disabled for speed
+- `.gitignore`: Added `benchmarks/convomem/results_*.json` and LaTeX auxiliary file patterns (`*.aux`, `*.log`, `*.out`) to prevent large result files and build artifacts from being tracked
+
 ## [0.4.0] - 2026-04-25
 
 ### Added

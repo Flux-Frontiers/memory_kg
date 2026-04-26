@@ -298,10 +298,29 @@ Add `.memorykg/` to `.gitignore`.
 
 ---
 
-## Citing MemoryKG
+## Citation
 
-If MemoryKG informs your research, please cite via the [CITATION.cff](CITATION.cff) metadata or the Zenodo DOI badge above.
+If you use MemoryKG in your research or project, please cite it:
 
+[![DOI](https://zenodo.org/badge/1205364687.svg)](https://zenodo.org/badge/latestdoi/1205364687)
+
+**APA**
+
+> Suchanek, E. G. (2026). *MemoryKG: Hybrid Semantic-Graph Knowledge Base for Conversational Memory* (Version 0.4.0) [Software]. Flux-Frontiers. https://github.com/Flux-Frontiers/memory_kg
+
+**BibTeX**
+
+```bibtex
+@software{suchanek_memory_kg,
+  author    = {Suchanek, Eric G.},
+  title     = {{MemoryKG}: Hybrid Semantic-Graph Knowledge Base for Conversational Memory},
+  version   = {0.4.0},
+  year      = {2026},
+  publisher = {Flux-Frontiers},
+  url       = {https://github.com/Flux-Frontiers/memory_kg},
+  doi       = {10.5281/zenodo.TBD},
+}
+```
 ---
 
 ## License

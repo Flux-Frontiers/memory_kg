@@ -1,0 +1,494 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{microtype}
+\usepackage{parskip}
+\usepackage{natbib}
+\usepackage{listings}
+\usepackage{caption}
+\usepackage{multirow}
+\usepackage{float}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!60!black,
+  citecolor=blue!60!black,
+  urlcolor=blue!60!black,
+}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single,
+  backgroundcolor=\color{gray!8},
+}
+
+\title{\textbf{Near-Perfect Session Retrieval on LongMemEval:}\\
+       \large MemoryKG's Hybrid Semantic-Graph Architecture\\
+       Achieves 99.4\% Recall@10 and 100\% Recall@30 Across 500 Questions}
+
+\author{Eric G. Suchanek, PhD\\
+        \texttt{suchanek@flux-frontiers.com}}
+
+\date{April 25, 2026}
+
+% ============================================================
+\begin{document}
+\maketitle
+
+% ============================================================
+\begin{abstract}
+We evaluate MemoryKG, a conversational memory system based on
+DocKG~\citep{dockg2026}, on the LongMemEval
+benchmark~\citep{wang2024longmemeval}, a dataset of 500 questions spanning six
+question types that require locating specific sessions within a multi-session
+conversation corpus of up to 500 sessions.
+MemoryKG achieves \textbf{99.4\% session-level Recall@10} and
+\textbf{100\% Recall@30} across all question types, with an NDCG@10 of 0.943,
+on the full 500-question test set.
+Perfect recall is attained at $k{=}30$ with no LLM required at any stage ---
+neither for indexing nor for retrieval.
+The hardest question types are \textit{temporal-reasoning} (Recall@10 = 98.5\%)
+and \textit{multi-session} (Recall@10 = 99.2\%), where evidence spans multiple
+chronologically ordered sessions.
+The easiest types --- \textit{single-session-user}, \textit{single-session-assistant},
+and \textit{single-session-preference} --- each reach 100\% Recall@10.
+Graph expansion through structured \textsc{Contains}, \textsc{Next}, and
+\textsc{References} edges closes the gap between semantic seeding and
+complete evidence recovery, requiring only $k{=}30$ seeds to exhaust all 500
+questions.
+A single shared sentence-transformer embedder (BAAI/bge-small-en-v1.5)
+processes each per-question corpus in approximately 0.36 seconds on Apple Silicon.
+\end{abstract}
+
+% ============================================================
+\section{Introduction}
+\label{sec:intro}
+
+Long-term conversational memory retrieval --- locating the right session from
+a large multi-session corpus given a natural-language question --- is
+increasingly important for AI assistants operating over months of interaction history.
+Prior approaches include full-context LLM inference, structured memory extraction
+\citep{mem0}, and flat dense retrieval over session text.
+These approaches differ in accuracy, latency, cost, and privacy guarantees.
+
+The LongMemEval benchmark \citep{wang2024longmemeval} provides a structured
+evaluation across six question types, each requiring the system to locate
+the correct session(s) from a corpus of up to 500 long-horizon conversation
+sessions.
+The benchmark distinguishes single-session retrieval (facts, preferences,
+assistant claims) from multi-session and temporally-ordered evidence.
+
+MemoryKG~\citep{memorykg2026} builds a lightweight knowledge graph over verbatim
+conversation text, where semantic vector search seeds initial candidates and
+structured graph traversal expands the result set.
+MemoryKG is a direct specialisation of DocKG~\citep{dockg2026}, a hybrid
+semantic-graph system for general document corpora.
+In this paper we report MemoryKG's performance on LongMemEval and analyse the
+retrieval characteristics of each question type.
+
+% ============================================================
+\section{The LongMemEval Benchmark}
+\label{sec:benchmark}
+
+LongMemEval \citep{wang2024longmemeval} is a benchmark for evaluating chat assistants
+on long-term interactive memory.
+It contains 500 questions drawn from realistic multi-session conversation histories.
+Each question is paired with one or more \emph{evidence sessions} --- the specific
+conversation turns or sessions whose content is necessary to answer the question
+correctly.
+
+The six question types are:
+
+\begin{description}
+  \item[Single-Session User ($n{=}70$)] Questions about facts the user stated in a
+        single session.
+  \item[Single-Session Assistant ($n{=}56$)] Questions about claims or information
+        the assistant provided in a single session.
+  \item[Single-Session Preference ($n{=}30$)] Questions about user preferences expressed
+        within a single session.
+  \item[Knowledge Update ($n{=}78$)] Facts that the user updated or corrected across
+        sessions; the system must retrieve the most recent statement.
+  \item[Multi-Session ($n{=}133$)] Questions whose answer requires aggregating
+        information from two or more separate sessions.
+  \item[Temporal Reasoning ($n{=}133$)] Questions that require reasoning about the
+        order or timing of events across sessions.
+\end{description}
+
+We use \emph{session-level retrieval recall} as our primary metric: the fraction
+of evidence sessions whose text is found in the top-$k$ retrieved nodes.
+We also report NDCG@$k$ (Normalised Discounted Cumulative Gain), which rewards
+placing the correct session higher in the ranked list.
+These are binary retrieval metrics, not end-to-end QA accuracy.
+The LongMemEval paper reports end-to-end QA accuracy (requiring an LLM to generate
+an answer); we report whether the evidence session is present in the retrieved context.
+These are complementary but distinct measures.
+
+% ============================================================
+\section{MemoryKG Architecture}
+\label{sec:arch}
+
+MemoryKG represents a conversation corpus as a four-layer knowledge graph:
+
+\begin{enumerate}
+  \item \textbf{Document layer.} Each conversation session is a root document node
+        containing the full session text.
+  \item \textbf{Section layer.} Markdown headings (one per speaker turn) produce
+        section nodes connected to their parent document by \textsc{Contains} edges.
+  \item \textbf{Chunk layer.} Section content is split into sentence-aligned chunks;
+        adjacent chunks are linked by \textsc{Next} edges.
+  \item \textbf{Semantic index.} All nodes are embedded with a sentence transformer
+        and stored in LanceDB for approximate nearest-neighbour retrieval.
+\end{enumerate}
+
+\subsection{Query pipeline}
+
+A query $q$ is processed in two stages:
+
+\paragraph{Stage 1 --- Semantic seeding.}
+The top-$k$ nodes by cosine similarity to the query embedding are retrieved from LanceDB.
+These form the \emph{seed set} $S$.
+
+\paragraph{Stage 2 --- Graph expansion.}
+Starting from $S$, BFS expansion walks outward through the graph for $h$ hops along
+any edge in the relation set $\mathcal{R}$.
+The default relation set is
+\begin{equation*}
+  \mathcal{R} = \{\textsc{Contains},\;\textsc{Next},\;\textsc{References},\;
+    \textsc{Similar\_To},\;\textsc{Has\_Topic},\;\textsc{Mentions\_Entity},\;
+    \textsc{Has\_Keyword}\}.
+\end{equation*}
+Nodes reachable within $h$ hops of any seed are added to the candidate pool and ranked
+by a composite key combining seed distance, hop depth, and structural position.
+
+For LongMemEval evaluations we use $k{=}10$ seeds and $h{=}1$ hop.
+
+\subsection{Why graph expansion helps for long-horizon retrieval}
+
+Consider a Knowledge Update question: ``What is the user's current job title?''
+The earliest session might read ``I just started as a junior analyst,'' while a
+later session reads ``Got promoted to senior analyst last month.''
+A flat vector search that ranks the earlier session higher will return a stale
+answer.
+Graph expansion helps via \textsc{Contains} edges: the parent document node for
+each session contains the full session text, and temporal ordering is encoded in
+\textsc{Next} edges between sessions.
+When the correct (most recent) session is seeded by any related chunk, expansion
+propagates recall upward to the session level.
+
+For temporal reasoning questions, the same mechanism resolves ordering ambiguity:
+if any chunk from the target session appears in the seed set, traversal lifts the
+entire session into the candidate pool regardless of whether the question vocabulary
+matches the session's surface text.
+
+% ============================================================
+\section{Experimental Setup}
+\label{sec:setup}
+
+\subsection{Corpus format}
+
+For each question, all sessions in the user's history are written to a temporary
+directory as Markdown files (one file per session).
+Each speaker turn becomes a \texttt{\#\#}-headed section:
+
+\begin{lstlisting}
+# Session 2024-03-15
+
+## User
+
+I just got promoted to senior analyst last month.
+
+## Assistant
+
+Congratulations! That's a big step --- what changed in your role?
+
+## User
+
+More client-facing work, mostly. I'm leading the quarterly reviews now.
+\end{lstlisting}
+
+The heading chunk strategy splits at \texttt{\#\#} boundaries, so each turn
+becomes one chunk node.
+
+\subsection{Build configuration}
+
+\begin{itemize}
+  \item Chunk strategy: \texttt{heading} (no per-file embedding at parse time)
+  \item Topic / entity / keyword enrichment: disabled (speed)
+  \item SIMILAR\_TO edge discovery: disabled (speed)
+  \item Workers: 1 (per-item builds are already fast)
+  \item Batch size: 512 embeddings
+\end{itemize}
+
+\subsection{Shared embedder}
+
+A single \texttt{SentenceTransformerEmbedder}
+(\texttt{BAAI/bge-small-en-v1.5}, 384-dimensional)
+is initialised once and reused across all questions.
+This avoids the per-question model reload overhead and is the primary contributor
+to the 0.36 s/question throughput.
+The full 500-question evaluation completes in 181.6 seconds on an Apple M5 Max.
+
+\subsection{Recall and NDCG computation}
+
+For each question, let $E = \{e_1, \ldots, e_n\}$ be the set of evidence session texts and
+$N = \{n_1, \ldots, n_m\}$ be the ranked list of retrieved node texts.
+Session-level recall at $k$ is:
+\[
+  \text{Recall@}k = \frac{1}{|E|}
+    \sum_{e \in E} \mathbf{1}\!\left[\exists\, n \in N_k :
+      e \subset n \;\vee\; n \subset e
+    \right]
+\]
+where $\subset$ denotes case-insensitive substring containment and $N_k$ is the
+top-$k$ subset of $N$.
+NDCG@$k$ is computed over binary relevance labels using the standard formulation:
+\[
+  \text{NDCG@}k = \frac{\text{DCG@}k}{\text{IDCG@}k}, \qquad
+  \text{DCG@}k = \sum_{i=1}^{k} \frac{\text{rel}_i}{\log_2(i+1)}
+\]
+where $\text{rel}_i \in \{0,1\}$ indicates whether position $i$ in the ranking
+contains an evidence session.
+
+% ============================================================
+\section{Results}
+\label{sec:results}
+
+\subsection{Session-level retrieval across $k$}
+
+Table~\ref{tab:recall_at_k} shows MemoryKG's session-level Recall@$k$ and NDCG@$k$
+across increasing retrieval depths.
+
+\begin{table}[H]
+\centering
+\caption{MemoryKG session-level retrieval metrics on LongMemEval (500 questions).}
+\label{tab:recall_at_k}
+\begin{tabular}{rrr}
+  \toprule
+  \textbf{$k$} & \textbf{Recall@$k$} & \textbf{NDCG@$k$} \\
+  \midrule
+   1  & 0.904 & 0.904 \\
+   3  & 0.974 & 0.942 \\
+   5  & 0.984 & 0.942 \\
+  10  & 0.994 & 0.943 \\
+  30  & \textbf{1.000} & 0.942 \\
+  50  & 1.000 & 0.942 \\
+  \bottomrule
+\end{tabular}
+\end{table}
+
+Perfect recall is reached at $k{=}30$: all 500 evidence sessions appear in the
+top-30 retrieved nodes.
+The NDCG@$k$ stabilises at 0.942--0.943 for $k \geq 3$, indicating that the
+correct sessions consistently rank near the top of the list once they appear.
+
+\subsection{Per-type breakdown}
+
+Table~\ref{tab:type_results} shows Recall@5, Recall@10, and NDCG@10 for each
+LongMemEval question type.
+
+\begin{table}[H]
+\centering
+\caption{MemoryKG retrieval metrics on LongMemEval by question type (top-10, hop=1).}
+\label{tab:type_results}
+\begin{tabular}{lrrrr}
+  \toprule
+  \textbf{Question Type} & \textbf{$n$} & \textbf{Recall@5} & \textbf{Recall@10} & \textbf{NDCG@10} \\
+  \midrule
+  knowledge-update          &  78 & 1.000 & 1.000 & 0.984 \\
+  multi-session             & 133 & 0.992 & 0.992 & 0.949 \\
+  single-session-assistant  &  56 & 1.000 & 1.000 & 1.000 \\
+  single-session-preference &  30 & 1.000 & 1.000 & 0.913 \\
+  single-session-user       &  70 & 0.986 & 1.000 & 0.932 \\
+  temporal-reasoning        & 133 & 0.955 & 0.985 & 0.901 \\
+  \midrule
+  \textbf{Overall}          & \textbf{500} & \textbf{0.984} & \textbf{0.994} & \textbf{0.943} \\
+  \bottomrule
+\end{tabular}
+\end{table}
+
+Four of the six question types achieve 100\% Recall@10.
+The two types that do not --- \textit{temporal-reasoning} (98.5\%) and
+\textit{multi-session} (99.2\%) --- are those requiring evidence from multiple
+or temporally ordered sessions.
+
+\subsection{Comparison with literature baselines}
+
+Table~\ref{tab:lit_comparison} places MemoryKG in the context of systems
+evaluated in the LongMemEval literature~\citep{wang2024longmemeval}.
+Those results are reported as end-to-end QA accuracy, which requires an LLM to
+generate a free-form answer given retrieved context.
+MemoryKG's retrieval recall is a strictly easier task: it measures whether the
+evidence is \emph{present} in the retrieved context, not whether a reader can
+extract the correct answer from it.
+The two metrics are complementary but not directly comparable; the table is
+included for broader orientation.
+
+\begin{table}[H]
+\centering
+\caption{Context comparison.
+         \dag~QA accuracy from~\citet{wang2024longmemeval} (requires LLM answer
+         generation); ours is retrieval recall (no LLM). Different metrics;
+         not directly comparable.}
+\label{tab:lit_comparison}
+\begin{tabular}{lrll}
+  \toprule
+  \textbf{System} & \textbf{Score} & \textbf{Metric} & \textbf{LLM required} \\
+  \midrule
+  MemoryKG (ours, R@10)       & \textbf{99.4\%} & Retrieval recall & None \\
+  MemoryKG (ours, R@30)       & \textbf{100\%}  & Retrieval recall & None \\
+  \midrule
+  GPT-4o full-context\dag     & $\sim$66\%      & QA accuracy      & Yes  \\
+  GPT-4o + RAG\dag            & $\sim$50\%      & QA accuracy      & Yes  \\
+  GPT-4-Turbo full-context\dag& $\sim$56\%      & QA accuracy      & Yes  \\
+  Claude-3.5-Sonnet\dag       & $\sim$52\%      & QA accuracy      & Yes  \\
+  ReadAgent\dag               & $\sim$42\%      & QA accuracy      & Yes  \\
+  Zero-shot (no memory)\dag   & $\sim$25\%      & QA accuracy      & Yes  \\
+  \bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Miss analysis}
+
+At $k{=}10$, exactly 3 out of 500 questions returned no evidence session in the
+top-10 retrieved nodes.
+These three misses correspond to question IDs \texttt{10d9b85a},
+\texttt{gpt4\_468eb064}, and \texttt{eac54add}.
+All three were recovered by $k{=}30$, confirming that the evidence exists in the
+index but ranks below position 10 in these cases.
+The miss rate at $k{=}10$ is 0.6\% (3/500).
+
+% ============================================================
+\section{Analysis}
+\label{sec:analysis}
+
+\subsection{Why temporal-reasoning is the hardest type}
+
+Temporal-reasoning questions ask about the ordering or recency of events across
+sessions (e.g., ``When did the user first mention they were learning Spanish?'').
+The evidence session may contain only a passing reference to the target event,
+while semantically closer sessions discuss unrelated topics.
+Vocabulary mismatch between the question and the target session is highest in
+this category: a question about ``first mention'' may correspond to a session
+that simply reads ``I started a Spanish class'' without temporal markers.
+Graph expansion partially compensates --- if any chunk from the same session
+appears in the seed set, \textsc{Next} and \textsc{Contains} edges recover the
+full session --- but 2 out of 133 temporal-reasoning questions (1.5\%) still
+miss at $k{=}10$.
+
+\subsection{Why multi-session questions remain hard}
+
+Multi-session questions require evidence from two or more sessions simultaneously.
+At $k{=}10$, the system must place all required sessions within the top-10 result,
+which becomes more constrained as the number of required sessions grows.
+Unlike the ConvoMem tier model~\citep{pakhomov2025convomem}
+(which fixes the number of evidence messages),
+LongMemEval multi-session questions vary in evidence count.
+The 1 miss at $k{=}10$ for this category represents a case where one required
+session ranked below position 10 while the other(s) ranked highly.
+
+\subsection{The NDCG plateau and its implications}
+
+NDCG@$k$ rises sharply from 0.904 at $k{=}1$ to 0.942 at $k{=}3$ and then
+plateaus at 0.942--0.943 for all larger $k$.
+This plateau indicates that additional retrieved nodes beyond $k{=}3$ do not
+substantially improve the rank of correct sessions --- the correct sessions are
+already near the top of the list when they are present.
+The gap between Recall@$k$ and the NDCG plateau reflects the 3 hard misses
+that only appear beyond position 10.
+For a downstream reader consuming the top-$k$ retrieved context, $k{=}10$ is
+effectively optimal: additional items improve coverage without meaningfully
+improving precision.
+
+\subsection{Throughput and scaling}
+
+At 0.36 s/question on Apple Silicon (M5 Max), MemoryKG processes 500 questions
+in 181.6 seconds.
+The dominant cost is LanceDB indexing (Phase 2) per question, which scales with
+the number of sessions in the corpus.
+LongMemEval corpora are larger than ConvoMem corpora (up to 500 sessions vs.\ up
+to 300 conversations), accounting for the higher per-question time (0.36 s vs.\
+0.07 s on ConvoMem).
+The shared embedder eliminates model reload overhead; the remaining cost is
+proportional to corpus size and is bounded by MPS-accelerated LanceDB ingestion.
+
+% ============================================================
+\section{Conclusion}
+\label{sec:conclusion}
+
+MemoryKG achieves 99.4\% Recall@10 and 100\% Recall@30 on the 500-question
+LongMemEval benchmark, with an NDCG@10 of 0.943 and no LLM required at any stage.
+Four of six question types reach perfect Recall@10.
+The two remaining types --- temporal-reasoning and multi-session --- reflect the
+fundamental difficulty of retrieving evidence from multi-session contexts with
+temporal ordering requirements; both approach but do not reach 100\% at $k{=}10$,
+and both are fully resolved by $k{=}30$.
+
+The hybrid architecture --- semantic seeding combined with structured graph
+expansion --- enables high-precision retrieval without the latency or cost of
+LLM inference.
+The NDCG plateau at 0.942 from $k{=}3$ onward confirms that when evidence
+sessions are retrieved, they rank near the top of the result list, making the
+system suitable for downstream readers with tight context budgets.
+
+\paragraph{Limitations.}
+Recall measures whether the evidence session is \emph{present} in the retrieved
+context; it does not measure whether a downstream reader can correctly extract
+the answer.
+End-to-end QA accuracy on LongMemEval with a MemoryKG retrieval front-end is
+left for future work.
+The 3 misses at $k{=}10$ are all resolved by $k{=}30$ and are concentrated in
+the temporal-reasoning category, suggesting that temporal ordering cues are the
+primary remaining failure mode.
+
+\paragraph{Reproducibility.}
+All benchmark scripts, result JSON files, and this writeup are included in the
+MemoryKG repository.
+The full evaluation can be reproduced with:
+\begin{lstlisting}
+python benchmarks/longmemeval/longmemeval_bench.py --limit 500
+\end{lstlisting}
+
+% ============================================================
+\bibliographystyle{plainnat}
+\begin{thebibliography}{9}
+
+\bibitem[Wang et al.(2024)]{wang2024longmemeval}
+Wang, X., et al. (2024).
+\newblock {LongMemEval: Benchmarking Chat Assistants on Long-Term Interactive
+  Memory}.
+\newblock \textit{arXiv preprint arXiv:2410.10813}.
+\newblock \url{https://arxiv.org/abs/2410.10813}
+
+\bibitem[Suchanek(2026a)]{memorykg2026}
+Suchanek, E.~G. (2026).
+\newblock {MemoryKG: A Hybrid Semantic-Graph Knowledge Base for Conversational Memory}.
+\newblock \url{https://github.com/Flux-Frontiers/memory_kg}
+
+\bibitem[Suchanek(2026b)]{dockg2026}
+Suchanek, E.~G. (2026).
+\newblock {DocKG: Semantic Knowledge Graph for Document Corpora}.
+\newblock Version 0.11.0. Flux-Frontiers. Initial commit: 2026-03-08.
+\newblock DOI: \url{https://doi.org/10.5281/zenodo.19770973}
+
+\bibitem[Mem0(2024)]{mem0}
+{Mem0 Team}. (2024).
+\newblock {Mem0: The Memory Layer for Personalized AI}.
+\newblock \url{https://mem0.ai}
+
+\bibitem[Pakhomov et al.(2025)]{pakhomov2025convomem}
+Pakhomov, E., Nijkamp, E., \& Xiong, C. (2025).
+\newblock {ConvoMem Benchmark: Why Your First 150 Conversations Don't Need RAG}.
+\newblock \textit{arXiv preprint arXiv:2511.10523}.
+\newblock \url{https://arxiv.org/abs/2511.10523}
+
+\end{thebibliography}
+
+\end{document}
