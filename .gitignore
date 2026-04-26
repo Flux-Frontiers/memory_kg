@@ -257,6 +257,8 @@ __marimo__/
 # MacOS
 .DS_Store
 commit.txt
+# Release scratch — gh release body is canonical, this file is just a draft
+release-notes.md
 
 # Benchmark data (large corpus files and raw results, not tracked)
 benchmarks/longmemeval/data/
