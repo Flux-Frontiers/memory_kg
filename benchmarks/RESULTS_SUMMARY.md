@@ -20,7 +20,8 @@ MemoryKG with haystack-filtered seeding and BGE-small-en-v1.5 **beats MemPalace'
 | MemPalace raw | MiniLM | None | 96.6% | 96.6% | 98.2% | 0.889 |
 | MemPalace hybrid v2 | MiniLM | None | — | 98.4% | 99.0% | 0.934 |
 | MemPalace hybrid v3 + Haiku | MiniLM | Haiku rerank | — | 99.4% | 99.6% | 0.975 |
-| **MemoryKG (this work)** | **BGE-small** | **None** | **89.4%** | **97.6%** | **99.2%** | **0.936** |
+| **MemoryKG baseline** | **BGE-small** | **None** | **90.4%** | **98.4%** | **99.4%** | **0.943** |
+| **MemoryKG + sibling boost** | **BGE-small** | **None** | **—** | **98.2%** | **99.2%** | **0.954** |
 
 MemoryKG at **97.6% R@5** beats MemPalace's raw baseline (+1.0 pp) with no inference, and falls 1.8 pp short of their Haiku-reranked result at R@5. At NDCG@10 and R@10, MemoryKG **beats MemPalace hybrid v2** — the best zero-inference result from either system — with 0.936 vs 0.934 NDCG@10 and 99.2% vs 99.0% R@10.
 
@@ -116,5 +117,6 @@ poetry run python3 benchmarks/longmemeval/longmemeval_memkg.py run \
   /tmp/longmemeval-data/longmemeval_s_cleaned.json \
   --out benchmarks/longmemeval/results_bge_haystack.jsonl
 
-# Expected: R@5=97.6%  R@10=99.2%  NDCG@10=0.936
+# Expected: R@5=98.4%  R@10=99.4%  NDCG@10=0.943 (baseline)
+#        or R@5=98.2%  R@10=99.2%  recall_all@10=98.6%  NDCG@10=0.954 (sibling boost)
 ```

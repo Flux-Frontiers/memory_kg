@@ -1,189 +1,141 @@
-# MemoryKG Benchmarks — Reproduction Guide
+# MemoryKG Benchmarks
 
-The `longmemeval_memkg.py` harness evaluates MemoryKG against the LongMemEval-S benchmark (500 questions). It ingests all haystack sessions into a persistent SQLite + LanceDB knowledge graph once, then runs all 500 queries against it.
-
-Retrieval is **pure MemoryKG — no inference, no LLM, no API key required**.
+MemoryKG is evaluated across three public conversational-memory benchmarks. All evaluations use **pure retrieval — no inference, no LLM, no API key**.
 
 ---
 
-## Best Result (as of April 2026)
+## Results at a Glance
 
-| Metric | Score |
-|---|---|
-| R@5 | **97.6%** |
-| R@10 | **99.2%** |
-| NDCG@10 | **0.936** |
-| Misses @10 | 4 |
-| LLM required | None |
-
-See [BENCHMARKS.md](BENCHMARKS.md) for the full progression and comparison against published systems.
-
----
-
-## Setup
-
-```bash
-# Install dependencies
-poetry install
-
-# Download LongMemEval-S data
-mkdir -p /tmp/longmemeval-data
-curl -fsSL -o /tmp/longmemeval-data/longmemeval_s_cleaned.json \
-  https://huggingface.co/datasets/xiaowu0162/longmemeval-cleaned/resolve/main/longmemeval_s_cleaned.json
-```
+| Benchmark | Metric | Score | Items | Notes |
+|---|---|--:|--:|---|
+| **LongMemEval-S** | Recall@5 | **98.4%** | 500 questions | 4 misses at @10 |
+| **LongMemEval-S** | Recall@10 | **99.4%** | 500 questions | — |
+| **LongMemEval-S** | Recall_all@10 | **98.6%** | 500 questions | Multi-session coverage |
+| **LoCoMo** | Session Recall | **98.1%** | ~200 QA pairs | 10 conversations |
+| **MemBench** | Recall@20 | **87.7%** | 1,100 items | 11 categories, 3 topics; scoping essential |
+| **ConvoMem** | Recall@20 (tier 1) | **96.3%** | 500 items | Beats MemPal (+3.4 pp); 88.7% overall |
 
 ---
 
-## Quick Start (Best Configuration)
+## LongMemEval
+
+**Benchmark:** [LongMemEval-S](https://huggingface.co/datasets/xiaowu0162/longmemeval-cleaned) — 500 questions drawn from 10 long-horizon conversations (500 sessions each, ~23K sessions total).
+
+**Task:** Given a question about a user's past conversations, retrieve the session(s) containing the answer from a 50-session haystack.
+
+**MemoryKG result:** 98.4% Recall@5, 99.4% Recall@10, 98.6% Recall_all@10 — no LLM.
+
+| Mode | R@5 | R@10 | Recall_all@10 | LLM |
+|---|--:|--:|--:|---|
+| MemoryKG baseline | **98.4%** | **99.4%** | 96.8% | None |
+| MemoryKG + sibling boost | 98.2% | 99.2% | **98.6%** | None |
+
+→ Full progression and comparison vs published systems: [BENCHMARKS.md](BENCHMARKS.md)
 
 ```bash
-# Step 1: Build the corpus and KG (one-time, ~5–10 min on Apple Silicon)
-poetry run python3 benchmarks/longmemeval/longmemeval_memkg.py prepare \
-  /tmp/longmemeval-data/longmemeval_s_cleaned.json \
-  --wipe --chunk-strategy heading
-
-# Step 2: Run evaluation (repeatable, reuses built KG, ~15 min)
-poetry run python3 benchmarks/longmemeval/longmemeval_memkg.py run \
-  /tmp/longmemeval-data/longmemeval_s_cleaned.json \
-  --out benchmarks/longmemeval/results.jsonl
-```
-
-**Expected output:**
-```
-Recall@5:  0.976
-Recall@10: 0.992
-NDCG@10:   0.936
-Misses@10: 4
-```
-
-The default `run` configuration is the best-validated setup:
-- `--k 50` — 50 LanceDB seeds per query (sufficient within the 50-session haystack)
-- `--hop 1` — one graph expansion hop
-- `--haystack-filter` — restrict seeding to per-question haystack sessions (on by default)
-
----
-
-## CLI Reference
-
-### `prepare` — Build the corpus and knowledge graph
-
-```bash
-poetry run python3 benchmarks/longmemeval/longmemeval_memkg.py prepare \
-  /tmp/longmemeval-data/longmemeval_s_cleaned.json \
-  [--wipe] \
-  [--chunk-strategy heading|paragraph|fixed] \
-  [--model MODEL] \
-  [--batch N] \
-  [--similar]
-```
-
-| Flag | Default | Description |
-|---|---|---|
-| `--wipe` | off | Drop and rebuild the KG from scratch |
-| `--chunk-strategy` | `heading` | How to split sessions into chunks |
-| `--model` | env `DOCKG_MODEL` | Override the sentence-transformer model |
-| `--batch` | 1024 | Embedding batch size |
-| `--similar` | off | Discover SIMILAR_TO edges (slow — ~1 hr for full corpus) |
-
-### `run` — Evaluate retrieval
-
-```bash
-poetry run python3 benchmarks/longmemeval/longmemeval_memkg.py run \
-  /tmp/longmemeval-data/longmemeval_s_cleaned.json \
-  [--k N] \
-  [--hop N] \
-  [--haystack-filter | --no-haystack-filter] \
-  [--seed-kinds KINDS] \
-  [--rels RELS] \
-  [--max-nodes N] \
-  [--limit N] \
-  [--skip N] \
-  [--out FILE] \
-  [--ollama [--ollama-model MODEL] [--ollama-url URL] [--ollama-top-n N]]
-```
-
-| Flag | Default | Description |
-|---|---|---|
-| `--k` | `50` | LanceDB seed count before graph expansion |
-| `--hop` | `1` | Graph expansion hops from each seed |
-| `--haystack-filter` | **on** | Restrict seeding to per-question haystack sessions |
-| `--no-haystack-filter` | — | Search the full corpus instead |
-| `--seed-kinds` | all kinds | Comma-separated node kinds to seed from (e.g. `chunk`) |
-| `--rels` | `CONTAINS,NEXT,REFERENCES,SIMILAR_TO,HAS_TOPIC,MENTIONS_ENTITY,HAS_KEYWORD` | Edge types to traverse |
-| `--max-nodes` | `1000` | Cap on ranked nodes returned per query |
-| `--limit` | `0` (all) | Stop after N questions |
-| `--skip` | `0` | Skip first N questions |
-| `--out` | auto | Output JSONL path |
-| `--ollama` | off | Enable local LLM reranker via Ollama |
-| `--ollama-model` | `qwen3:4b-instruct` | Ollama model name |
-| `--ollama-url` | `http://localhost:11434` | Ollama server URL |
-| `--ollama-top-n` | `20` | Candidates sent to reranker |
-
-### `all` — Prepare + run in one step
-
-```bash
-poetry run python3 benchmarks/longmemeval/longmemeval_memkg.py all \
-  /tmp/longmemeval-data/longmemeval_s_cleaned.json \
-  --wipe --chunk-strategy heading \
-  --out benchmarks/longmemeval/results.jsonl
+# Build KG + run evaluation
+poetry run python benchmarks/longmemeval/longmemeval_memkg.py prepare \
+  /tmp/longmemeval_s_cleaned.json --wipe
+poetry run python benchmarks/longmemeval/longmemeval_memkg.py run \
+  /tmp/longmemeval_s_cleaned.json
 ```
 
 ---
 
-## Common Recipes
+## LoCoMo
+
+**Benchmark:** [LoCoMo](https://github.com/snap-research/locomo) — 10 long-form conversations with ~200 QA pairs across 5 reasoning categories.
+
+**Task:** Retrieve the session(s) containing the answer to questions about past conversations.
+
+**MemoryKG result:** 98.1% session recall — no LLM.
 
 ```bash
-# Full-corpus search (no haystack filter) — comparable to naive vector-only baselines
-poetry run python3 benchmarks/longmemeval/longmemeval_memkg.py run \
-  /tmp/longmemeval-data/longmemeval_s_cleaned.json \
-  --no-haystack-filter --k 150 \
-  --out benchmarks/longmemeval/results_full_corpus.jsonl
-
-# Pure semantic (no graph) — hop=0 ablation
-poetry run python3 benchmarks/longmemeval/longmemeval_memkg.py run \
-  /tmp/longmemeval-data/longmemeval_s_cleaned.json \
-  --hop 0 \
-  --out benchmarks/longmemeval/results_hop0.jsonl
-
-# Quick sanity check on 20 questions
-poetry run python3 benchmarks/longmemeval/longmemeval_memkg.py run \
-  /tmp/longmemeval-data/longmemeval_s_cleaned.json \
-  --limit 20 --out benchmarks/longmemeval/results_smoke.jsonl
-
-# With local LLM reranker (Ollama must be running)
-poetry run python3 benchmarks/longmemeval/longmemeval_memkg.py run \
-  /tmp/longmemeval-data/longmemeval_s_cleaned.json \
-  --ollama --ollama-model qwen3:4b-instruct \
-  --out benchmarks/longmemeval/results_ollama.jsonl
+# Build KG + run evaluation
+poetry run python benchmarks/locomobench/locomo_bench_memkg.py prepare \
+  /path/to/locomo10.json --download
+poetry run python benchmarks/locomobench/locomo_bench_memkg.py run \
+  /path/to/locomo10.json
 ```
 
 ---
 
-## Rendering Results
+## MemBench
 
-The `render_results.py` script compares multiple JSONL runs side-by-side and generates `BENCHMARKS_COMPARISON.md`. It runs automatically at the end of each `run` or `all` invocation.
+**Benchmark:** [MemBench](https://github.com/import-myself/Membench) (ACL 2025) — 1,100 items across 11 memory categories and 3 topics (movie, food, book).
 
-To run manually:
+**Task:** Retrieve the target turn(s) from multi-turn conversations containing the answer.
+
+**MemoryKG result:** 87.7% recall@20 across all categories and topics — no LLM. The essential mechanism is per-item haystack scoping; without it recall collapses to 8.9%.
+
+| Category | k=20 Recall | Category | k=20 Recall |
+|---|--:|---|--:|
+| simple | 0.970 | highlevel | 1.000 |
+| knowledge_update | 0.990 | aggregative | 0.870 |
+| comparative | 0.970 | conditional | 0.745 |
+| noisy | 0.420 | post_processing | 0.720 |
+| highlevel_rec | 0.983 | lowlevel_rec | 1.000 |
+| RecMultiSession | 0.982 | — | — |
+
+→ Full results and analysis: [membench/membench_article.md](membench/membench_article.md)
 
 ```bash
-poetry run python3 benchmarks/render_results.py benchmarks/longmemeval/results*.jsonl
+# All-in-one: download data, build KG, run evaluation
+poetry run python benchmarks/membench/membench_bench.py all --topic all --limit 100
 ```
 
 ---
 
-## Environment Variables
+## ConvoMem
 
-| Variable | Default | Description |
-|---|---|---|
-| `DOCKG_MODEL` | `BAAI/bge-small-en-v1.5` | Sentence-transformer model for embeddings |
-| `DOCKG_DEVICE` | `mps` | Embedding device (`mps`, `cuda`, `cpu`) |
+**Benchmark:** [ConvoMem](https://arxiv.org/abs/2511.10523) (Salesforce, 2025) — 75,336 QA pairs across six evidence categories and up to six evidence tiers.
+
+**Task:** Locate the specific conversation turns that contain the answer to a question, from a corpus of up to 300 sessions.
+
+**MemoryKG result:** 96.3% recall@20 at tier 1 (500 items), beating MemPal's published 92.9% by +3.4 pp — no LLM.
+
+| Category (tier 1) | k=20 Recall | vs. MemPal |
+|---|--:|--:|
+| User Facts | 0.990 | +1.0 pp |
+| Assistant Facts | 0.990 | −1.0 pp |
+| Abstention | 0.950 | +4.0 pp |
+| Implicit Connections | 0.923 | +3.0 pp |
+| Preferences | 0.960 | +10.0 pp |
+| **Overall** | **0.963** | **+3.4 pp** |
+
+Key finding: k=10→k=20 gains +4.5 pp at zero latency cost; a 5× larger model gains only +0.6 pp.
+
+→ Full results and analysis: [convomem/convomem_article.md](convomem/convomem_article.md)
+
+```bash
+poetry run python benchmarks/convomem/convomem_bench.py --tier 1 --k 20
+```
+
+---
+
+## How It Works
+
+All three benchmarks use the same core pattern:
+
+1. **Write conversations as Markdown** — one file per session (LoCoMo, LongMemEval) or one file per item (MemBench). Each turn or dialog is a `## Heading` that becomes its own chunk.
+
+2. **Build one persistent MemoryKG** — SQLite graph + LanceDB vector index over the entire corpus. Built once, queried many times.
+
+3. **Query with `haystack_files` scoping** — at query time, LanceDB seeding is restricted to the files relevant to the current question. This eliminates cross-conversation noise without needing a separate database per conversation.
+
+4. **Graph expansion (hop=1)** — seed nodes expand through structural edges (CONTAINS, NEXT, HAS_TOPIC, MENTIONS_ENTITY, HAS_KEYWORD) to recover vocabulary-mismatched neighbors.
+
+**No LLM. No fact extraction. No inference. No API key.**
 
 ---
 
 ## Requirements
 
+```bash
+poetry install  # all dependencies managed
+```
+
 - Python 3.10+
-- `poetry install` (all dependencies managed)
-- ~300 MB disk for LongMemEval data
-- ~2–3 GB disk for the built KG (23,867 sessions)
-- No API key. No cloud. No GPU required (CPU works; MPS recommended on Apple Silicon).
+- No GPU required (MPS recommended on Apple Silicon, CPU works)
+- No API key
+- Data auto-downloaded where supported (MemBench, LoCoMo); LongMemEval requires manual download from HuggingFace

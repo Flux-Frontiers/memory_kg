@@ -225,7 +225,7 @@ def retrieve_for_item(
         for ev_text in evidence_texts:
             for node in result.nodes:
                 node_text = (node.get("text") or "").strip().lower()
-                if ev_text in node_text or node_text in ev_text:
+                if node_text and (ev_text in node_text or node_text in ev_text):
                     found += 1
                     break
 

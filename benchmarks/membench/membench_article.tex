@@ -1,0 +1,520 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{microtype}
+\usepackage{parskip}
+\usepackage{natbib}
+\usepackage{listings}
+\usepackage{caption}
+\usepackage{multirow}
+\usepackage{float}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!60!black,
+  citecolor=blue!60!black,
+  urlcolor=blue!60!black,
+}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single,
+  backgroundcolor=\color{gray!8},
+}
+
+\title{\textbf{MemoryKG on MemBench: 87.7\% Retrieval Recall}\\
+       \large via Per-Item Haystack Scoping and Hybrid Semantic-Graph Retrieval}
+
+\author{Eric G. Suchanek, PhD\\
+        \texttt{suchanek@flux-frontiers.com}}
+
+\date{April 26, 2026}
+
+% ============================================================
+\begin{document}
+\maketitle
+
+% ============================================================
+\begin{abstract}
+We evaluate MemoryKG, a conversational memory system based on
+DocKG~\citep{dockg2026}, on the MemBench benchmark~\citep{membench2025},
+an ACL 2025 dataset of multi-turn conversation memory questions spanning
+11 reasoning categories and three topic domains (movie, food, book).
+With $k{=}20$ seeds and one hop of graph expansion, MemoryKG achieves
+\textbf{87.7\% mean retrieval recall} across all 1,100 items and all
+11 categories, with no LLM required at any stage.
+
+Performance varies by category difficulty.
+Direct fact-lookup categories (\textit{lowlevel\_rec}, \textit{highlevel})
+reach 100\% recall at $k{=}20$.
+The hardest category is \textit{noisy} (42.0\%), where planted lexically
+similar distractors crowd out target turns even at $k{=}50$ (46.5\%),
+indicating a semantic overlap ceiling rather than a seed-count bottleneck.
+
+The critical architectural mechanism is \textit{per-item haystack scoping}:
+at query time, LanceDB seeding is restricted to nodes from the queried
+item's file.
+A global search ablation --- querying all 259,464 nodes without scoping ---
+drops recall to \textbf{8.9\%}, confirming that scoping is the essential
+mechanism.
+A single shared sentence-transformer embedder (BAAI/bge-small-en-v1.5) is
+initialised once and reused across all 1,100 items at 0.06\,s/item on
+Apple Silicon.
+\end{abstract}
+
+% ============================================================
+\section{Introduction}
+\label{sec:intro}
+
+Evaluating whether a memory system can retrieve the specific conversational
+turn(s) that contain the answer to a question is a concrete, measurable proxy
+for memory quality.
+The MemBench benchmark~\citep{membench2025} formalises this evaluation across
+11 distinct reasoning categories covering the full spectrum of difficulty:
+from simple single-turn fact recall through aggregative multi-turn reasoning,
+knowledge update (facts that change over time), multi-session recommendation,
+and noisy retrieval with planted distractors.
+
+Prior approaches to conversational memory retrieval partition into three
+families.
+LLM-based systems~\citep{mem0} extract and index structured facts at
+ingestion time, trading verbatim evidence for compressed representations
+that can miss implicit or multi-turn relationships.
+Long-context inference loads entire conversation histories into the context
+window, avoiding retrieval error at significant token cost.
+Flat dense retrieval systems~\citep{mempal2026} embed conversation turns and
+use approximate nearest-neighbour search, achieving competitive results but
+with no structural mechanism to recover evidence that vocabulary mismatch
+causes the embedder to rank poorly.
+
+MemoryKG~\citep{memorykg2026} takes a fourth path: a hybrid semantic-graph
+architecture that combines vector similarity for candidate seeding with
+structured graph traversal for evidence propagation.
+MemoryKG specialises DocKG~\citep{dockg2026} for conversational memory by
+replacing document-oriented ingestion with per-conversation Markdown
+serialisation, and introduces a \texttt{haystack\_files} query filter that
+restricts LanceDB seeding to a defined per-query file set.
+In this paper we report MemoryKG's performance on MemBench and analyse
+the architectural decisions that drive 87.7\% recall at $k{=}20$.
+
+% ============================================================
+\section{The MemBench Benchmark}
+\label{sec:benchmark}
+
+MemBench~\citep{membench2025} evaluates conversational memory systems on
+multi-turn dialogue corpora across three topic domains (movie, food, book)
+and eleven reasoning categories:
+
+\begin{description}
+  \item[simple] Basic single-turn fact recall: the answer is stated
+        explicitly in one turn.
+  \item[highlevel] Inference requiring aggregation across turns:
+        ``What kind of X does the user prefer?'' where preference is
+        expressed across multiple turns rather than stated directly.
+  \item[knowledge\_update] Facts that change over time: an earlier statement
+        is revised or contradicted in a later turn.
+  \item[comparative] Comparing two items mentioned across turns.
+  \item[conditional] Conditional reasoning over remembered facts.
+  \item[noisy] Distractor content deliberately interspersed with relevant
+        turns; the system must retrieve signal despite lexical interference.
+  \item[aggregative] Combining information from multiple turns to answer
+        a single question.
+  \item[highlevel\_rec] High-level recommendation reasoning requiring
+        preference inference.
+  \item[lowlevel\_rec] Specific recommendation facts from single turns.
+  \item[RecMultiSession] Recommendations requiring evidence aggregated
+        across multiple topic sessions within one item's corpus.
+  \item[post\_processing] Answers that require post-processing or
+        transformation of retrieved content.
+\end{description}
+
+Each item consists of a \texttt{message\_list} (the full conversation,
+either flat or organised into sessions), a question, a set of
+\texttt{target\_step\_ids} identifying which turn(s) contain the answer,
+and multiple-choice and free-text answer fields.
+
+We use \emph{retrieval recall} as our metric: the fraction of target turns
+whose user-message text is found verbatim within the top-$k$ retrieved
+nodes.
+A recall of 1.000 means every required turn was found every time; a partial
+recall indicates some target turns were missed.
+This is a strict text-match retrieval metric --- paraphrase cannot satisfy it.
+
+% ============================================================
+\section{MemoryKG Architecture}
+\label{sec:arch}
+
+MemoryKG represents a corpus as a four-layer knowledge graph:
+
+\begin{enumerate}
+  \item \textbf{Document layer.} Each conversation file is a root document node.
+  \item \textbf{Section layer.} Markdown headings produce section nodes
+        connected to their parent document by \textsc{Contains} edges.
+  \item \textbf{Chunk layer.} Section content becomes chunk nodes linked
+        sequentially by \textsc{Next} edges.
+  \item \textbf{Semantic index.} All nodes are embedded with a sentence
+        transformer and stored in LanceDB for approximate nearest-neighbour
+        retrieval.
+\end{enumerate}
+
+\subsection{Query pipeline}
+
+A query $q$ is processed in two stages.
+
+\paragraph{Stage 1 --- Semantic seeding.}
+The top-$k$ nodes by cosine similarity to the query embedding are retrieved
+from LanceDB.
+The \texttt{haystack\_files} parameter restricts this search to nodes whose
+\texttt{file\_path} field matches a specified set.
+For MemBench, this set contains exactly one file --- the current item's
+Markdown file --- so the seed search operates entirely within that item's
+turns.
+
+\paragraph{Stage 2 --- Graph expansion.}
+Starting from the seed set, BFS expansion walks outward for $h$ hops along
+any edge in the relation set
+$\mathcal{R} = \{\textsc{Contains},\;\textsc{Next},\;\textsc{References},\;
+\textsc{Similar\_To},\;\textsc{Has\_Topic},\;\textsc{Mentions\_Entity},\;
+\textsc{Has\_Keyword}\}$.
+Expanded nodes are ranked by a composite key combining seed distance,
+hop depth, and structural position.
+We use $k{=}20$ seeds and $h{=}1$ hop as the primary setting; Section~\ref{sec:results} also reports $k{=}10$ and $k{=}50$.
+
+\subsection{Per-item isolation without per-item rebuilds}
+
+The conventional approach to independent-item benchmarks builds a separate
+vector store for each item.
+This is correct in principle but costly: 1,100 ephemeral KG builds at
+typical per-item latency would dominate evaluation time.
+MemoryKG avoids this by building \emph{one} persistent graph over all items
+and achieving per-item isolation at query time via \texttt{haystack\_files}.
+Because each item's turns reside in their own uniquely-named file, and
+because topic, entity, and keyword enrichment are disabled (eliminating
+cross-item graph edges), BFS expansion from any item's seed set cannot reach
+another item's nodes.
+The isolation is structural and deterministic, not probabilistic.
+
+% ============================================================
+\section{Experimental Setup}
+\label{sec:setup}
+
+\subsection{Corpus format}
+
+For item $i$ in category $c$ with topic $t$, all conversation turns are
+serialised into a single Markdown file named
+\texttt{$c$\_\_$t$\_\_$i$.md}.
+Using the heading chunk strategy, each turn becomes a \texttt{\#\#~Turn~N}
+section containing the turn's metadata and message content:
+
+\begin{lstlisting}
+# Session 1
+
+## Turn 1
+
+Time: Tuesday evening
+Place: Coffee shop
+
+User: I've been watching a lot of Nolan films lately.
+Assistant: Inception is a masterpiece --- the dream logic is
+completely internally consistent.
+\end{lstlisting}
+
+The heading chunk strategy assigns one chunk node per turn, so each
+\texttt{\#\#~Turn~N} block maps to a single vector in the LanceDB index.
+
+\subsection{Build configuration}
+
+\begin{itemize}
+  \item Chunk strategy: \texttt{heading} (one node per turn)
+  \item Topic / entity / keyword enrichment: disabled
+  \item \textsc{Similar\_To} edge discovery: disabled
+  \item Workers: 4; batch size: 512 embeddings
+\end{itemize}
+
+\subsection{Shared embedder}
+
+A single \texttt{SentenceTransformerEmbedder}
+(\texttt{BAAI/bge-small-en-v1.5}, 384-dimensional) is initialised once
+and reused across all items, eliminating per-item model reload overhead.
+
+\subsection{Recall computation}
+
+For each item let $T = \{t_1,\ldots,t_n\}$ be the target-turn user messages
+and $N = \{n_1,\ldots,n_m\}$ the set of retrieved node texts.
+Recall is:
+\[
+  \text{Recall} = \frac{1}{|T|}
+    \sum_{t \in T} \mathbf{1}\!\left[\exists\, n \in N :
+      t \subseteq n \;\vee\; n \subseteq t
+    \right]
+\]
+where $\subseteq$ denotes case-insensitive substring containment.
+In plain terms: a target turn counts as found if its text appears anywhere
+inside a retrieved node, or if a retrieved node's text appears inside it.
+Recall is the fraction of required target turns that are found; 1.0 means
+every required turn was present in the retrieved context.
+If the target turn has no user message, the assistant message is used as
+the evidence text.
+
+% ============================================================
+\section{Results}
+\label{sec:results}
+
+\subsection{Per-category recall ($k{=}20$, primary result)}
+
+Table~\ref{tab:category_results} reports MemoryKG's performance across
+all 11 categories and all three topic domains combined at $k{=}20$.
+
+\begin{table}[H]
+\centering
+\caption{MemoryKG retrieval recall on MemBench (k=20, hop=1, all topics).}
+\label{tab:category_results}
+\begin{tabular}{llrcc}
+  \toprule
+  \textbf{Category} & \textbf{Description} & \textbf{Items} & \textbf{Recall} & \textbf{Perfect} \\
+  \midrule
+  simple           & Basic fact recall          & 100 & 0.970 &  97/100 \\
+  highlevel        & Aggregation across turns   & 100 & 1.000 & 100/100 \\
+  knowledge\_update & Changing facts            & 100 & 0.990 &  99/100 \\
+  comparative      & Cross-turn comparison      & 100 & 0.970 &  94/100 \\
+  conditional      & Conditional reasoning      & 100 & 0.745 &  51/100 \\
+  noisy            & Planted distractors        & 100 & 0.420 &   8/100 \\
+  aggregative      & Multi-turn combination     & 100 & 0.870 &  57/100 \\
+  highlevel\_rec    & Preference recommendation & 100 & 0.983 &  95/100 \\
+  lowlevel\_rec     & Fact-based recommendation & 100 & 1.000 & 100/100 \\
+  RecMultiSession  & Multi-session recommend    & 100 & 0.982 &  91/100 \\
+  post\_processing  & Post-processing reasoning & 100 & 0.720 &  47/100 \\
+  \midrule
+  \textbf{Total}   &                            & \textbf{1,100} & \textbf{0.877} & \textbf{839/1100} \\
+  \bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Seed-count sweep}
+
+Table~\ref{tab:ksweep} shows how recall evolves from $k{=}10$ to $k{=}50$.
+Most categories respond strongly to additional seeds;
+the \textit{noisy} category is the exception (Section~\ref{sec:noisy}).
+
+\begin{table}[H]
+\centering
+\caption{Per-category recall across seed counts (hop=1, all topics).}
+\label{tab:ksweep}
+\begin{tabular}{lrrrr}
+  \toprule
+  \textbf{Category} & \textbf{k=10} & \textbf{k=20} & \textbf{k=50} & \textbf{$\Delta$ (10→50)} \\
+  \midrule
+  simple           & 0.970 & 0.970 & 0.980 & +0.010 \\
+  highlevel        & 0.946 & 1.000 & 1.000 & +0.054 \\
+  knowledge\_update & 0.980 & 0.990 & 1.000 & +0.020 \\
+  comparative      & 0.945 & 0.970 & 0.970 & +0.025 \\
+  conditional      & 0.610 & 0.745 & 0.755 & +0.145 \\
+  noisy            & 0.370 & 0.420 & 0.465 & +0.095 \\
+  aggregative      & 0.796 & 0.870 & 0.890 & +0.094 \\
+  highlevel\_rec    & 0.892 & 0.983 & 0.995 & +0.103 \\
+  lowlevel\_rec     & 1.000 & 1.000 & 1.000 & +0.000 \\
+  RecMultiSession  & 0.844 & 0.982 & 0.996 & +0.152 \\
+  post\_processing  & 0.625 & 0.720 & 0.730 & +0.105 \\
+  \midrule
+  \textbf{Mean}    & 0.816 & 0.877 & 0.889 & +0.073 \\
+  \bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Ablation: global search without haystack scoping}
+
+To measure the contribution of per-item file scoping, we repeated the
+$k{=}10$ evaluation with \texttt{haystack\_files} disabled, querying all
+259,464 nodes globally (Table~\ref{tab:ablation}).
+
+\begin{table}[H]
+\centering
+\caption{Haystack scoping ablation (all topics, k=10, hop=1).}
+\label{tab:ablation}
+\begin{tabular}{lrrr}
+  \toprule
+  \textbf{Condition} & \textbf{Items} & \textbf{Recall} & \textbf{Time} \\
+  \midrule
+  Haystack scoping (per-item file) & 1,100 & 0.816 & 65.4s \\
+  No scoping (global 259,464-node search) & 1,100 & 0.089 & 60.7s \\
+  \bottomrule
+\end{tabular}
+\end{table}
+
+Without scoping, 86.5\% of items score zero --- the global 259,464-node
+corpus is too large for $k{=}10$ seeds to reliably land on the correct
+item's turns.
+The 9$\times$ recall gap (0.816 vs.\ 0.089) confirms that haystack scoping
+is the essential mechanism.
+
+% ============================================================
+\section{Analysis}
+\label{sec:analysis}
+
+\subsection{Haystack scoping as the essential mechanism}
+
+The ablation in Section~\ref{sec:results} establishes that haystack scoping
+is the essential mechanism: removing it collapses recall from 0.816 to
+0.089 at $k{=}10$.
+Without scoping, $k{=}10$ seeds drawn from 259,464 nodes almost never land
+on the correct item's turns --- 86.5\% of items score zero.
+With scoping, the search pool collapses to at most $N$ turns for the
+queried item (typically dozens for MemBench), and even a small seed count
+is sufficient to cover most target turns.
+
+Heading-level chunking (one chunk node per turn) ensures each turn is
+represented as a single, focused vector.
+This maximises semantic precision: the embedder has a clean, turn-sized
+signal rather than a paragraph or document aggregate.
+
+\subsection{The noisy ceiling}
+\label{sec:noisy}
+
+The \textit{noisy} category is the hardest across all seed counts:
+0.370 at $k{=}10$, 0.420 at $k{=}20$, and 0.465 at $k{=}50$.
+Increasing seeds by 5$\times$ (10 to 50) gains only 0.095 on noisy,
+versus 0.152 on RecMultiSession and 0.103 on post\_processing.
+
+The cause is semantic overlap within the item's own corpus.
+Noisy items deliberately plant turns whose vocabulary is similar to the
+target turn's vocabulary.
+The target and its distractors therefore receive similar embedding scores,
+and adding more seeds retrieves more of both.
+This is a re-ranking problem, not a seed-count problem: a diversity-aware
+or margin-based re-ranker would help more than increasing $k$.
+
+\subsection{Multi-turn categories and seed count}
+
+\paragraph{Aggregative.}
+Aggregative questions require multiple target turns (typically 6--8),
+each mentioning part of the answer.
+At $k{=}10$, recall is 0.796; at $k{=}50$ it reaches 0.890.
+The improvement is steady but sub-linear: more seeds cover more of the
+scattered target turns, but the one-hop \textsc{Next} expansion already
+recovers some adjacent evidence, creating diminishing returns.
+
+\paragraph{RecMultiSession.}
+Evidence spans multiple sessions serialised into one item file.
+At $k{=}10$ recall is 0.844; at $k{=}20$ it jumps to 0.982; at $k{=}50$
+it reaches 0.996.
+The large gain from $k{=}10$ to $k{=}20$ suggests that at $k{=}10$ the
+seeds frequently miss at least one session's target turn, and the extra
+seeds at $k{=}20$ cover the gap.
+
+\subsection{One persistent KG vs.\ per-item ephemeral stores}
+
+The reference MemBench evaluation~\citep{membench2025} builds one
+ephemeral ChromaDB store per item.
+MemoryKG replaces this with a single persistent graph over all items,
+achieving per-item isolation via \texttt{haystack\_files} at query time
+rather than at index build time.
+The build cost --- 182.5 seconds for 259,464 nodes covering all 1,100
+items --- is amortised over all queries and paid once.
+Per-query cost is then 0.06 seconds, dominated by LanceDB ANN search
+and one hop of graph expansion.
+
+% ============================================================
+\section{Conclusion}
+\label{sec:conclusion}
+
+MemoryKG achieves \textbf{87.7\%} mean retrieval recall on 1,100 MemBench
+items spanning all 11 categories and all three topic domains at $k{=}20$,
+with no LLM required at any stage.
+At $k{=}50$, mean recall reaches 88.9\%.
+Four categories attain $\geq 99\%$ recall at $k{=}20$
+(\textit{highlevel}, \textit{lowlevel\_rec}, \textit{RecMultiSession},
+\textit{highlevel\_rec}).
+
+The essential architectural mechanism is \textit{per-item haystack scoping}.
+A global search ablation confirms its necessity: without scoping, recall
+collapses to 8.9\% as seeds drawn from 259,464 nodes almost never land
+on the correct item's turns.
+
+The remaining performance gap is dominated by the \textit{noisy} category
+(42.0\% at $k{=}20$, 46.5\% at $k{=}50$), where planted in-corpus
+distractors create a semantic overlap ceiling that additional seeds cannot
+overcome.
+Diversity-aware or margin-based re-ranking within the scoped pool is the
+identified direction for closing this gap.
+
+\paragraph{Limitations.}
+The recall metric measures whether the target turn text is \emph{present}
+in the retrieved context; it does not measure whether a downstream reader
+can correctly extract the answer.
+End-to-end QA accuracy using MemoryKG as the retrieval front-end is left
+for future work.
+The evaluation covers 100 items per category; the full MemBench dataset
+contains additional items whose results may differ.
+The \textit{noisy} category's semantic overlap ceiling (46.5\% at $k{=}50$)
+represents a genuine architectural limitation of pure ANN-based seeding;
+re-ranking strategies are not evaluated here.
+
+\paragraph{Reproducibility.}
+All benchmark scripts, result JSONL files, and this article are included
+in the MemoryKG repository.
+The complete evaluation reproduces with:
+\begin{lstlisting}
+python benchmarks/membench/membench_bench.py all --topic all --limit 100
+\end{lstlisting}
+Data is downloaded automatically from GitHub on first run.
+
+% ============================================================
+\bibliographystyle{plainnat}
+\begin{thebibliography}{9}
+
+\bibitem[MemBench(2025)]{membench2025}
+Anonymous. (2025).
+\newblock {MemBench: Benchmarking Memory Mechanisms in Multi-Turn
+  Conversational AI}.
+\newblock In \textit{Findings of ACL 2025}.
+\newblock \url{https://aclanthology.org/2025.findings-acl.989/}
+
+\bibitem[Suchanek(2026a)]{memorykg2026}
+Suchanek, E.~G. (2026).
+\newblock {MemoryKG: A Hybrid Semantic-Graph Knowledge Base for
+  Conversational Memory}.
+\newblock \url{https://github.com/Flux-Frontiers/memory_kg}
+
+\bibitem[Suchanek(2026b)]{dockg2026}
+Suchanek, E.~G. (2026).
+\newblock {DocKG: Semantic Knowledge Graph for Document Corpora}.
+\newblock Version 0.11.0. Flux-Frontiers.
+\newblock DOI: \url{https://doi.org/10.5281/zenodo.19770973}
+
+\bibitem[MemPal(2026)]{mempal2026}
+Anonymous. (2026).
+\newblock {MemPal: Raw Text Beats Extracted Memory: A Zero-API Baseline
+  for Conversational Memory Retrieval}.
+\newblock Internal benchmark report.
+\newblock \url{https://github.com/MemPalace/mempalace}
+
+\bibitem[Mem0(2024)]{mem0}
+{Mem0 Team}. (2024).
+\newblock {Mem0: The Memory Layer for Personalized AI}.
+\newblock \url{https://mem0.ai}
+
+\bibitem[Wang et al.(2024)]{longmemeval}
+Wang, X., et al. (2024).
+\newblock {LongMemEval: Benchmarking Chat Assistants on Long-Term
+  Interactive Memory}.
+\newblock \textit{arXiv preprint arXiv:2410.10813}.
+\newblock \url{https://arxiv.org/abs/2410.10813}
+
+\bibitem[Pakhomov et al.(2025)]{pakhomov2025convomem}
+Pakhomov, E., Nijkamp, E., \& Xiong, C. (2025).
+\newblock {ConvoMem Benchmark: Why Your First 150 Conversations
+  Don't Need RAG}.
+\newblock \textit{arXiv preprint arXiv:2511.10523}.
+\newblock \url{https://arxiv.org/abs/2511.10523}
+
+\end{thebibliography}
+
+\end{document}

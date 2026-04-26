@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `benchmarks/membench/membench_bench.py`: Complete MemBench benchmark harness (ACL 2025) — 1,100 items across 11 memory categories (simple, highlevel, knowledge_update, comparative, conditional, noisy, aggregative, highlevel_rec, lowlevel_rec, RecMultiSession, post_processing) and 3 topics (movie, food, book); prepare/run/all subcommand architecture; per-item haystack scoping essential (without it recall collapses from 87.7% to 8.9%); results: **87.7% recall@k20** (k=10: 81.6%, k=50: 88.9%)
+- `benchmarks/membench/BENCHMARKS_MEMBENCH.md`: Full MemBench results record — per-category recall table, k-ablation, scoping ablation, and architectural notes
+- `benchmarks/membench/membench_article.md` + `.tex` + `.pdf`: Academic writeup for MemBench evaluation
+- `benchmarks/membench/results/`: JSONL + Markdown result files for k=10/20/50/hop=2 runs
+- `benchmarks/convomem/convomem_article.md`: New ConvoMem article (corrected numbers — 96.3% tier-1 recall, beating MemPal by +3.4 pp; replaces the prior inflated 100% result)
+- New ConvoMem result files (`results_convomem_tier{1-4}_top{10,20}_hop{0,1}_20260426_*.json`) replacing the prior runs that contained the scoring bug
 - `benchmarks/locomobench/locomo_bench_memkg.py`: New MemoryKG-native LoCoMo benchmark — replaces ChromaDB-based `locomo_bench.py`; prepare/run/all subcommand architecture; one persistent KG over all 10 conversations with per-conversation `haystack_files` filtering; session and dialog granularity; shared `SentenceTransformerEmbedder`; optional Ollama reranker; auto-generated JSONL + Markdown result files; `--download` flag for dataset fetch
 - `benchmarks/locomobench/locomo_article.tex` + `.md` + `.pdf`: Academic writeup — "98.1% Session Recall on LoCoMo: MemoryKG's Hybrid Semantic-Graph Architecture Achieves Near-Perfect Retrieval Across 1,986 Questions with No LLM Required"; includes per-category table, session vs. dialog granularity comparison (24.2 pp gap), recall distribution, throughput analysis, and architectural explanation of why session granularity dominates
 - `benchmarks/locomobench/results/`: Session-granularity result (98.1% avg recall, 96.5% perfect) and dialog-granularity result (73.9%) JSONL + Markdown files for k=50, hop=1
@@ -15,14 +21,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `analysis/memory_kg_analysis_20260426.md`: Updated codebase analysis
 
 ### Changed
+- `benchmarks/README.md`: Major restructure — now covers all four benchmarks (LongMemEval-S, LoCoMo, MemBench, ConvoMem) with a unified results-at-a-glance table and per-benchmark sections; replaced the old LongMemEval-only guide and CLI reference with concise quick-start commands
+- `benchmarks/RESULTS_SUMMARY.md`: Updated LongMemEval comparison table — split MemoryKG row into "baseline" (98.4% R@5, 0.943 NDCG@10) and "sibling boost" (98.6% recall_all@10, 0.954 NDCG@10) to accurately reflect the two configurations
+- `benchmarks/convomem/BENCHMARKS_CONVOMEM.md`: Updated with corrected numbers (96.3% tier-1, 88.6% tier-2, 83.7% tier-3, 84.3% tier-4); revised item counts (500/597/500/300 sampled vs. full dataset); added k=10 vs. k=20 ablation and MemPal comparison table
+- `benchmarks/convomem/convomem_article.tex` + `.pdf`: Revised to reflect corrected benchmark numbers and ablation findings
 - `benchmarks/locomo_bench.py` → `benchmarks/locomobench/locomo_bench.py`: Moved original ChromaDB benchmark into `locomobench/` subdirectory for consistency with other benchmark layouts
 - `.gitignore`: Added `benchmarks/locomobench/data/` to exclude large corpus files, KG indices, and raw data from version control
 - `docs/ingestion.md`: Minor clarifications — added `DocGraph` row to component table, expanded `TextChunker` strategy list, noted `CO_OCCURS_WITH` is off by default
 - `src/memory_kg/index.py`: Updated module docstring to accurately describe default model (`BAAI/bge-small-en-v1.5`) and `DOCKG_MODEL` override mechanism
 
 ### Removed
+- `benchmarks/BENCHMARKS.md`, `benchmarks/BENCHMARKS_COMPARISON.md`: Superseded by per-benchmark articles and the unified `benchmarks/README.md`
+- `benchmarks/membench_bench.py`: Top-level script moved to `benchmarks/membench/membench_bench.py`
+- Old ConvoMem result files with inflated scores from the scoring bug
 
 ### Fixed
+- `benchmarks/convomem/convomem_bench.py`: Scoring bug in `retrieve_for_item()` — empty `node_text` was always counted as a substring match (empty string is a substring of any string), artificially inflating recall to 100%; fixed with `node_text and (...)` guard; corrected tier-1 recall: 96.3% (vs. 92.9% MemPal, still +3.4 pp)
 
 ## [0.4.1] - 2026-04-25
 
