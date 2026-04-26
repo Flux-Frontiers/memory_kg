@@ -15,7 +15,7 @@ Usage::
 
     from memory_kg.embedder_worker import CorpusEmbedder
 
-    embedder = CorpusEmbedder("all-mpnet-base-v2", n_workers=4)
+    embedder = CorpusEmbedder(n_workers=4)
     cache = embedder.embed(texts, metadata)
     embedder.save_cache(cache, Path("embeddings.json"))
 
@@ -38,8 +38,9 @@ import numpy as np
 logger = logging.getLogger(__name__)
 
 #: Default embedding model for the multipass pipeline.
-#: Matches diary_kg: nomic-embed-text-v1 (768-d, asymmetric retrieval).
-PIPELINE_MODEL: str = "nomic-ai/nomic-embed-text-v1"
+#: Reads ``DOCKG_MODEL`` env var (same as ``DEFAULT_MODEL`` in memorykg.py)
+#: so the global model setting applies to both the core build and pipeline stages.
+PIPELINE_MODEL: str = os.environ.get("DOCKG_MODEL", "BAAI/bge-small-en-v1.5")
 
 
 # ============================================================================

@@ -27,8 +27,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `benchmarks/convomem/convomem_article.tex` + `.pdf`: Revised to reflect corrected benchmark numbers and ablation findings
 - `benchmarks/locomo_bench.py` → `benchmarks/locomobench/locomo_bench.py`: Moved original ChromaDB benchmark into `locomobench/` subdirectory for consistency with other benchmark layouts
 - `.gitignore`: Added `benchmarks/locomobench/data/` to exclude large corpus files, KG indices, and raw data from version control
-- `docs/ingestion.md`: Minor clarifications — added `DocGraph` row to component table, expanded `TextChunker` strategy list, noted `CO_OCCURS_WITH` is off by default
-- `src/memory_kg/index.py`: Updated module docstring to accurately describe default model (`BAAI/bge-small-en-v1.5`) and `DOCKG_MODEL` override mechanism
+- `docs/ingestion.md`: Minor clarifications — added `DocGraph` row to component table, expanded `TextChunker` strategy list, noted `CO_OCCURS_WITH` is off by default; updated default pipeline embedding model table from `nomic-ai/nomic-embed-text-v1` (768d) to `BAAI/bge-small-en-v1.5` (384d) to match implementation
+- `docs/ingestion_infographic.md`: Updated pipeline embedding model table to reflect `BAAI/bge-small-en-v1.5` default and `DOCKG_MODEL` env var
+- `src/memory_kg/memorykg.py`: Removed local `DEFAULT_MODEL` definition; re-exported from `kg_utils.embed` to centralize model configuration across the KG ecosystem
+- `src/memory_kg/index.py`: `DEFAULT_MODEL` and `resolve_model_path` now imported from `kg_utils.embed`; `_local_model_path()` delegates to `kg_utils.embed.resolve_model_path()`, respecting `KGRAG_MODEL_DIR` for system-wide cache redirection
+- `src/memory_kg/embedder_worker.py`: `PIPELINE_MODEL` now reads `DOCKG_MODEL` env var (default `BAAI/bge-small-en-v1.5`) instead of being hardcoded to `nomic-ai/nomic-embed-text-v1`, aligning pipeline and core build model selection
 
 ### Removed
 - `benchmarks/BENCHMARKS.md`, `benchmarks/BENCHMARKS_COMPARISON.md`: Superseded by per-benchmark articles and the unified `benchmarks/README.md`
@@ -37,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - `benchmarks/convomem/convomem_bench.py`: Scoring bug in `retrieve_for_item()` — empty `node_text` was always counted as a substring match (empty string is a substring of any string), artificially inflating recall to 100%; fixed with `node_text and (...)` guard; corrected tier-1 recall: 96.3% (vs. 92.9% MemPal, still +3.4 pp)
+- `tests/test_embedder_worker.py`: Updated `test_pipeline_model_constant_value` to respect `DOCKG_MODEL` env var override rather than asserting the old hardcoded model name
 
 ## [0.4.1] - 2026-04-25
 

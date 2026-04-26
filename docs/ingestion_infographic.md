@@ -177,7 +177,7 @@ STAGE 3: CorpusEmbedder          STAGE 4: ManifoldAnalyzer
 
 | Model | Dims | Notes |
 |-------|------|-------|
-| `nomic-ai/nomic-embed-text-v1` | 768 | Asymmetric; task prefix `search_document:` |
+| `BAAI/bge-small-en-v1.5` | 384 | Default — reads `DOCKG_MODEL` env var (same as core build) |
 
 ### Commands
 

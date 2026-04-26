@@ -10,7 +10,11 @@ from memory_kg.embedder_worker import PIPELINE_MODEL, CorpusEmbedder, EmbeddingC
 
 
 def test_pipeline_model_constant_value():
-    assert PIPELINE_MODEL == "nomic-ai/nomic-embed-text-v1"
+    # Default is BAAI/bge-small-en-v1.5; overrideable via DOCKG_MODEL env var.
+    import os
+
+    expected = os.environ.get("DOCKG_MODEL", "BAAI/bge-small-en-v1.5")
+    assert PIPELINE_MODEL == expected
 
 
 def test_pipeline_model_is_string():

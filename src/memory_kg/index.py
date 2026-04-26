@@ -7,7 +7,7 @@ SemanticIndex — LanceDB vector index for MemoryKG.
 Mirrors CodeKG's index.py with the following additions:
 
 1. Default model is ``BAAI/bge-small-en-v1.5`` (384-dim) via ``DEFAULT_MODEL``
-   from ``memorykg.py``; override with ``DOCKG_MODEL`` env var or ``--model``.
+   from ``kg_utils.embed``; override with ``KGRAG_MODEL_DIR`` env var or ``--model``.
 
 2. After building the vector index, ``build()`` optionally runs a
    SIMILAR_TO edge discovery pass: each chunk is queried against its
@@ -32,7 +32,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from memory_kg.memorykg import DEFAULT_MODEL
+from kg_utils.embed import DEFAULT_MODEL, resolve_model_path
 
 if TYPE_CHECKING:
     from memory_kg.store import GraphStore
@@ -45,18 +45,14 @@ if TYPE_CHECKING:
 def _local_model_path(model_name: str) -> Path:
     """Return the local cache path for *model_name*.
 
-    Defaults to ``.memorykg/models/<model>`` under the current working directory.
-    Override via the ``DOCKG_MODEL_DIR`` environment variable.
+    Delegates to :func:`kg_utils.embed.resolve_model_path` with
+    ``.memorykg/models/`` as the local fallback.  Respects ``KGRAG_MODEL_DIR``
+    for system-wide cache redirection.
 
-    :param model_name: HuggingFace model identifier.
+    :param model_name: HuggingFace model identifier or known alias.
     :return: Absolute :class:`~pathlib.Path` to the cached model directory.
     """
-    import os  # pylint: disable=import-outside-toplevel
-
-    default = str(Path.cwd() / ".memorykg" / "models")
-    cache_root = Path(os.environ.get("DOCKG_MODEL_DIR", default))
-    safe_name = model_name.replace("/", "--")
-    return cache_root / safe_name
+    return resolve_model_path(model_name, local_fallback=Path.cwd() / ".memorykg" / "models")
 
 
 # ---------------------------------------------------------------------------
@@ -132,10 +128,9 @@ class Embedder:
 class SentenceTransformerEmbedder(Embedder):
     """Local embedding via ``sentence-transformers``.
 
-    Defaults to ``all-mpnet-base-v2`` — a strong general-text sentence model
-    (768 dimensions).  Swap for ``BAAI/bge-small-en-v1.5`` or any
-    other HuggingFace model by changing ``DEFAULT_MODEL`` or setting the
-    ``DOCKG_MODEL`` environment variable.
+    Default model is ``BAAI/bge-small-en-v1.5`` (384-dim).  Override by
+    passing ``model_name`` directly or setting ``KGRAG_MODEL_DIR`` to redirect
+    the model cache system-wide.
 
     :param model_name: HuggingFace model name or local path.
     """

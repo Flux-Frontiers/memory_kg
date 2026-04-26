@@ -317,11 +317,11 @@ memorykg pipeline manifold --cache .memorykg/pipeline/embeddings.json --max-pca 
 
 ### Embedding Model
 
-| Model | Dims | Task Prefix | Context |
-|-------|------|-------------|---------|
-| `nomic-ai/nomic-embed-text-v1` | 768 | `search_document: <text>` | Pipeline default — asymmetric retrieval, matches diary_kg |
+| Model | Dims | Context |
+|-------|------|---------|
+| `BAAI/bge-small-en-v1.5` | 384 | Default — reads `DOCKG_MODEL` env var, same as core build |
 
-Override via `--model` on any pipeline command.
+Override via `--model` on any pipeline command, or set `DOCKG_MODEL` globally.
 
 ### Sampling Strategies
 
