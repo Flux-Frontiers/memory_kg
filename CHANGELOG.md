@@ -8,8 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `benchmarks/locomobench/locomo_bench_memkg.py`: New MemoryKG-native LoCoMo benchmark — replaces ChromaDB-based `locomo_bench.py`; prepare/run/all subcommand architecture; one persistent KG over all 10 conversations with per-conversation `haystack_files` filtering; session and dialog granularity; shared `SentenceTransformerEmbedder`; optional Ollama reranker; auto-generated JSONL + Markdown result files; `--download` flag for dataset fetch
+- `benchmarks/locomobench/locomo_article.tex` + `.md` + `.pdf`: Academic writeup — "98.1% Session Recall on LoCoMo: MemoryKG's Hybrid Semantic-Graph Architecture Achieves Near-Perfect Retrieval Across 1,986 Questions with No LLM Required"; includes per-category table, session vs. dialog granularity comparison (24.2 pp gap), recall distribution, throughput analysis, and architectural explanation of why session granularity dominates
+- `benchmarks/locomobench/results/`: Session-granularity result (98.1% avg recall, 96.5% perfect) and dialog-granularity result (73.9%) JSONL + Markdown files for k=50, hop=1
+- `docs/ingestion_infographic.md`: New ingestion pipeline infographic
+- `analysis/memory_kg_analysis_20260426.md`: Updated codebase analysis
 
 ### Changed
+- `benchmarks/locomo_bench.py` → `benchmarks/locomobench/locomo_bench.py`: Moved original ChromaDB benchmark into `locomobench/` subdirectory for consistency with other benchmark layouts
+- `.gitignore`: Added `benchmarks/locomobench/data/` to exclude large corpus files, KG indices, and raw data from version control
+- `docs/ingestion.md`: Minor clarifications — added `DocGraph` row to component table, expanded `TextChunker` strategy list, noted `CO_OCCURS_WITH` is off by default
+- `src/memory_kg/index.py`: Updated module docstring to accurately describe default model (`BAAI/bge-small-en-v1.5`) and `DOCKG_MODEL` override mechanism
 
 ### Removed
 

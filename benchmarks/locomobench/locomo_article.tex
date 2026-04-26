@@ -1,0 +1,508 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{microtype}
+\usepackage{parskip}
+\usepackage{natbib}
+\usepackage{listings}
+\usepackage{caption}
+\usepackage{multirow}
+\usepackage{float}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!60!black,
+  citecolor=blue!60!black,
+  urlcolor=blue!60!black,
+}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single,
+  backgroundcolor=\color{gray!8},
+}
+
+\title{\textbf{98.1\% Session Recall on LoCoMo:}\\
+       \large MemoryKG's Hybrid Semantic-Graph Architecture\\
+       Achieves Near-Perfect Retrieval Across 1,986 Questions\\
+       with No LLM Required}
+
+\author{Eric G. Suchanek, PhD\\
+        \texttt{suchanek@flux-frontiers.com}}
+
+\date{April 25, 2026}
+
+% ============================================================
+\begin{document}
+\maketitle
+
+% ============================================================
+\begin{abstract}
+We evaluate MemoryKG, a conversational memory system based on
+DocKG~\citep{dockg2026}, on the LoCoMo benchmark~\citep{maharana2024locomo},
+a dataset of 1,986 questions spanning five categories that require locating
+specific sessions within long-horizon social conversation corpora.
+MemoryKG achieves \textbf{98.1\% average session-level recall} across all
+five categories, with \textbf{96.5\% of questions answered perfectly} (all
+evidence sessions retrieved), and only \textbf{1.0\% total misses}.
+No LLM is required at any stage --- neither for indexing nor for retrieval.
+The hardest category is \textit{Temporal-inference} (89.0\%), which requires
+cross-session reasoning rather than direct lookup; the easiest are
+\textit{Temporal} and \textit{Adversarial} (both 99.6\%).
+A key architectural finding is that \textit{session granularity} substantially
+outperforms \textit{dialog-turn granularity}: indexing one document per session
+(98.1\%) versus one document per dialog turn (73.9\%) --- a 24.2 percentage
+point gap --- confirming that session-level context aggregation is the correct
+retrieval unit for LoCoMo's multi-turn evidence structure.
+The full 1,986-question evaluation completes in 67.4 seconds on Apple Silicon.
+\end{abstract}
+
+% ============================================================
+\section{Introduction}
+\label{sec:intro}
+
+Long-horizon conversational memory --- the ability to locate specific facts
+or events from months of prior dialogue --- is increasingly central to
+AI assistant design.
+Retrieval approaches must navigate the dual challenge of semantic matching
+(finding sessions whose \emph{content} is relevant) and structural
+disambiguation (identifying \emph{which} session holds the evidence when many
+sessions discuss related topics).
+
+The LoCoMo benchmark~\citep{maharana2024locomo} evaluates retrieval over
+long-horizon social conversation corpora.
+Unlike single-fact or short-history benchmarks, LoCoMo conversations span
+many sessions over extended time periods, with evidence scattered across
+temporally ordered dialog turns.
+The five question categories --- Single-hop, Temporal, Temporal-inference,
+Open-domain, and Adversarial --- probe qualitatively different retrieval
+challenges.
+
+MemoryKG~\citep{memorykg2026} builds a persistent knowledge graph over
+verbatim conversation sessions, combining semantic vector search (LanceDB)
+with structured graph expansion (SQLite).
+It is a direct specialisation of DocKG~\citep{dockg2026} for conversational
+memory corpora.
+In this paper we report MemoryKG's performance on LoCoMo and analyse the
+architectural factors driving the results, with particular attention to
+the granularity question: should retrieval units be entire sessions or
+individual dialog turns?
+
+% ============================================================
+\section{The LoCoMo Benchmark}
+\label{sec:benchmark}
+
+LoCoMo~\citep{maharana2024locomo} (Long Context Motivated) is a benchmark
+for evaluating long-term conversational memory.
+It contains 10 long-horizon social conversations between two participants,
+each spanning many sessions over an extended period.
+From these conversations, 1,986 question--answer pairs are constructed,
+each paired with one or more \emph{evidence dialog IDs} --- the specific
+turns whose content is necessary to answer the question.
+
+The five question categories are:
+
+\begin{description}
+  \item[Single-hop ($n{=}282$)] Questions answerable from a single dialog turn
+        without temporal reasoning.
+  \item[Temporal ($n{=}321$)] Questions requiring knowledge of \emph{when}
+        an event occurred; evidence is usually a single datable session.
+  \item[Temporal-inference ($n{=}96$)] Questions requiring temporal
+        \emph{reasoning} across multiple sessions (e.g.\ ``Which happened
+        first?''), not just lookup.
+  \item[Open-domain ($n{=}841$)] General questions about conversation content
+        that may draw on any session.
+  \item[Adversarial ($n{=}446$)] Questions designed to exploit surface-level
+        lexical overlap with incorrect sessions.
+\end{description}
+
+The original LoCoMo paper reports end-to-end QA accuracy (requiring an LLM
+to generate a free-form answer); we report session-level retrieval recall ---
+whether the evidence session is \emph{present} in the retrieved context.
+These are complementary but distinct measures.
+Our metric is a strict prerequisite for QA accuracy: no downstream reader
+can correctly answer a question whose evidence was not retrieved.
+
+% ============================================================
+\section{MemoryKG Architecture}
+\label{sec:arch}
+
+MemoryKG represents a conversation corpus as a four-layer knowledge graph:
+
+\begin{enumerate}
+  \item \textbf{Document layer.} Each conversation session is a root document
+        node containing the full session text.
+  \item \textbf{Section layer.} Markdown headings (one per dialog turn) produce
+        section nodes connected to their parent document by
+        \textsc{Contains} edges.
+  \item \textbf{Chunk layer.} Section content is split into sentence-aligned
+        chunks; adjacent chunks are linked by \textsc{Next} edges.
+  \item \textbf{Semantic index.} All nodes are embedded with a sentence
+        transformer and stored in LanceDB for approximate nearest-neighbour
+        retrieval.
+\end{enumerate}
+
+\subsection{Query pipeline}
+
+A query $q$ is processed in two stages:
+
+\paragraph{Stage 1 --- Semantic seeding.}
+The top-$k$ nodes by cosine similarity to the query embedding are retrieved
+from LanceDB.
+For LoCoMo, seeding is restricted to the \emph{current conversation's} session
+files via a per-query \texttt{haystack\_files} filter, making retrieval
+apples-to-apples with per-conversation search approaches.
+
+\paragraph{Stage 2 --- Graph expansion.}
+Starting from the seed set $S$, BFS expansion walks outward for $h$ hops along
+any edge in the relation set $\mathcal{R}$:
+\begin{equation*}
+  \mathcal{R} = \{\textsc{Contains},\;\textsc{Next},\;\textsc{References},\;
+    \textsc{Similar\_To},\;\textsc{Has\_Topic},\;\textsc{Mentions\_Entity},\;
+    \textsc{Has\_Keyword}\}.
+\end{equation*}
+Nodes reachable within $h$ hops of any seed are added to the candidate pool
+and ranked by a composite key combining seed distance, hop depth, and
+structural position.
+For LoCoMo evaluations we use $k{=}50$ seeds and $h{=}1$ hop.
+
+\subsection{LoCoMo-specific corpus structure}
+
+All sessions from all 10 conversations are written to a single flat corpus
+directory during the \texttt{prepare} phase (one time).
+Each session is serialised as a Markdown file with the session number as the
+top-level heading and each dialog turn as a second-level heading:
+
+\begin{lstlisting}
+# session_3
+
+**Conversation:** conv-05
+**Date:** 2023-08-14
+
+## D3:1
+
+Alice said, "I finally signed up for that pottery class."
+
+## D3:2
+
+Bob said, "That's great! You've been talking about it for months."
+\end{lstlisting}
+
+The heading chunk strategy splits at \texttt{\#\#} boundaries, so each dialog
+turn becomes one chunk node while the parent session document node aggregates
+all turns.
+At query time, the \texttt{haystack\_files} filter restricts LanceDB seeding
+to the files belonging to the current conversation, providing per-conversation
+isolation without rebuilding the KG for each conversation.
+
+\subsection{Granularity: session vs.\ dialog}
+
+A key design question is whether to index \emph{sessions} (one file containing
+all turns) or individual \emph{dialog turns} (one file per turn).
+LoCoMo's evidence format specifies dialog IDs (e.g.\ \texttt{D3:7}), which
+at first suggests turn-level indexing.
+However, our experiments (Section~\ref{sec:granularity}) show that session
+granularity dominates by a large margin, because:
+
+\begin{itemize}
+  \item Session-level documents give the \textsc{Has\_Topic},
+        \textsc{Mentions\_Entity}, and \textsc{Has\_Keyword} enrichment edges
+        a richer surface to index.
+  \item The \textsc{Contains} edge from a session document to any of its
+        turn-level section nodes means that finding \emph{any} turn in the
+        seed set recovers the whole session.
+  \item With $\sim$200--300 dialog turn files per conversation and $k{=}50$
+        seeds, turn-level corpora are too sparse for reliable seeding.
+\end{itemize}
+
+% ============================================================
+\section{Experimental Setup}
+\label{sec:setup}
+
+\subsection{Build configuration}
+
+\begin{itemize}
+  \item Chunk strategy: \texttt{heading} (one chunk per Markdown section)
+  \item Topic / entity / keyword enrichment: enabled (default)
+  \item SIMILAR\_TO edge discovery: disabled (speed)
+  \item Workers: 8 (parallel file parsing in Phase 1)
+  \item Batch size: 1,024 embeddings
+  \item Model: \texttt{BAAI/bge-small-en-v1.5} (384-dimensional)
+\end{itemize}
+
+\subsection{Shared embedder}
+
+A single \texttt{SentenceTransformerEmbedder} is initialised once and passed
+to \texttt{MemoryKG} via the \texttt{embedder=} argument, reused across all
+1,986 questions.
+This eliminates per-question model-reload overhead.
+
+\subsection{Recall computation}
+
+Evidence for each question is expressed as a list of dialog IDs
+(e.g.\ \texttt{["D3:7", "D3:8"]}).
+For session-granularity evaluation, these are mapped to session IDs
+(\texttt{session\_3}) before scoring:
+
+\[
+  \text{Recall} = \frac{1}{|E|}
+    \sum_{e \in E} \mathbf{1}\!\left[e \in \text{retrieved\_ids}\right]
+\]
+
+where $E$ is the set of evidence session IDs and
+$\text{retrieved\_ids}$ is the ordered list of session IDs returned by the KG
+query, clipped to the top $k$.
+A recall of 1.0 means all evidence sessions were retrieved; 0.0 means none were.
+
+% ============================================================
+\section{Results}
+\label{sec:results}
+
+\subsection{Overall session-level recall}
+
+Table~\ref{tab:category_results} shows MemoryKG's session-level recall by
+category on the full 1,986-question LoCoMo benchmark.
+
+\begin{table}[H]
+\centering
+\caption{MemoryKG session-level recall on LoCoMo (session granularity,
+         $k{=}50$, hop=1).}
+\label{tab:category_results}
+\begin{tabular}{lrr}
+  \toprule
+  \textbf{Category} & \textbf{$n$} & \textbf{Recall} \\
+  \midrule
+  Single-hop          & 282 & 0.950 \\
+  Temporal            & 321 & 0.996 \\
+  Temporal-inference  &  96 & 0.890 \\
+  Open-domain         & 841 & 0.988 \\
+  Adversarial         & 446 & 0.996 \\
+  \midrule
+  \textbf{Overall}    & \textbf{1,986} & \textbf{0.981} \\
+  \bottomrule
+\end{tabular}
+\end{table}
+
+Of the 1,986 questions, 1,916 (96.5\%) achieve perfect recall (all evidence
+sessions retrieved), 50 (2.5\%) achieve partial recall, and only 20 (1.0\%)
+return zero recall.
+
+\subsection{Granularity comparison}
+\label{sec:granularity}
+
+Table~\ref{tab:granularity} compares session-level and dialog-turn-level
+granularity across all five categories.
+
+\begin{table}[H]
+\centering
+\caption{Session vs.\ dialog granularity on LoCoMo ($k{=}50$, hop=1).}
+\label{tab:granularity}
+\begin{tabular}{lrrr}
+  \toprule
+  \textbf{Category} & \textbf{Session} & \textbf{Dialog} & \textbf{$\Delta$} \\
+  \midrule
+  Single-hop          & \textbf{0.950} & 0.591 & +35.9 pp \\
+  Temporal            & \textbf{0.996} & 0.786 & +21.0 pp \\
+  Temporal-inference  & \textbf{0.890} & 0.579 & +31.1 pp \\
+  Open-domain         & \textbf{0.988} & 0.808 & +18.0 pp \\
+  Adversarial         & \textbf{0.996} & 0.703 & +29.3 pp \\
+  \midrule
+  \textbf{Overall}    & \textbf{0.981} & \textbf{0.739} & \textbf{+24.2 pp} \\
+  \bottomrule
+\end{tabular}
+\end{table}
+
+Session granularity outperforms dialog-turn granularity by 24.2 percentage
+points overall, with gains exceeding 30 pp on Single-hop and
+Temporal-inference.
+The gap is largest in categories where the evidence is a specific turn but the
+question vocabulary matches the broader session context rather than the
+isolated turn text.
+
+\subsection{Recall distribution}
+
+\begin{table}[H]
+\centering
+\caption{Recall distribution across 1,986 questions (session granularity).}
+\label{tab:distribution}
+\begin{tabular}{lrr}
+  \toprule
+  \textbf{Outcome} & \textbf{Count} & \textbf{\%} \\
+  \midrule
+  Perfect (1.0) & 1,916 & 96.5\% \\
+  Partial (0--1) &    50 &  2.5\% \\
+  Zero (0.0)     &    20 &  1.0\% \\
+  \bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Throughput}
+
+The full 1,986-question evaluation (session granularity) completes in
+67.4 seconds --- 0.03 seconds per question --- on an Apple M5 Max (64 GB RAM).
+The KG is built once in the \texttt{prepare} phase and reused across all
+queries; the per-question cost is purely inference (LanceDB vector search
+plus SQLite graph expansion).
+
+% ============================================================
+\section{Analysis}
+\label{sec:analysis}
+
+\subsection{Temporal-inference is the hardest category}
+
+Temporal-inference questions (89.0\% recall) require cross-session temporal
+reasoning: not just finding the session where an event occurred, but
+comparing the timing of multiple events across sessions.
+A question such as ``Which happened first, Alice starting pottery or Bob
+changing jobs?'' requires the system to retrieve sessions for \emph{both}
+events, where the vocabulary of the question may match neither event's
+session directly.
+
+At $k{=}50$ seeds with hop=1 expansion, the KG retrieves both sessions for
+most temporal-inference questions (10.4\% miss rate vs.\ 0.4\% for
+Temporal).
+The miss cases typically involve events mentioned only briefly in passing,
+where the session's dominant topic is unrelated to the question --- a
+vocabulary mismatch that neither semantic seeding nor one-hop graph expansion
+fully resolves.
+
+\subsection{Single-hop is harder than expected}
+
+Single-hop questions (95.0\%) score lower than Open-domain (98.8\%) and
+Adversarial (99.6\%).
+This is counterintuitive: Single-hop questions should be the simplest, with
+evidence in a single specific session.
+The explanation lies in specificity: Single-hop evidence tends to be a very
+specific isolated fact (a date, a name, a quantity) mentioned in one turn of
+one session, without surrounding context that would boost that session's
+semantic similarity to the question.
+Open-domain questions are broader, matching more sessions and benefiting from
+the aggregated topic and entity edges.
+
+\subsection{Adversarial questions and graph expansion}
+
+Adversarial questions (99.6\% recall) are designed to share surface vocabulary
+with incorrect sessions.
+MemoryKG's graph expansion is robust to this because the \textsc{Has\_Topic}
+and \textsc{Mentions\_Entity} edges connect sessions to their underlying
+semantic content, not just surface tokens.
+The BFS expansion from a correctly seeded session will pull in the true
+evidence even when the question vocabulary superficially matches other sessions.
+
+\subsection{Why dialog granularity fails}
+
+At dialog-turn granularity, the corpus for a single LoCoMo conversation
+contains 200--300 individual turn files.
+With $k{=}50$ seeds and hop=1, the system retrieves at most $50 \times (\text{fan-out})$
+nodes --- but because each turn is now its own file, the \textsc{Contains} edges
+no longer propagate session-level recall.
+The graph's enrichment edges (\textsc{Has\_Topic}, \textsc{Mentions\_Entity})
+are computed per file; a one-sentence turn gives these edges almost nothing
+to work with.
+The result is that the KG is effectively flat vector search over individual
+turns, with very limited graph advantage --- explaining the 73.9\% recall
+ceiling, close to what one would expect from embedding-only retrieval.
+
+\subsection{The persistent-KG advantage}
+
+Unlike per-conversation ChromaDB approaches, MemoryKG builds one persistent
+graph over all 10 conversations.
+Per-conversation isolation is achieved at query time via
+\texttt{haystack\_files} filtering in LanceDB --- restricting the $k$-NN seed
+search to the current conversation's files without rebuilding any index.
+This separation of build-once and query-many is the key to the 0.03 s/question
+throughput: the per-question cost is LanceDB vector search plus SQLite graph
+expansion, with no corpus ingestion or embedding on the critical path.
+
+% ============================================================
+\section{Conclusion}
+\label{sec:conclusion}
+
+MemoryKG achieves 98.1\% average session-level recall on the full 1,986-question
+LoCoMo benchmark, with 96.5\% of questions answered perfectly and only 1.0\%
+total misses.
+No LLM is required at any stage.
+
+The central architectural finding is that \textbf{session granularity is the
+correct retrieval unit for LoCoMo}: indexing one document per session
+outperforms dialog-turn-level indexing by 24.2 percentage points overall.
+The graph's \textsc{Contains} edges from session documents to their constituent
+turn-level section nodes mean that any turn appearing in the semantic seed
+set propagates recall to the whole session --- a propagation mechanism that
+dialog-turn granularity destroys.
+
+The hardest remaining category is Temporal-inference (89.0\%), where the miss
+cases involve events whose sessions are semantically distant from the question
+vocabulary.
+Deeper graph expansion ($h{=}2$) or temporal-aware reranking are natural
+directions for improvement.
+
+\paragraph{Limitations.}
+Retrieval recall measures whether evidence is \emph{present} in the retrieved
+context; it does not measure whether a downstream reader can correctly extract
+the answer.
+End-to-end QA accuracy on LoCoMo with a MemoryKG retrieval front-end is left
+for future work.
+
+\paragraph{Reproducibility.}
+All benchmark scripts and result files are included in the MemoryKG repository.
+The full evaluation can be reproduced with:
+\begin{lstlisting}
+# Build the KG (one time):
+python benchmarks/locomobench/locomo_bench_memkg.py prepare \
+    benchmarks/locomobench/data/locomo10.json
+
+# Run all 1,986 questions:
+python benchmarks/locomobench/locomo_bench_memkg.py run \
+    benchmarks/locomobench/data/locomo10.json
+\end{lstlisting}
+
+% ============================================================
+\bibliographystyle{plainnat}
+\begin{thebibliography}{9}
+
+\bibitem[Maharana et al.(2024)]{maharana2024locomo}
+Maharana, A., Lee, D., Tuladhar, B., Piper, M., Choi, N., \& Bansal, M. (2024).
+\newblock {LoCoMo: Long Context Motivated Long-Term Memory Consolidation and Retrieval}.
+\newblock \textit{arXiv preprint arXiv:2402.15048}.
+\newblock \url{https://arxiv.org/abs/2402.15048}
+
+\bibitem[Suchanek(2026a)]{memorykg2026}
+Suchanek, E.~G. (2026).
+\newblock {MemoryKG: A Hybrid Semantic-Graph Knowledge Base for Conversational Memory}.
+\newblock \url{https://github.com/Flux-Frontiers/memory_kg}
+
+\bibitem[Suchanek(2026b)]{dockg2026}
+Suchanek, E.~G. (2026).
+\newblock {DocKG: Semantic Knowledge Graph for Document Corpora}.
+\newblock Version 0.11.0. Flux-Frontiers.
+\newblock DOI: \url{https://doi.org/10.5281/zenodo.19770973}
+
+\bibitem[Wang et al.(2024)]{wang2024longmemeval}
+Wang, X., et al. (2024).
+\newblock {LongMemEval: Benchmarking Chat Assistants on Long-Term Interactive Memory}.
+\newblock \textit{arXiv preprint arXiv:2410.10813}.
+\newblock \url{https://arxiv.org/abs/2410.10813}
+
+\bibitem[Pakhomov et al.(2025)]{pakhomov2025convomem}
+Pakhomov, E., Nijkamp, E., \& Xiong, C. (2025).
+\newblock {ConvoMem Benchmark: Why Your First 150 Conversations Don't Need RAG}.
+\newblock \textit{arXiv preprint arXiv:2511.10523}.
+\newblock \url{https://arxiv.org/abs/2511.10523}
+
+\bibitem[Mem0(2024)]{mem0}
+{Mem0 Team}. (2024).
+\newblock {Mem0: The Memory Layer for Personalized AI}.
+\newblock \url{https://mem0.ai}
+
+\end{thebibliography}
+
+\end{document}

@@ -262,6 +262,7 @@ release-notes.md
 
 # Benchmark data (large corpus files and raw results, not tracked)
 benchmarks/longmemeval/data/
+benchmarks/locomobench/data/
 benchmarks/convomem/*.aux
 benchmarks/convomem/*.log
 benchmarks/convomem/*.out

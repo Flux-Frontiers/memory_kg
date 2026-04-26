@@ -6,8 +6,8 @@ SemanticIndex — LanceDB vector index for MemoryKG.
 
 Mirrors CodeKG's index.py with the following additions:
 
-1. Default model is a general-text embedding model (all-mpnet-base-v2)
-   instead of a code-specific model.
+1. Default model is ``BAAI/bge-small-en-v1.5`` (384-dim) via ``DEFAULT_MODEL``
+   from ``memorykg.py``; override with ``DOCKG_MODEL`` env var or ``--model``.
 
 2. After building the vector index, ``build()`` optionally runs a
    SIMILAR_TO edge discovery pass: each chunk is queried against its

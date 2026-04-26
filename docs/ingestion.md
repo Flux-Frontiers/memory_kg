@@ -90,8 +90,9 @@ The standard ingestion path. Parses a corpus into a hybrid SQLite + LanceDB know
 | Component | File | Role |
 |-----------|------|------|
 | `MemoryKG` | `kg.py` | Top-level orchestrator: `build()`, `query()`, `pack()` |
+| `DocGraph` | `graph.py` | OO corpus extraction layer (wraps `parse_corpus` with caching) |
 | `parse_corpus()` | `memorykg.py` | Deterministic extraction: files → nodes + edges |
-| `TextChunker` | `chunker.py` | Semantic text segmentation (embedding-based boundaries) |
+| `TextChunker` | `chunker.py` | Semantic text segmentation; strategies: `semantic`, `fixed`, `sentence_group`, `heading` |
 | `GraphStore` | `store.py` | SQLite persistence layer |
 | `SemanticIndex` | `index.py` | LanceDB vector index + SIMILAR_TO discovery |
 | `TopicExtractor` | `topics.py` | Supervised keyword-based topic classification |
@@ -119,7 +120,7 @@ The standard ingestion path. Parses a corpus into a hybrid SQLite + LanceDB know
 | `HAS_TOPIC` | chunk → topic | Topic classification |
 | `MENTIONS_ENTITY` | chunk → entity | Entity mention |
 | `HAS_KEYWORD` | chunk → keyword | Keyword salience |
-| `CO_OCCURS_WITH` | semantic ↔ semantic | Same-chunk co-occurrence |
+| `CO_OCCURS_WITH` | semantic ↔ semantic | Same-chunk co-occurrence (**off by default** — `--emit-cooccur` to enable) |
 
 ### Usage
 
