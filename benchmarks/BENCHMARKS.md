@@ -40,7 +40,7 @@ The sibling boost trades 0.2pp of recall_any@10 for +1.8pp of recall_all@10 — 
 | # | System | R@5 | LLM Required | Notes |
 |---|---|--:|---|---|
 | 1 | MemoryPalace hybrid v4 + Haiku | 100% | Haiku (rerank) | 3 of 500 fixes were tuned on test set — see integrity note |
-| 2 | MemoryPalace hybrid v4 held-out (450q) | 98.4% | None | Clean score — never tuned on held-out |
+| 2 | MemoryPalace hybrid v4 held-out (450q) | 98.4% | None | Held-out score — not tuned on these 450 questions |
 | 2 | **MemoryKG baseline** | **98.4%** | **None** | **Graph + BGE-small, no LLM at any stage** |
 | 3 | Supermemory ASMR | ~99% | Yes | Research only, not in production |
 | 4 | MemoryPalace hybrid v3 + Haiku | 99.4% | Haiku (rerank) | — |
@@ -53,7 +53,7 @@ The sibling boost trades 0.2pp of recall_any@10 for +1.8pp of recall_all@10 — 
 | 11 | Contriever | ~78% | None | Academic baseline |
 | 12 | BM25 | ~70% | None | Keyword baseline |
 
-**MemoryKG at 98.4% recall_any@5 (no LLM) matches MemoryPalace's clean held-out score — the honest published number for the best LLM-free system in the field.**
+**MemoryKG at 98.4% recall_any@5 (no LLM) matches MemoryPalace's held-out LLM-free score — the honest published number for the best LLM-free system in the field.**
 
 ---
 
@@ -159,7 +159,7 @@ The -0.2pp recall_any regression is one question at @10. The +1.8pp recall_all g
 | BGE-small, no filter | 86.6% | 89.4% | — | 0.852 | None | 53 |
 | MiniLM + haystack filter | 94.0% | 97.0% | — | 0.858 | None | 15 |
 | BGE-small + haystack filter | 97.6% | 99.2% | — | 0.936 | None | 4 |
-| **Clean baseline (raw questions)** | **98.4%** | **99.4%** | **96.8%** | **0.943** | **None** | **3** |
+| **Raw-question baseline (no normalization)** | **98.4%** | **99.4%** | **96.8%** | **0.943** | **None** | **3** |
 | **+ Sibling boost (gated)** | **98.2%** | **99.2%** | **98.6%** | **0.954** | **None** | **4** |
 
 ---
@@ -216,7 +216,7 @@ The progression from MiniLM baseline to BGE-small + haystack filter was driven b
 
 The sibling boost was motivated by analyzing the partial-hit pattern (recall_any=1, recall_all=0) at @10 after we added recall_all tracking. The pattern was structural — all misses were `_N`-family sessions ranked just outside @10 — not question-specific. The fix is a general structural rule, not a targeted patch.
 
-**This progression is clean.** No fix was designed around specific question IDs.
+**This progression is principled.** No fix was designed around specific question IDs.
 
 The query normalization removal was validated by running both conditions and comparing. Raw questions won. This is not overfitting — it's an empirical result that generalized.
 
@@ -254,7 +254,7 @@ poetry run python3 benchmarks/longmemeval/longmemeval_memkg.py run \
 | File | Mode | recall_any@5 | recall_any@10 | recall_all@10 | Notes |
 |---|---|--:|--:|--:|---|
 | `longmemeval/results_bge_haystack.jsonl` | BGE + haystack | 97.6% | 99.2% | — | recall_all not tracked |
-| `longmemeval/results_260425.jsonl` | Clean baseline | 98.4% | 99.4% | 96.8% | Raw questions, recall_all added |
+| `longmemeval/results_260425.jsonl` | Raw-question baseline | 98.4% | 99.4% | 96.8% | Raw questions, recall_all added |
 | `longmemeval/results_sibling_boost2.jsonl` | + Sibling boost | 98.2% | 99.2% | 98.6% | **Current best** |
 
 ---

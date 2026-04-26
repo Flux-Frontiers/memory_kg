@@ -330,11 +330,11 @@ MemoryKG was evaluated on 1,000 items per category (20$\times$ the MemPal sample
   \textbf{Category} & \textbf{MemPal} & \textbf{MemoryKG} & \textbf{$\Delta$} \\
   \midrule
   User Facts             & 98.0\% & \textbf{100\%} & +2.0 pp \\
-  Assistant Facts        & 100\%  & \textbf{100\%} & --- \\
+  Assistant Facts        & 100\%  & \textbf{100\%} & tied \\
   Abstention             & 91.0\% & \textbf{100\%} & +9.0 pp \\
   Implicit Connections   & 89.3\% & \textbf{100\%} & +10.7 pp \\
   Preferences            & 86.0\% & \textbf{100\%} & +14.0 pp \\
-  Changing Facts         & n/r    & \textbf{100\%} & --- \\
+  Changing Facts         & n/r    & \textbf{100\%} & n/a \\
   \midrule
   \textbf{Overall}       & \textbf{92.9\%} & \textbf{100\%} & \textbf{+7.1 pp} \\
   \bottomrule
@@ -401,9 +401,11 @@ MemoryKG achieves higher retrieval recall at zero LLM cost.
 
 \paragraph{Summary.}
 Table~\ref{tab:literature_comparison} consolidates these comparisons.
-MemoryKG is the only published system to achieve 100\% retrieval recall on
-ConvoMem, and the only LLM-free system to outperform long-context Gemini
-on the categories where retrieval recall and QA accuracy are most correlated.
+MemoryKG is the only published system to achieve 100\% \emph{overall}
+retrieval recall on ConvoMem (MemPal also reaches 100\% on Assistant Facts
+at tier 1 specifically, but 92.9\% overall), and the only LLM-free system
+to match or outperform long-context Gemini on the categories where
+retrieval recall and QA accuracy are most correlated.
 
 \begin{table}[ht]
 \centering

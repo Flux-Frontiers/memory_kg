@@ -13,7 +13,11 @@
 
 ## TL;DR
 
-MemoryKG is the **highest-scoring memory system on LongMemEval-S that uses no LLM, no API key, and no cloud inference at any stage** — 98.4% Recall@5, 99.4% Recall@10, 0.943 NDCG@10. It matches MemoryPalace's best clean LLM-free score and outperforms every system that requires an LLM at query time except MemoryPalace's (partially test-tuned) perfect run.
+MemoryKG achieves **100% retrieval recall on the ConvoMem benchmark — every evidence message found, on every question, across 17,463 items** spanning six evidence categories and four evidence tiers (1–4 messages). No LLM, no API key, no cloud inference at any stage. This is the largest non-LLM evaluation on ConvoMem reported. Full write-up: [`benchmarks/convomem/convomem_article.pdf`](benchmarks/convomem/convomem_article.pdf).
+
+Recall is measured by substring containment in the top-10 retrieved nodes: an evidence message counts as found if its text appears verbatim in (or contains) any retrieved node — lenient toward retrieval, but it cannot be fooled by paraphrase.
+
+On the LongMemEval-S benchmark, MemoryKG is **tied for the top LLM-free score** — 98.4% Recall@5, 99.4% Recall@10, 0.943 NDCG@10. It matches MemoryPalace's best LLM-free results (hybrid v4 held-out and hybrid v2) and beats every other LLM-free baseline. Three LLM-augmented systems rank higher at R@5 (MemoryPalace v4 + Haiku at 100%, MemoryPalace v3 + Haiku rerank at 99.4%, Supermemory ASMR at ~99%); MemoryKG narrows that gap without paying the inference cost. Full write-up: [`benchmarks/longmemeval/longmemeval_article.pdf`](benchmarks/longmemeval/longmemeval_article.pdf).
 
 | System | LongMemEval R@5 | LLM at query time | Cost / query |
 |---|--:|---|--:|
@@ -30,13 +34,13 @@ MemoryKG is the **highest-scoring memory system on LongMemEval-S that uses no LL
 | Stella (dense retriever) | ~85% | None | $0 |
 | BM25 (sparse baseline) | ~70% | None | $0 |
 
-With the sibling boost enabled, **recall_all@10 reaches 98.6%** — meaning MemoryKG retrieves *every* required session for 493 of 500 questions without any LLM. No published system reports this metric; we track it because multi-session coverage is the real test of memory completeness.
+With the sibling boost enabled on LongMemEval, **recall_all@10 reaches 98.6%** — meaning MemoryKG retrieves *every* required session for 493 of 500 questions without any LLM. No published system reports this metric; we track it because multi-session coverage is the real test of memory completeness.
 
 The field has been over-engineering retrieval. A graph-augmented index with correct search-space scoping matches the best LLM-free result in the field at a fraction of the complexity.
 
 ---
 
-## Why It Wins
+## Why It Works
 
 Most "memory" systems flatten a session into a single embedding and lean on an LLM at query time to rerank what they retrieve. MemoryKG does the opposite: it preserves session structure as a typed graph, then uses that structure as the ranking signal.
 
@@ -44,7 +48,7 @@ Most "memory" systems flatten a session into a single embedding and lean on an L
 2. **Structural expansion.** A `HAS_TOPIC` or `MENTIONS_ENTITY` edge from a weakly-matching chunk surfaces strongly-linked neighbors that pure cosine similarity never finds.
 3. **Score-first ranking.** Graph proximity breaks ties *within* a vector-quality band — never across one. Good seeds get amplified; bad seeds don't get rescued.
 4. **Kind-aware ranking.** Chunk matches outrank entity stubs outrank synthetic topic summaries. Flat vector stores treat every document equally.
-5. **Search-space scoping.** When the benchmark defines a per-question candidate pool, MemoryKG honours it (`haystack_files=...`). This was the +11 pp fix that closed the gap to the inference-based leaderboard.
+5. **Search-space scoping.** When the benchmark defines a per-question candidate pool, MemoryKG honours it (`haystack_files=...`). This was the +11 pp fix that narrowed the gap to the inference-based leaderboard.
 
 **No LLM. No API key. No cloud round-trip. Runs on Apple Silicon (MPS), CUDA, or CPU.**
 
@@ -148,7 +152,11 @@ See [docs/cli-reference.md](docs/cli-reference.md) for every flag.
 
 ---
 
-## Reproducing the Benchmark Result
+## Reproducing the Benchmarks
+
+### LongMemEval-S — 98.4% R@5, 99.4% R@10
+
+Full write-up: [`benchmarks/longmemeval/longmemeval_article.pdf`](benchmarks/longmemeval/longmemeval_article.pdf)
 
 ```bash
 # 1. Install
@@ -172,115 +180,21 @@ poetry run python3 benchmarks/longmemeval/longmemeval_memkg.py run \
 # Expected: R@5=98.4%  R@10=99.4%  NDCG@10=0.943  Misses@10=3
 ```
 
+### ConvoMem — 100% Recall Across 17,463 Items
+
+Full write-up: [`benchmarks/convomem/convomem_article.pdf`](benchmarks/convomem/convomem_article.pdf)
+
+```bash
+# Run all four evidence tiers (top-10, hop=1, BGE-small-en-v1.5)
+poetry run python3 benchmarks/convomem/convomem_bench.py --limit 1000 --tier 1
+poetry run python3 benchmarks/convomem/convomem_bench.py --limit 1000 --tier 2
+poetry run python3 benchmarks/convomem/convomem_bench.py --limit 1000 --tier 3
+poetry run python3 benchmarks/convomem/convomem_bench.py --limit 1000 --tier 4
+
+# Expected: 100% retrieval recall on every category × tier (17,463 items, ~20 min)
+```
+
 **Hardware tested:** Apple M5 Max MacBook Pro, 64 GB RAM. Also runs on CUDA and pure CPU (`MEMORYKG_DEVICE=cpu`).
-
----
-
-## Knowledge Graph Schema
-
-### Node kinds
-
-| Kind | Description |
-|---|---|
-| `document` | A source `.md` or `.txt` file (or a session log) |
-| `section` | A heading-delimited section within a document |
-| `chunk` | A semantically coherent text passage within a section |
-| `topic` | A topic extracted from chunk text |
-| `entity` | A named entity (person, place, organization, concept) |
-| `keyword` | A keyword or key phrase from a chunk |
-
-### Edge types
-
-| Type | Description |
-|---|---|
-| `CONTAINS` | Parent → child (document→section, section→chunk) |
-| `NEXT` | Sequential ordering between same-level nodes |
-| `REFERENCES` | A chunk references another document or section |
-| `SIMILAR_TO` | Semantic similarity between chunks (LanceDB-derived) |
-| `HAS_TOPIC` | Chunk → topic association |
-| `MENTIONS_ENTITY` | Chunk → named entity association |
-| `HAS_KEYWORD` | Chunk → keyword association |
-| `CO_OCCURS_WITH` | Co-occurrence between topics/entities within a chunk |
-
----
-
-## MCP Integration
-
-Once the MCP server is running, your AI agent has four tools:
-
-```
-graph_stats()                        # node/edge counts by kind
-query_docs("authentication flow")    # hybrid semantic + structural search
-pack_docs("configuration reference") # source-grounded passages as Markdown
-get_node("chunk:intro:overview")     # fetch a single node by ID
-```
-
-**Claude Code / Kilo Code** — `.mcp.json` in repo root:
-
-```json
-{
-  "mcpServers": {
-    "memorykg": {
-      "command": "memorykg-mcp",
-      "args": ["--repo", "."]
-    }
-  }
-}
-```
-
-**GitHub Copilot** — `.vscode/mcp.json`:
-
-```json
-{
-  "servers": {
-    "memorykg": {
-      "type": "stdio",
-      "command": "memorykg-mcp",
-      "args": ["--repo", "."]
-    }
-  }
-}
-```
-
-See [docs/MCP.md](docs/MCP.md) for Claude Desktop, Cline, SSE transport, and troubleshooting.
-
----
-
-## Python API
-
-```python
-from memory_kg import MemoryKG
-
-kg = MemoryKG(corpus_root="docs/", chunk_strategy="heading")
-kg.build(wipe=True)
-
-# Hybrid query
-result = kg.query("deployment configuration", k=8, hop=1)
-for node in result.nodes:
-    print(node["id"], node["name"])
-
-# Haystack-scoped query (per-question candidate pool — benchmark mode)
-result = kg.query("Dr. Chen's recommendation",
-                  k=50, hop=1,
-                  haystack_files=["session_2024_01_12.md", "session_2024_01_19.md"])
-
-# Passage pack for LLM context
-pack = kg.pack("authentication flow")
-pack.save("context.md")
-```
-
----
-
-## Storage Layout
-
-```
-.memorykg/
-  graph.sqlite      # SQLite knowledge graph (nodes + edges)
-  lancedb/          # LanceDB vector index
-  snapshots/        # Temporal snapshots (JSON)
-```
-
-Add `.memorykg/` to `.gitignore`.
 
 ---
 
@@ -290,11 +204,14 @@ Add `.memorykg/` to `.gitignore`.
 |---|---|
 | [docs/installation.md](docs/installation.md) | Detailed install, dev setup, entry points, config |
 | [docs/cli-reference.md](docs/cli-reference.md) | Full CLI reference with all options |
-| [docs/ingestion.md](docs/ingestion.md) | Build pipeline architecture |
-| [docs/MCP.md](docs/MCP.md) | MCP server setup for all clients |
+| [docs/ingestion.md](docs/ingestion.md) | Build pipeline architecture, **node kinds & edge types** |
+| [docs/python-api.md](docs/python-api.md) | `MemoryKG` class — build, query, haystack-scoping, passage packing |
+| [docs/MCP.md](docs/MCP.md) | MCP server setup (Claude Code, Copilot, Claude Desktop, Cline) |
 | [docs/CHEATSHEET.md](docs/CHEATSHEET.md) | MCP tool query patterns and examples |
 | [docs/SNAPSHOTS.md](docs/SNAPSHOTS.md) | Snapshot workflow and diff guide |
 | [benchmarks/BENCHMARKS.md](benchmarks/BENCHMARKS.md) | Full LongMemEval progression (75.8% → 98.4%), recall_all analysis, integrity notes |
+| [benchmarks/longmemeval/longmemeval_article.pdf](benchmarks/longmemeval/longmemeval_article.pdf) | LongMemEval-S report (PDF): 98.4% R@5, 99.4% R@10, 0.943 NDCG@10 |
+| [benchmarks/convomem/convomem_article.pdf](benchmarks/convomem/convomem_article.pdf) | ConvoMem report (PDF): 100% retrieval recall across 17,463 items |
 
 ---
 

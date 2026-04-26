@@ -457,7 +457,39 @@ The core build pipeline is always needed for MCP server, `query`, and `pack`. Th
     └── BAAI_bge-small-en-v1.5/
 ```
 
-All artifacts under `.memorykg/` are local and reproducible. Add `.memorykg/` to `.gitignore`.
+### Why ignore `.memorykg/` in version control
+
+Every artifact under `.memorykg/` is **derived from the source corpus** and
+fully reproducible by re-running `memorykg build`. They are also large
+binaries (SQLite databases, LanceDB Lance files, pickle caches, downloaded
+embedding models — often hundreds of MB to several GB) that bloat the
+repository and produce noisy diffs. The corpus is the source of truth; the
+graph is its index.
+
+### Correct `.gitignore` pattern
+
+```gitignore
+# Top-level .memorykg/ and any nested copies (e.g. docs/.memorykg/)
+**/.memorykg/
+```
+
+A plain `.memorykg/` only matches the repo root. The `**/` prefix also
+catches subdirectories — useful when you build per-corpus indexes inside
+`docs/`, `notes/`, or similar.
+
+If you want to keep snapshots committed (small JSON diffs of graph metrics
+over time) while excluding the heavy artifacts, use a more granular set:
+
+```gitignore
+.memorykg/lancedb/
+.memorykg/cache/
+.memorykg/pipeline/
+.memorykg/models/
+.memorykg/*.sqlite
+.memorykg/*.sqlite-shm
+.memorykg/*.sqlite-wal
+# .memorykg/snapshots/ is small JSON — keep it tracked if you want temporal diffs
+```
 
 ---
 
