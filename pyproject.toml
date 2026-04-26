@@ -54,7 +54,7 @@ packages = [{ include = "memory_kg", from = "src" }]
 # ---------------------------------------------------------------------------
 [project]
 name = "memory-kg"
-version = "0.4.0"
+version = "0.4.1"
 description = "A tool to build a semantically searchable knowledge graph from memories"
 readme = "README.md"
 license = "Elastic-2.0"

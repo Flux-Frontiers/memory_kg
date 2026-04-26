@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Removed
+
+### Fixed
+
+## [0.4.1] - 2026-04-25
+
+### Added
 - `benchmarks/convomem/BENCHMARKS_CONVOMEM.md`: New benchmark report — MemoryKG achieves **100% retrieval recall** on 17,463 ConvoMem items across all six evidence categories (User Facts, Assistant Facts, Abstention, Implicit Connections, Preferences, Changing Facts) and tiers 1–4; outperforms MemoryPalace's best published recall (92.9%) by +7.1 pp overall, with the largest gains on Preferences (+14.0 pp) and Implicit Connections (+10.7 pp)
 - `benchmarks/convomem/convomem_article.pdf` + `.tex`: Academic paper writeup — "Perfect Retrieval Recall on ConvoMem: MemoryKG's Hybrid Semantic-Graph Architecture Achieves 100% Across 17,463 Items"; includes tier tables (1–4), MemoryPalace comparison, paper-baseline context table, architectural analysis, and throughput analysis (0.07 s/item on Apple Silicon)
 - `README.md`: Expanded Citation section with APA and BibTeX formats
