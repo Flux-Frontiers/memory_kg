@@ -1,6 +1,6 @@
 """MemoryKG — hybrid semantic + structural knowledge graph for document corpora."""
 
-__version__ = "0.5.0"
+__version__ = "0.5.1"
 
 from memory_kg.kg import MemoryKG
 from memory_kg.semantic_builder import SemanticBuildStats, SemanticMemoryBuilder

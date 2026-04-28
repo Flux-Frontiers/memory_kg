@@ -14,7 +14,7 @@ import click
 
 
 @click.group()
-@click.version_option(package_name="doc-kg", prog_name="memorykg")
+@click.version_option(package_name="memory-kg", prog_name="memorykg")
 def cli() -> None:
     """MemoryKG - Document Knowledge Graph builder and query tool.
 

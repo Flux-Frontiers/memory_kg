@@ -117,7 +117,7 @@ MemoryKG includes a diary_kg-style multipass analysis pipeline for deep NLP tran
 | Command | Purpose |
 |---|---|
 | `memorykg pipeline run` | 5-phase analysis: sampling → chunking → classification → memory → output |
-| `memorykg pipeline embed` | Multi-process corpus embedding (nomic-embed-text-v1, 768-d) |
+| `memorykg pipeline embed` | Multi-process corpus embedding (BAAI/bge-small-en-v1.5, 384-d) |
 | `memorykg pipeline manifold` | Intrinsic dimensionality, PCA elbow, MRL truncation quality |
 
 ### The 5 Phases
@@ -152,7 +152,7 @@ memorykg pipeline manifold
 | `--n-clusters` | `8` | K-means clusters for diversity sampling and topic fallback |
 | `--supervised-threshold` | `0.3` | Min confidence to accept supervised classification |
 | `--topics-file` | built-in | Custom topic catalog (YAML/JSON) |
-| `--model` | `nomic-ai/nomic-embed-text-v1` | Embedding model for pipeline |
+| `--model` | `BAAI/bge-small-en-v1.5` | Embedding model for pipeline |
 
 ### Pipeline Output
 
@@ -165,7 +165,7 @@ Output files are written to `.memorykg/pipeline/`:
 | Pipeline | Model | Dims | Notes |
 |---|---|---|---|
 | Core build (`memorykg build`) | `BAAI/bge-small-en-v1.5` | 384 | Fast, general-text, SIMILAR_TO discovery |
-| Multipass (`memorykg pipeline`) | `nomic-ai/nomic-embed-text-v1` | 768 | Asymmetric retrieval with `search_document:` prefix |
+| Multipass (`memorykg pipeline`) | `BAAI/bge-small-en-v1.5` | 384 | Asymmetric retrieval with `search_document:` prefix |
 
 ## Configure Claude Code / Kilo Code (.mcp.json)
 
@@ -330,8 +330,7 @@ Config path: `~/Library/Application Support/Claude/claude_desktop_config.json` (
 
 - `k=8, hop=1, rels="CONTAINS,NEXT,REFERENCES,SIMILAR_TO,HAS_TOPIC,MENTIONS_ENTITY,HAS_KEYWORD,CO_OCCURS_WITH"`
 - `max_chars=2000` (pack_docs), `max_nodes=15` (pack_docs), `max_nodes=25` (query_docs)
-- Core build embedding model: `BAAI/bge-small-en-v1.5` (384-d)
-- Pipeline embedding model: `nomic-ai/nomic-embed-text-v1` (768-d)
+- Embedding model (all pipelines): `BAAI/bge-small-en-v1.5` (384-d)
 - Storage: `.memorykg/graph.sqlite` (SQLite) + `.memorykg/lancedb/` (LanceDB)
 - Pipeline output: `.memorykg/pipeline/` (`.psv` runs, `embeddings.json` cache)
 - Feature cache: `.memorykg/cache/` (pickle, per-file with SHA-256 invalidation)
