@@ -152,7 +152,9 @@ class SentenceTransformerEmbedder(Embedder):
         local_path = _local_model_path(model_name)
         _prev_tqdm = os.environ.get("TQDM_DISABLE")
         os.environ["TQDM_DISABLE"] = "1"
-        device = os.environ.get("DOCKG_DEVICE", "mps")
+        # Device selection: honour the shared ``KG_EMBED_DEVICE`` convention
+        # (kg_utils) and default to CPU — portable everywhere; mps/cuda are opt-in.
+        device = os.environ.get("KG_EMBED_DEVICE", "cpu")
         try:
             if local_path.exists():
                 self.model = SentenceTransformer(

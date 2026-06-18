@@ -1,0 +1,44 @@
+"""denoise.py — strip rambling distractor preamble from a noisy MemBench query.
+
+MemBench's ``noisy`` category wraps the real question in several sentences of
+unrelated chit-chat — *including decoy questions* — before a pivot phrase
+("Oh, what I truly wanted to clarify is,") and the actual ask:
+
+    "I was thinking about going for a hike ... Did you see the weather forecast?
+     ... Oh, what I truly wanted to clarify is, What position does someone who
+     has rock climbing as a hobby hold?"
+
+That preamble pollutes the dense query embedding and pulls retrieval toward
+irrelevant turns. ``denoise_query`` recovers just the real question.
+
+Heuristic: the real ask is the **last** interrogative clause that begins with a
+capitalized wh-word (``What``/``Which``/``How``/``Where``/``When``/``Who``/
+``Whose``/``Why``). Decoy preamble questions are either yes/no ("Did I leave the
+oven on?") or sit *before* the pivot, so the trailing wh-clause is the real one.
+The pivot phrases themselves use lowercase "what" ("what I wanted to ask is"),
+so capitalization alone separates them from the real question.
+
+Designed to be a **safe no-op** on clean questions: a normal single-question
+string has exactly one wh-word, at the start, so the function returns it intact.
+"""
+
+from __future__ import annotations
+
+import re
+
+# Capitalized wh-word starting an interrogative clause. Word-boundary anchored so
+# the lowercase pivot ("...what I wanted to ask is,") is never matched.
+_WH_START = re.compile(r"\b(?:What|Which|How|Where|When|Who|Whose|Why)\b")
+
+
+def denoise_query(question: str) -> str:
+    """Return the trailing real question, stripping any distractor preamble.
+
+    :param question: Raw (possibly noise-padded) query string.
+    :return: The substring from the last capitalized wh-word to the end, trimmed.
+        Returns the input unchanged when no wh-word is found.
+    """
+    matches = list(_WH_START.finditer(question))
+    if not matches:
+        return question.strip()
+    return question[matches[-1].start() :].strip()

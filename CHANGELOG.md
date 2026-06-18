@@ -7,7 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- `src/memory_kg/index.py`: embedding **device selection now honours the shared `KG_EMBED_DEVICE` convention** (was the stale, DocKG-branded `DOCKG_DEVICE`) and **defaults to `cpu`** instead of `mps`. The hardcoded `mps` default crashed on any non-Mac host (`RuntimeError: PyTorch is not linked with support for mps devices`); CPU is portable everywhere and mps/cuda are now opt-in via the env var.
+
 ### Added
+- `benchmarks/membench/ERROR_ANALYSIS.md`: Error analysis of the 87.7% MemBench run showing the entire headroom is multi-evidence reasoning/aggregation (0/237 weak-category misses are single-evidence retrieval failures) — i.e. lexical/BM25 retrieval cannot help and would regress the distractor-heavy `noisy` category
+- `benchmarks/membench/denoise.py` + `measure_denoise.py`: query-denoiser prototype that strips `noisy`-category distractor preambles; measured **+32pp recall on `noisy` (0.425 → 0.745)**, a safe no-op on clean categories (≈ +2.9pp overall MemBench)
 - `benchmarks/membench/membench_bench.py`: Complete MemBench benchmark harness (ACL 2025) — 1,100 items across 11 memory categories (simple, highlevel, knowledge_update, comparative, conditional, noisy, aggregative, highlevel_rec, lowlevel_rec, RecMultiSession, post_processing) and 3 topics (movie, food, book); prepare/run/all subcommand architecture; per-item haystack scoping essential (without it recall collapses from 87.7% to 8.9%); results: **87.7% recall@k20** (k=10: 81.6%, k=50: 88.9%)
 - `benchmarks/membench/BENCHMARKS_MEMBENCH.md`: Full MemBench results record — per-category recall table, k-ablation, scoping ablation, and architectural notes
 - `benchmarks/membench/membench_article.md` + `.tex` + `.pdf`: Academic writeup for MemBench evaluation
