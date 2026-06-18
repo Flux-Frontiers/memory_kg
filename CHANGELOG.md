@@ -32,8 +32,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `src/memory_kg/memorykg.py`: Removed local `DEFAULT_MODEL` definition; re-exported from `kg_utils.embed` to centralize model configuration across the KG ecosystem
 - `src/memory_kg/index.py`: `DEFAULT_MODEL` and `resolve_model_path` now imported from `kg_utils.embed`; `_local_model_path()` delegates to `kg_utils.embed.resolve_model_path()`, respecting `KGRAG_MODEL_DIR` for system-wide cache redirection
 - `src/memory_kg/embedder_worker.py`: `PIPELINE_MODEL` now reads `DOCKG_MODEL` env var (default `BAAI/bge-small-en-v1.5`) instead of being hardcoded to `nomic-ai/nomic-embed-text-v1`, aligning pipeline and core build model selection
+- **Tooling: type-checker migrated from `mypy` to `ty`** (Astral), matching the sister repo `doc_kg`. `pyproject.toml`: `[tool.mypy]` replaced with `[tool.ty.environment]` + `[tool.ty.rules]` (`unresolved-import = "ignore"`, mirroring mypy's `ignore_missing_imports`); `mypy` dev/all dep replaced with `ty>=0.0.41`. `.github/workflows/ci.yml`: type-check job now runs `ty check src/`. `.pre-commit-config.yaml`: `mypy` local hook replaced with `ty`
+- `src/memory_kg/graph.py`: `nodes`/`edges` properties use `assert ... is not None` instead of `# type: ignore[return-value]`; `__repr__` ignore comment updated to `# ty: ignore[invalid-argument-type]`
+- `src/memory_kg/store.py`: hoisted `params: list[object]` annotation above the branch so both query-parameter branches share the declared element type (ty `invalid-argument-type` fix)
+- `src/memory_kg/index.py`: progress-bar advance now guards `prog is not None` alongside `task_id` (ty `unresolved-attribute` fix; `prog` is `None` under `nullcontext`)
+- `src/memory_kg/topics.py`: optional-`yaml` fallback ignore comment updated to `# ty: ignore[invalid-assignment]`
+
+- `pyproject.toml`: the cross-KG sibling integrations (`pycode-kg`, `doc-kg`) are now **optional manual installs** rather than a resolved `kgdeps` extra. They are never imported by memory_kg's core code, and pinning them forced poetry's universal lock resolution to reconcile their newer `transformers>=4.57.6` requirement against this project's `transformers<4.57` cap — which had left `poetry.lock` unbuildable. Removing them unblocks `poetry lock`
+- `poetry.lock`: regenerated — now consistent with `pyproject.toml` (`poetry check --lock` passes); previously stale since the `transformers<4.57` cap was introduced
 
 ### Removed
+- **`pylint` dropped** in favour of `ruff` (which already enforces the pylint-derived `PLE`/`PLW` rules): removed `pylint>=4.0.5` from dev/all deps, the `[tool.pylint.messages_control]` config, and the `pylint` pre-commit hook
+- `pyproject.toml`: the `kgdeps` extra (`pip install -e ".[kgdeps]"`) — superseded by manual installs for the optional cross-KG siblings; removed its references from the install-instructions header
 - `benchmarks/BENCHMARKS.md`, `benchmarks/BENCHMARKS_COMPARISON.md`: Superseded by per-benchmark articles and the unified `benchmarks/README.md`
 - `benchmarks/membench_bench.py`: Top-level script moved to `benchmarks/membench/membench_bench.py`
 - Old ConvoMem result files with inflated scores from the scoring bug

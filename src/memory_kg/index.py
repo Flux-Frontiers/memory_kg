@@ -397,7 +397,7 @@ class SemanticIndex:
                 if discover_similar:
                     all_ids.extend(ids)
                     all_vecs.extend(vecs)
-                if task_id is not None:
+                if task_id is not None and prog is not None:
                     prog.advance(task_id, len(rows))
 
             _flush(force=True)  # write any remaining rows

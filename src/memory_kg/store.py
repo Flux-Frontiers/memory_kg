@@ -346,9 +346,10 @@ class GraphStore:
         :param limit: Maximum number of edges to return.
         :return: List of edge dicts.
         """
+        params: list[object]
         if rel is not None:
             query = "SELECT src, rel, dst, evidence FROM edges WHERE src = ? AND rel = ?"
-            params: list[object] = [node_id, rel]
+            params = [node_id, rel]
         else:
             query = "SELECT src, rel, dst, evidence FROM edges WHERE src = ?"
             params = [node_id]
