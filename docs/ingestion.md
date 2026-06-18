@@ -147,10 +147,10 @@ memorykg build --repo docs \
 
 | Model | Dims | Context | Notes |
 |-------|------|---------|-------|
-| `BAAI/bge-small-en-v1.5` | 384 | Code + general text | Default (`DOCKG_MODEL` env override) |
+| `BAAI/bge-small-en-v1.5` | 384 | Code + general text | Default (`MEMORYKG_MODEL` env override) |
 | `all-mpnet-base-v2` | 768 | General text | Higher-quality alternative |
 
-Override via `--model` or `DOCKG_MODEL` environment variable.
+Override via `--model` or `MEMORYKG_MODEL` environment variable.
 
 ---
 
@@ -319,9 +319,9 @@ memorykg pipeline manifold --cache .memorykg/pipeline/embeddings.json --max-pca 
 
 | Model | Dims | Context |
 |-------|------|---------|
-| `BAAI/bge-small-en-v1.5` | 384 | Default — reads `DOCKG_MODEL` env var, same as core build |
+| `BAAI/bge-small-en-v1.5` | 384 | Default — reads `MEMORYKG_MODEL` env var, same as core build |
 
-Override via `--model` on any pipeline command, or set `DOCKG_MODEL` globally.
+Override via `--model` on any pipeline command, or set `MEMORYKG_MODEL` globally.
 
 ### Sampling Strategies
 
@@ -498,7 +498,7 @@ over time) while excluding the heavy artifacts, use a more granular set:
 
 | Context | Model | Dims | Why |
 |---------|-------|------|-----|
-| Core build (`memorykg build`) | `BAAI/bge-small-en-v1.5` | 384 | Default (`DOCKG_MODEL` env override); fast, strong for code+text |
+| Core build (`memorykg build`) | `BAAI/bge-small-en-v1.5` | 384 | Default (`MEMORYKG_MODEL` env override); fast, strong for code+text |
 | Core build (alternative) | `all-mpnet-base-v2` | 768 | Higher-quality general-text model; slower |
 | Pipeline embedding (`memorykg pipeline embed`) | `nomic-ai/nomic-embed-text-v1` | 768 | Asymmetric retrieval with task prefix; matches diary_kg |
 

@@ -31,7 +31,7 @@ def download_model(model: str, force: bool) -> None:
     """Download and cache the embedding model for offline use.
 
     The model is saved to ``.memorykg/models/<model>/`` in the current working
-    directory (or the path set by the ``DOCKG_MODEL_DIR`` environment
+    directory (or the path set by the ``KGRAG_MODEL_DIR`` environment
     variable).  Once cached, ``memorykg build`` and ``memorykg query``
     will use this local copy without any network access.
     """

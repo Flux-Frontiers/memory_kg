@@ -24,6 +24,7 @@ from pathlib import Path
 from memory_kg.graph import DocGraph
 from memory_kg.index import Embedder, SemanticIndex, SentenceTransformerEmbedder
 from memory_kg.memorykg import DEFAULT_MODEL
+from memory_kg.query_denoise import denoise_query
 from memory_kg.store import DEFAULT_RELS, GraphStore, ProvMeta
 
 # ---------------------------------------------------------------------------
@@ -552,6 +553,7 @@ class MemoryKG:
         max_nodes: int = 25,
         seed_kinds: tuple[str, ...] | None = None,
         haystack_files: frozenset[str] | None = None,
+        denoise: bool = False,
     ) -> QueryResult:
         """Hybrid query: semantic seeding + structural expansion.
 
@@ -560,6 +562,9 @@ class MemoryKG:
         :param hop: Graph expansion hops.
         :param rels: Edge types to expand.
         :param max_nodes: Maximum nodes to return.
+        :param denoise: If True, strip conversational distractor preamble from
+            ``q`` (keeping only the trailing real question) before seeding. A safe
+            no-op on clean queries. See :func:`memory_kg.query_denoise.denoise_query`.
         :param seed_kinds: If set, restrict semantic seeding to these node kinds.
             ``("document",)`` seeds from session-root nodes only — one per session,
             full text embedded. Useful for reducing chunk-level noise when doing
@@ -579,6 +584,8 @@ class MemoryKG:
                 haystack_files=frozenset(f"{sid}.md" for sid in haystack_session_ids),
             )
         """
+        if denoise:
+            q = denoise_query(q)
         hits = self.index.search(q, k=k, seed_kinds=seed_kinds, haystack_files=haystack_files)
         seed_ids: set[str] = {h.id for h in hits}
         seed_rank: dict[str, dict] = {h.id: {"rank": h.rank, "dist": h.distance} for h in hits}
@@ -645,6 +652,7 @@ class MemoryKG:
         rels: tuple[str, ...] = DEFAULT_RELS,
         max_chars: int = 2000,
         max_nodes: int | None = 15,
+        denoise: bool = False,
     ) -> TextPack:
         """Hybrid query + text excerpt extraction.
 
@@ -654,8 +662,12 @@ class MemoryKG:
         :param rels: Edge types to expand.
         :param max_chars: Maximum characters per text excerpt.
         :param max_nodes: Maximum nodes to return (``None`` for no limit).
+        :param denoise: If True, strip conversational distractor preamble from
+            ``q`` before seeding (see :meth:`query`).
         :return: :class:`TextPack`.
         """
+        if denoise:
+            q = denoise_query(q)
         hits = self.index.search(q, k=k)
         seed_rank: dict[str, dict] = {h.id: {"rank": h.rank, "dist": h.distance} for h in hits}
         seed_ids: set[str] = set(seed_rank.keys())

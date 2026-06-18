@@ -81,10 +81,10 @@ Every subcommand also ships as a dedicated `memorykg-<name>` script — useful f
 ## Embedding Model
 
 The default embedding model is `BAAI/bge-small-en-v1.5` (384-d). Override via `--model` or the
-`DOCKG_MODEL` environment variable:
+`MEMORYKG_MODEL` environment variable:
 
 ```bash
-export DOCKG_MODEL=all-mpnet-base-v2
+export MEMORYKG_MODEL=all-mpnet-base-v2
 memorykg build --repo docs/
 ```
 

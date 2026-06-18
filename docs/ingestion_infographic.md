@@ -93,7 +93,7 @@ Corpus files
 
 | Model | Dims | Notes |
 |-------|------|-------|
-| `BAAI/bge-small-en-v1.5` | 384 | Default (`DOCKG_MODEL` env override) |
+| `BAAI/bge-small-en-v1.5` | 384 | Default (`MEMORYKG_MODEL` env override) |
 | `all-mpnet-base-v2` | 768 | Higher-quality alternative |
 
 ### Commands
@@ -177,7 +177,7 @@ STAGE 3: CorpusEmbedder          STAGE 4: ManifoldAnalyzer
 
 | Model | Dims | Notes |
 |-------|------|-------|
-| `BAAI/bge-small-en-v1.5` | 384 | Default — reads `DOCKG_MODEL` env var (same as core build) |
+| `BAAI/bge-small-en-v1.5` | 384 | Default — reads `MEMORYKG_MODEL` env var (same as core build) |
 
 ### Commands
 

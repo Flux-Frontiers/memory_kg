@@ -217,7 +217,7 @@ The hook never blocks commits — if the graph isn't built yet, it prints a warn
 
 Snapshots are local artifacts by default (`.memorykg/` is gitignored). Commit them manually at milestones if you want git history:
 ```bash
-git add .memorykg/snapshots/ && DOCKG_SKIP_SNAPSHOT=1 git commit -m "chore: capture snapshot"
+git add .memorykg/snapshots/ && MEMORYKG_SKIP_SNAPSHOT=1 git commit -m "chore: capture snapshot"
 ```
 
 To overwrite an existing hook:
@@ -389,7 +389,7 @@ Monitor trends to detect:
 A: At version releases (mandatory), weekly for long projects, after major changes (optional). More frequent = better granularity, but storage is minimal.
 
 **Q: Can I commit snapshots to git?**
-A: Yes, optionally. By default `.memorykg/` is gitignored — snapshots are local artifacts. To commit at a milestone: `git add .memorykg/snapshots/ && DOCKG_SKIP_SNAPSHOT=1 git commit -m "chore: capture snapshot"`. The `DOCKG_SKIP_SNAPSHOT=1` env var prevents the post-commit hook from running again and creating new unstaged files.
+A: Yes, optionally. By default `.memorykg/` is gitignored — snapshots are local artifacts. To commit at a milestone: `git add .memorykg/snapshots/ && MEMORYKG_SKIP_SNAPSHOT=1 git commit -m "chore: capture snapshot"`. The `MEMORYKG_SKIP_SNAPSHOT=1` env var prevents the post-commit hook from running again and creating new unstaged files.
 
 **Q: What if I miss a snapshot?**
 A: You can manually create one anytime with `memorykg snapshot save`. Delta comparison still works as long as timestamps are preserved.

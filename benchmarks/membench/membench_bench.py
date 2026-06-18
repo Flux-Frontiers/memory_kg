@@ -407,11 +407,14 @@ def score_item(
     rels: tuple[str, ...],
     max_nodes: int,
     use_haystack: bool = True,
+    denoise: bool = False,
 ) -> tuple[float, dict]:
     """
     Query MemoryKG for one item and compute recall.
 
     :param use_haystack: If True, restrict LanceDB seeding to the item's own file.
+    :param denoise: If True, strip distractor preamble from the question before
+        seeding (helps the ``noisy`` category; safe no-op elsewhere).
     :return: (recall, details_dict)
     """
     question = item["question"]
@@ -428,6 +431,7 @@ def score_item(
         rels=rels,
         max_nodes=max_nodes,
         haystack_files=haystack,
+        denoise=denoise,
     )
 
     found = 0
@@ -649,6 +653,7 @@ def cmd_run(args: argparse.Namespace) -> None:
                 rels=rels,
                 max_nodes=args.max_nodes,
                 use_haystack=use_haystack,
+                denoise=getattr(args, "denoise", False),
             )
             t_q = time.time() - t0
 
@@ -819,6 +824,11 @@ def _add_run_args(p: argparse.ArgumentParser) -> None:
         action="store_true",
         help="Ablation: disable per-item file scoping (global search across all items)",
     )
+    p.add_argument(
+        "--denoise",
+        action="store_true",
+        help="Strip distractor preamble from queries before seeding (helps 'noisy'; no-op elsewhere)",
+    )
 
 
 # =============================================================================
@@ -846,6 +856,7 @@ def main() -> None:
     p_all.add_argument("--rels", default=None)
     p_all.add_argument("--out", default=None)
     p_all.add_argument("--no-haystack", action="store_true")
+    p_all.add_argument("--denoise", action="store_true")
     p_all.set_defaults(func=cmd_all)
 
     args = parser.parse_args()

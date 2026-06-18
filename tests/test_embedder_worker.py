@@ -10,10 +10,10 @@ from memory_kg.embedder_worker import PIPELINE_MODEL, CorpusEmbedder, EmbeddingC
 
 
 def test_pipeline_model_constant_value():
-    # Default is BAAI/bge-small-en-v1.5; overrideable via DOCKG_MODEL env var.
+    # Default is BAAI/bge-small-en-v1.5; overrideable via MEMORYKG_MODEL env var.
     import os
 
-    expected = os.environ.get("DOCKG_MODEL", "BAAI/bge-small-en-v1.5")
+    expected = os.environ.get("MEMORYKG_MODEL", "BAAI/bge-small-en-v1.5")
     assert PIPELINE_MODEL == expected
 
 

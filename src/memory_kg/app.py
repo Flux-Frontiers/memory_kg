@@ -49,8 +49,8 @@ _REL_COLOR: dict[str, str] = {
     "CO_OCCURS_WITH": "#9E9E9E",
 }
 
-_DEFAULT_DB = os.environ.get("DOCKG_DB", ".memorykg/graph.sqlite")
-_DEFAULT_LANCEDB = os.environ.get("DOCKG_LANCEDB", ".memorykg/lancedb")
+_DEFAULT_DB = os.environ.get("MEMORYKG_DB", ".memorykg/graph.sqlite")
+_DEFAULT_LANCEDB = os.environ.get("MEMORYKG_LANCEDB", ".memorykg/lancedb")
 
 
 st.set_page_config(

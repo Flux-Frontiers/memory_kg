@@ -31,10 +31,10 @@ _PRE_COMMIT_HOOK = """\
 # MemoryKG pre-commit hook — keeps local index in sync and captures metrics
 # snapshots BEFORE quality checks run.
 # Installed by: memorykg install-hooks
-# Skip with: DOCKG_SKIP_SNAPSHOT=1 git commit ...
+# Skip with: MEMORYKG_SKIP_SNAPSHOT=1 git commit ...
 set -euo pipefail
 
-[ "${DOCKG_SKIP_SNAPSHOT:-0}" = "1" ] && exit 0
+[ "${MEMORYKG_SKIP_SNAPSHOT:-0}" = "1" ] && exit 0
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 
@@ -339,7 +339,7 @@ def install_hooks(repo: str, force: bool, claude_hooks: bool, global_hooks: bool
         mode = hook_path.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
         hook_path.chmod(mode)
         click.echo(f"OK Installed pre-commit hook: {hook_path}")
-        click.echo("   Skip with: DOCKG_SKIP_SNAPSHOT=1 git commit ...")
+        click.echo("   Skip with: MEMORYKG_SKIP_SNAPSHOT=1 git commit ...")
 
     # ── Claude Code hooks ─────────────────────────────────────────────────────
     targets: list[Path] = []

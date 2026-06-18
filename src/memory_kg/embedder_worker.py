@@ -38,9 +38,9 @@ import numpy as np
 logger = logging.getLogger(__name__)
 
 #: Default embedding model for the multipass pipeline.
-#: Reads ``DOCKG_MODEL`` env var (same as ``DEFAULT_MODEL`` in memorykg.py)
+#: Reads ``MEMORYKG_MODEL`` env var (same as ``DEFAULT_MODEL`` in memorykg.py)
 #: so the global model setting applies to both the core build and pipeline stages.
-PIPELINE_MODEL: str = os.environ.get("DOCKG_MODEL", "BAAI/bge-small-en-v1.5")
+PIPELINE_MODEL: str = os.environ.get("MEMORYKG_MODEL", "BAAI/bge-small-en-v1.5")
 
 
 # ============================================================================
