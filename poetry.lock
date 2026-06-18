@@ -1217,18 +1217,6 @@ files = [
 referencing = ">=0.31.0"
 
 [[package]]
-name = "kg-snapshot"
-version = "0.3.0"
-description = "Shared snapshot infrastructure for KG modules — zero stdlib-only deps."
-optional = false
-python-versions = "<3.14,>=3.12"
-groups = ["main"]
-files = [
-    {file = "kg_snapshot-0.3.0-py3-none-any.whl", hash = "sha256:46f5cb57eb7ac66e3d4c64b46c2a403268c65e7ffa2bd45766a871b06d5bd69b"},
-    {file = "kg_snapshot-0.3.0.tar.gz", hash = "sha256:5588e756fe6378a40577cf32f6b4a7416658aba9dff397623d5613a86f44a73f"},
-]
-
-[[package]]
 name = "kgmodule-utils"
 version = "0.4.4"
 description = "Shared types, graph store, semantic index, and pipeline base for the KGModule SDK"
@@ -4116,4 +4104,4 @@ viz = ["plotly", "pyvis", "streamlit"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<3.14"
-content-hash = "a459f6b3c2229702a95a50920b180e3269f4022cf533664382cf83092b415cf6"
+content-hash = "6ed1ee4fa188802160ab23ce10b8be3b71fb449ca0fbb0c41cc5c6f322e4857c"

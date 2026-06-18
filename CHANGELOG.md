@@ -35,8 +35,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Tooling: type-checker migrated from `mypy` to `ty`** (Astral), matching the sister repo `doc_kg`. `pyproject.toml`: `[tool.mypy]` replaced with `[tool.ty.environment]` + `[tool.ty.rules]` (`unresolved-import = "ignore"`, mirroring mypy's `ignore_missing_imports`); `mypy` dev/all dep replaced with `ty>=0.0.41`. `.github/workflows/ci.yml`: type-check job now runs `ty check src/`. `.pre-commit-config.yaml`: `mypy` local hook replaced with `ty`
 - `src/memory_kg/graph.py`: `nodes`/`edges` properties use `assert ... is not None` instead of `# type: ignore[return-value]`; `__repr__` ignore comment updated to `# ty: ignore[invalid-argument-type]`
 - `src/memory_kg/store.py`: hoisted `params: list[object]` annotation above the branch so both query-parameter branches share the declared element type (ty `invalid-argument-type` fix)
-- `src/memory_kg/index.py`: progress-bar advance now guards `prog is not None` alongside `task_id` (ty `unresolved-attribute` fix; `prog` is `None` under `nullcontext`)
+- `src/memory_kg/index.py`: progress-bar advance now guards `prog is not None` alongside `task_id` (ty `unresolved-attribute` fix; `prog` is `None` under `nullcontext`); the two `tqdm.__init__ = _silent_init` monkey-patches carry `# ty: ignore[invalid-assignment]` (matching doc_kg)
 - `src/memory_kg/topics.py`: optional-`yaml` fallback ignore comment updated to `# ty: ignore[invalid-assignment]`
+- **`src/memory_kg/snapshots.py`: migrated off the deprecated `kg_snapshot` package to `kg_utils.snapshots`** (provided by `kgmodule-utils`), matching the sister repo `doc_kg`. The `SnapshotManager.capture()` override was realigned to the base class's `(..., tree_hash, hotspots, issues, **extra_metrics)` signature — the per-field kwargs (`coverage_score`, `issues_count`, `complexity_median`) are now read from `**extra_metrics`, which both preserves the public call contract (all callers pass them by keyword) and restores Liskov substitutability (fixes the ty `invalid-method-override` error)
+- `pyproject.toml`: `kgmodule-utils` bumped `>=0.2.0` → `>=0.4.4` (provides `kg_utils.snapshots`), matching doc_kg
 
 - `pyproject.toml`: the cross-KG sibling integrations (`pycode-kg`, `doc-kg`) are now **optional manual installs** rather than a resolved `kgdeps` extra. They are never imported by memory_kg's core code, and pinning them forced poetry's universal lock resolution to reconcile their newer `transformers>=4.57.6` requirement against this project's `transformers<4.57` cap — which had left `poetry.lock` unbuildable. Removing them unblocks `poetry lock`
 - `poetry.lock`: regenerated — now consistent with `pyproject.toml` (`poetry check --lock` passes); previously stale since the `transformers<4.57` cap was introduced
@@ -44,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - **`pylint` dropped** in favour of `ruff` (which already enforces the pylint-derived `PLE`/`PLW` rules): removed `pylint>=4.0.5` from dev/all deps, the `[tool.pylint.messages_control]` config, and the `pylint` pre-commit hook
 - `pyproject.toml`: the `kgdeps` extra (`pip install -e ".[kgdeps]"`) — superseded by manual installs for the optional cross-KG siblings; removed its references from the install-instructions header
+- `pyproject.toml`: the `kg-snapshot>=0.3.0` runtime dependency — snapshot functionality now comes from `kg_utils.snapshots` (in `kgmodule-utils`); `kg_snapshot` is no longer imported anywhere
 - `benchmarks/BENCHMARKS.md`, `benchmarks/BENCHMARKS_COMPARISON.md`: Superseded by per-benchmark articles and the unified `benchmarks/README.md`
 - `benchmarks/membench_bench.py`: Top-level script moved to `benchmarks/membench/membench_bench.py`
 - Old ConvoMem result files with inflated scores from the scoring bug

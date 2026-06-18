@@ -77,7 +77,6 @@ requires-python = ">=3.12,<3.14"
 dependencies = [
     "click>=8.1.0,<9",
     "einops>=0.8.2",
-    "kg-snapshot>=0.3.0",
     "lancedb>=0.29.0",
     "markdown-it-py>=3.0.0",
     "mcp>=1.0.0",
@@ -89,7 +88,7 @@ dependencies = [
     "sentence-transformers>=5.4.1",
     "torch>=2.5.1",
     "transformers>=4.40.0,<4.57",
-    "kgmodule-utils>=0.2.0",
+    "kgmodule-utils>=0.4.4",
 ]
 
 [project.optional-dependencies]
