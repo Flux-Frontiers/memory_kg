@@ -21,6 +21,18 @@ alone separates them from the question.
 It is a **safe no-op on clean queries**: a normal single-question string has one
 wh-word, at the start, so the function returns it unchanged. Opt-in via
 ``MemoryKG.query(..., denoise=True)`` / ``pack(..., denoise=True)``.
+
+Honesty caveat — this is a benchmark-shaped heuristic, not a general capability
+-------------------------------------------------------------------------------
+The "last capitalized wh-clause" rule is fitted to the structure of MemBench's
+synthetic ``noisy`` generator (real question always last, always a capitalized
+wh-word, lowercase pivots). Those are artifacts of that generator, not robust
+properties of real-world rambling queries. Its measured lift on MemBench
+``noisy`` (≈0.42→0.74) should therefore be read as a **probe confirming that the
+gap is a query-surface artifact rather than a retrieval weakness** — NOT as a
+general MemoryKG improvement, and NOT to be folded into headline benchmark
+numbers. Treat generalization as unproven until validated on a different noise
+distribution (or replaced with a principled query-rewriter). Default is off.
 """
 
 from __future__ import annotations

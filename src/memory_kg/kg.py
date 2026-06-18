@@ -564,7 +564,10 @@ class MemoryKG:
         :param max_nodes: Maximum nodes to return.
         :param denoise: If True, strip conversational distractor preamble from
             ``q`` (keeping only the trailing real question) before seeding. A safe
-            no-op on clean queries. See :func:`memory_kg.query_denoise.denoise_query`.
+            no-op on clean queries. Off by default. Note: the current denoiser is a
+            **benchmark-shaped heuristic** fitted to MemBench's synthetic ``noisy``
+            format, not a proven general capability — see
+            :mod:`memory_kg.query_denoise` for the honesty caveat.
         :param seed_kinds: If set, restrict semantic seeding to these node kinds.
             ``("document",)`` seeds from session-root nodes only — one per session,
             full text embedded. Useful for reducing chunk-level noise when doing
@@ -663,7 +666,8 @@ class MemoryKG:
         :param max_chars: Maximum characters per text excerpt.
         :param max_nodes: Maximum nodes to return (``None`` for no limit).
         :param denoise: If True, strip conversational distractor preamble from
-            ``q`` before seeding (see :meth:`query`).
+            ``q`` before seeding (see :meth:`query`). Off by default; a
+            benchmark-shaped heuristic, not a proven general capability.
         :return: :class:`TextPack`.
         """
         if denoise:

@@ -81,27 +81,41 @@ chunk. A graph-traversal / entity-linking problem.
 reasoning/aggregation gaps that make up 100% of the headroom, and it would
 likely regress `noisy` (the worst category), where distractors share vocabulary.
 
+## The `noisy` gap is a query-surface artifact, not a retrieval weakness
+
+This is a **probe, not a scoreboard result.** To test whether `noisy`'s low score
+reflects a real retrieval weakness, we strip the rambling preamble from the query
+(keeping only the trailing real question) and re-seed (`denoise.py` +
+`measure_denoise.py`):
+
+| | recall |
+|---|---|
+| raw (baseline) | 0.4250 |
+| denoised | 0.7450 |
+| delta | +0.3200 (59 improved, 2 regressed, 39 unchanged) |
+
+When the surface noise is removed, retrieval recovers — so the gap was the
+**query's surface form, not MemoryKG's memory/retrieval ability.** That is the
+finding worth keeping.
+
+> ⚠️ **Honesty caveat — do NOT report this as a MemBench improvement.** The
+> denoiser's "last capitalized wh-clause" rule is *fitted to MemBench's synthetic
+> `noisy` generator* (real question always last, capitalized wh-word, lowercase
+> pivots). Those are artifacts of that generator, not robust properties of real
+> rambling queries — so this is a **benchmark-shaped heuristic**, and the implied
+> "≈ +2.9pp overall" must **not** be folded into any headline MemBench number.
+> It is shipped only as an **opt-in, default-off** `denoise=True` flag, documented
+> as a probe. To claim it as a real capability, validate generalization on a
+> different noise distribution (or replace the regex with a principled
+> query-rewriter). It is a no-op on clean categories (0/100 changed on `simple`,
+> `conditional`, `aggregative`, `comparative`, `knowledge_update`).
+
 ## Real levers (play to the graph, not lexical search)
 
-1. **noisy** — *query denoising*: strip the rambling preamble and embed only the
-   real question. Pure query-preprocessing, fully isolated, zero retrieval-path
-   risk. **Prototyped and measured** (`denoise.py` + `measure_denoise.py`):
-
-   | | recall |
-   |---|---|
-   | raw (baseline) | 0.4250 |
-   | denoised | **0.7450** |
-   | delta | **+0.3200** (59 improved, 2 regressed, 39 unchanged) |
-
-   The denoiser is a safe no-op on clean categories (0/100 changed on `simple`,
-   `conditional`, `aggregative`, `comparative`, `knowledge_update`), so it can be
-   applied universally. noisy is 100/1100 items, so this is ≈ **+2.9pp overall
-   MemBench** (87.7% → ~90.6%) — more than the BM25 port could plausibly deliver,
-   at a fraction of the risk.
-2. **conditional / post_processing** — strengthen entity-linking so the bridging
+1. **conditional / post_processing** — strengthen entity-linking so the bridging
    entity connects the two turns; consider higher `hop`/expansion for
    attribute-lookup queries. This is what the KG is *for*.
-3. **aggregative** — aggregation-aware retrieval (gather all turns for the
+2. **aggregative** — aggregation-aware retrieval (gather all turns for the
    matched entity) and a higher `k` for counting questions.
 
 ## Reproduce

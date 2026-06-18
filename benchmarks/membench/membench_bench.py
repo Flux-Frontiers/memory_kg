@@ -414,7 +414,8 @@ def score_item(
 
     :param use_haystack: If True, restrict LanceDB seeding to the item's own file.
     :param denoise: If True, strip distractor preamble from the question before
-        seeding (helps the ``noisy`` category; safe no-op elsewhere).
+        seeding. Benchmark-shaped probe (fitted to the ``noisy`` template), not a
+        headline metric — see ERROR_ANALYSIS.md.
     :return: (recall, details_dict)
     """
     question = item["question"]
@@ -827,7 +828,9 @@ def _add_run_args(p: argparse.ArgumentParser) -> None:
     p.add_argument(
         "--denoise",
         action="store_true",
-        help="Strip distractor preamble from queries before seeding (helps 'noisy'; no-op elsewhere)",
+        help="PROBE: strip distractor preamble before seeding. A benchmark-shaped "
+        "heuristic fitted to the 'noisy' template — use to characterize the gap, "
+        "NOT as a headline score (see benchmarks/membench/ERROR_ANALYSIS.md)",
     )
 
 
