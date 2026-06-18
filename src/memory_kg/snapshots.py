@@ -5,7 +5,7 @@ Author: Eric G. Suchanek, PhD
 License: Elastic-2.0
 Last Revision: 2026-04-07
 
-Thin compatibility layer over the shared ``kg_snapshot`` module.
+Thin compatibility layer over the shared ``kg_utils.snapshots`` module.
 
 The shared module provides canonical ``Snapshot``, ``SnapshotManifest``, and
 ``SnapshotManager`` backed by free-form dicts.  This module re-exports those
@@ -23,7 +23,7 @@ types and adds:
   - ``metrics_to_dict`` / ``metrics_from_dict`` — helpers for converting
     between ``SnapshotMetrics`` dataclass and the underlying dict
 
-``Snapshot`` is re-exported from ``kg_snapshot.snapshots``.  For backwards
+``Snapshot`` is re-exported from ``kg_utils.snapshots``.  For backwards
 compatibility ``snapshot.metrics`` returns a ``SnapshotMetrics``-shaped
 view object when the snapshot was constructed via this module's helpers.
 
@@ -45,12 +45,12 @@ from typing import Any
 # ---------------------------------------------------------------------------
 # Re-export shared base types (backwards-compat public API)
 # ---------------------------------------------------------------------------
-from kg_snapshot.snapshots import (
+from kg_utils.snapshots import (
     PruneResult,
     SnapshotManifest,
 )
-from kg_snapshot.snapshots import Snapshot as _BaseSnapshot
-from kg_snapshot.snapshots import SnapshotManager as _BaseSnapshotManager
+from kg_utils.snapshots import Snapshot as _BaseSnapshot
+from kg_utils.snapshots import SnapshotManager as _BaseSnapshotManager
 
 __all__ = [
     "PruneResult",
@@ -158,7 +158,7 @@ def _delta_from_dict(d: dict[str, Any] | None) -> SnapshotDelta | None:
 class Snapshot(_BaseSnapshot):
     """MemoryKG-flavoured snapshot with attribute-style access to metrics and deltas.
 
-    Extends the shared ``kg_snapshot.snapshots.Snapshot`` (which stores metrics
+    Extends the shared ``kg_utils.snapshots.Snapshot`` (which stores metrics
     as a free-form dict) with ``@property`` accessors that return the typed
     ``SnapshotMetrics`` and ``SnapshotDelta`` objects that the CLI and tests
     expect.
@@ -243,7 +243,7 @@ class Snapshot(_BaseSnapshot):
 class SnapshotManager(_BaseSnapshotManager):
     """MemoryKG snapshot manager.
 
-    Subclasses the shared ``kg_snapshot.snapshots.SnapshotManager`` and adds:
+    Subclasses the shared ``kg_utils.snapshots.SnapshotManager`` and adds:
 
     * ``package_name="doc-kg"`` default for version detection.
     * Legacy ``capture()`` kwargs: ``coverage_score``, ``issues_count``,
@@ -279,34 +279,34 @@ class SnapshotManager(_BaseSnapshotManager):
     # capture — backwards-compat wrapper
     # ------------------------------------------------------------------
 
-    def capture(  # pylint: disable=arguments-renamed,arguments-differ
+    def capture(
         self,
         version: str | None = None,
         branch: str | None = None,
         graph_stats_dict: dict[str, Any] | None = None,
-        coverage_score: float = 0.0,
-        issues_count: int = 0,
-        complexity_median: float = 0.0,
+        tree_hash: str = "",
         hotspots: list[dict[str, Any]] | None = None,
         issues: list[str] | None = None,
-        tree_hash: str = "",
+        **extra_metrics: Any,
     ) -> Snapshot:
         """Capture a MemoryKG snapshot.
 
         Accepts the legacy per-field kwargs (``coverage_score``,
-        ``issues_count``, ``complexity_median``) in addition to the dict-based
-        ``graph_stats_dict`` from the base class, and builds the full metrics
-        dict expected by the shared infrastructure.
+        ``issues_count``, ``complexity_median``) via ``**extra_metrics`` in
+        addition to the dict-based ``graph_stats_dict`` from the base class,
+        and builds the full metrics dict expected by the shared infrastructure.
+        Keeping the base class's ``**extra_metrics`` signature preserves the
+        Liskov substitutability of this override.
 
         :param version: Version string (e.g., "0.3.0").
         :param branch: Git branch name; auto-detected if None.
         :param graph_stats_dict: Output from ``graph_stats()`` / ``store.stats()``.
-        :param coverage_score: Semantic coverage score (0.0 to 1.0).
-        :param issues_count: Number of issues found.
-        :param complexity_median: Median semantic_links across hot chunks.
+        :param tree_hash: Git tree hash; auto-detected if not provided.
         :param hotspots: Top hot chunks with metadata.
         :param issues: List of issue description strings.
-        :param tree_hash: Git tree hash; auto-detected if not provided.
+        :param extra_metrics: Domain-specific fields; recognised keys are
+            ``coverage_score`` (float), ``issues_count`` (int), and
+            ``complexity_median`` (float).
         :return: New :class:`Snapshot` instance (not yet persisted).
         """
         stats = graph_stats_dict or {}
@@ -318,9 +318,10 @@ class SnapshotManager(_BaseSnapshotManager):
 
         extra: dict[str, Any] = {
             "meaningful_nodes": meaningful_nodes,
-            "coverage_score": float(coverage_score),
-            "issues_count": int(issues_count),
-            "complexity_median": float(complexity_median),
+            "coverage_score": float(extra_metrics.pop("coverage_score", 0.0)),
+            "issues_count": int(extra_metrics.pop("issues_count", 0)),
+            "complexity_median": float(extra_metrics.pop("complexity_median", 0.0)),
+            **extra_metrics,
         }
 
         base_snap = super().capture(
