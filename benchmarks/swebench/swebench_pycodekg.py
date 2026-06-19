@@ -99,7 +99,8 @@ def load_instances(dataset: str, limit: int, cache_dir: str, repo: str | None = 
     cols = ["instance_id", "repo", "base_commit", "problem_statement", "patch"]
     rows = pq.read_table(parquet_path, columns=cols).to_pylist()
     if repo:
-        rows = [r for r in rows if r["repo"] == repo or repo in r["instance_id"]]
+        wanted = {x.strip() for x in repo.split(",") if x.strip()}
+        rows = [r for r in rows if r["repo"] in wanted or any(w in r["instance_id"] for w in wanted)]
     return rows[:limit] if limit else rows
 
 
@@ -172,30 +173,8 @@ def _ranked_files(result, limit: int) -> list[str]:
     return ordered
 
 
-def retrieve_for_instance(
-    inst: dict,
-    repo_dir: Path,
-    tmp_kg: Path,
-    top_k: int,
-    hop: int,
-    rels: tuple[str, ...],
-    model: str,
-) -> dict:
-    """Build a PyCodeKG over the checked-out repo, query it, score file localization."""
-    gold = gold_files_from_patch(inst["patch"])
-
-    kg = PyCodeKG(
-        repo_root=repo_dir,
-        db_path=tmp_kg / "graph.sqlite",
-        lancedb_dir=tmp_kg / "lancedb",
-        model=model,
-    )
-    with open(os.devnull, "w") as devnull, contextlib.redirect_stdout(devnull):
-        kg.build(wipe=True)
-    result = kg.query(inst["problem_statement"], k=top_k, hop=hop, rels=rels)
-    with contextlib.suppress(Exception):
-        kg.close()
-
+def _score(inst: dict, gold: set[str], result) -> dict:
+    """Score one query result for file localization against the gold patch files."""
     ranked = _ranked_files(result, limit=50)
     rank_of_first = next((i + 1 for i, f in enumerate(ranked) if f in gold), None)
 
@@ -221,6 +200,40 @@ def retrieve_for_instance(
     }
 
 
+def retrieve_for_instance(
+    inst: dict,
+    repo_dir: Path,
+    tmp_kg: Path,
+    top_k: int,
+    hops: tuple[int, ...],
+    rels: tuple[str, ...],
+    model: str,
+) -> dict[int, dict]:
+    """Build the PyCodeKG once, then query at each hop and score — same graph for all.
+
+    Building dominates cost and is hop-independent, so comparing hop 0 vs hop 1 on the
+    *identical* built graph is both ~2x faster and methodologically cleaner.
+    """
+    gold = gold_files_from_patch(inst["patch"])
+
+    kg = PyCodeKG(
+        repo_root=repo_dir,
+        db_path=tmp_kg / "graph.sqlite",
+        lancedb_dir=tmp_kg / "lancedb",
+        model=model,
+    )
+    with open(os.devnull, "w") as devnull, contextlib.redirect_stdout(devnull):
+        kg.build(wipe=True)
+
+    out: dict[int, dict] = {}
+    for hop in hops:
+        result = kg.query(inst["problem_statement"], k=top_k, hop=hop, rels=rels)
+        out[hop] = _score(inst, gold, result)
+    with contextlib.suppress(Exception):
+        kg.close()
+    return out
+
+
 # =============================================================================
 # BENCHMARK RUNNER
 # =============================================================================
@@ -229,13 +242,15 @@ METRICS = ["recall@1", "recall@5", "recall@10", "recall@20", "recall_all@10", "r
 
 
 def run_benchmark(args) -> None:
+    hops = tuple(int(h) for h in str(args.hop).split(",") if h.strip() != "")
+
     print(f"\n{'=' * 60}")
     print("  PyCodeKG × SWE-bench — file-localization retrieval")
     print(f"{'=' * 60}")
     print(f"  Dataset:  {args.dataset}")
     print(f"  Limit:    {args.limit}")
     print(f"  Top-k:    {args.k}")
-    print(f"  Hop:      {args.hop}  ({'flat top-k' if args.hop == 0 else 'AST graph expansion'})")
+    print(f"  Hops:     {', '.join(map(str, hops))}  (0=flat top-k, 1=AST graph expansion)")
     print(f"  Model:    {args.model}")
     print(f"{'-' * 60}")
 
@@ -252,8 +267,7 @@ def run_benchmark(args) -> None:
     repos_cache = Path(args.repos_cache)
     rels = tuple(r.strip() for r in args.rels.split(",")) if args.rels else DEFAULT_RELS
 
-    agg: dict[str, list[float]] = defaultdict(list)
-    by_repo: dict[str, list[float]] = defaultdict(list)
+    agg: dict[int, dict[str, list[float]]] = {h: defaultdict(list) for h in hops}
     results_log: list[dict] = []
     start = datetime.now()
 
@@ -263,7 +277,7 @@ def run_benchmark(args) -> None:
             continue
         tmp_kg = Path(tempfile.mkdtemp(prefix="pck_swe_"))
         try:
-            r = retrieve_for_instance(inst, repo_dir, tmp_kg, args.k, args.hop, rels, args.model)
+            per_hop = retrieve_for_instance(inst, repo_dir, tmp_kg, args.k, hops, rels, args.model)
         except Exception as e:  # noqa: BLE001
             print(f"    [{inst['instance_id']}] retrieval error: {e}")
             continue
@@ -272,12 +286,14 @@ def run_benchmark(args) -> None:
 
             shutil.rmtree(tmp_kg, ignore_errors=True)
 
-        for m in METRICS:
-            agg[m].append(r[m])
-        by_repo[inst["repo"]].append(r["recall@10"])
-        results_log.append(r)
-        print(f"  [{i + 1:3}/{len(instances)}] {inst['instance_id']:<28} "
-              f"R@10={r['recall@10']:.0f} MRR={r['mrr']:.2f}")
+        for h in hops:
+            for m in METRICS:
+                agg[h][m].append(per_hop[h][m])
+        results_log.append({"instance_id": inst["instance_id"], "repo": inst["repo"],
+                            "by_hop": per_hop})
+        cells = "  ".join(f"hop{h} R@10={per_hop[h]['recall@10']:.0f} MRR={per_hop[h]['mrr']:.2f}"
+                          for h in hops)
+        print(f"  [{i + 1:3}/{len(instances)}] {inst['instance_id']:<28} {cells}")
 
     elapsed = (datetime.now() - start).total_seconds()
     n = len(results_log)
@@ -286,23 +302,25 @@ def run_benchmark(args) -> None:
         return
 
     print(f"\n{'=' * 60}")
-    print(f"  RESULTS — PyCodeKG (top-{args.k}, hop={args.hop})")
+    print(f"  RESULTS — PyCodeKG (top-{args.k})   n={n}   {elapsed:.0f}s ({elapsed / n:.0f}s/inst)")
     print(f"{'=' * 60}")
-    print(f"  Time:       {elapsed:.1f}s ({elapsed / n:.1f}s per instance)")
-    print(f"  Scored:     {n}")
+    header = "  " + f"{'metric':16}" + "".join(f"hop{h:<10}" for h in hops)
+    print(header)
     for m in METRICS:
-        print(f"  {m:16} {sum(agg[m]) / n:.3f}")
-    print("\n  recall@10 BY REPO:")
-    for repo in sorted(by_repo):
-        v = by_repo[repo]
-        print(f"    {repo:32} {sum(v) / len(v):.3f}  (n={len(v)})")
+        row = "  " + f"{m:16}" + "".join(f"{sum(agg[h][m]) / n:<13.3f}" for h in hops)
+        print(row)
+    if len(hops) > 1:
+        h0, h1 = hops[0], hops[1]
+        print(f"\n  Δ(hop{h1}-hop{h0}) recall@10 = "
+              f"{(sum(agg[h1]['recall@10']) - sum(agg[h0]['recall@10'])) / n:+.3f}   "
+              f"MRR = {(sum(agg[h1]['mrr']) - sum(agg[h0]['mrr'])) / n:+.3f}")
     print(f"\n{'=' * 60}\n")
 
     if args.out:
-        summary = {m: sum(agg[m]) / n for m in METRICS}
+        summary = {f"hop{h}": {m: sum(agg[h][m]) / n for m in METRICS} for h in hops}
         with open(args.out, "w") as f:
             json.dump(
-                {"config": {"dataset": args.dataset, "hop": args.hop, "k": args.k, "n": n,
+                {"config": {"dataset": args.dataset, "hops": list(hops), "k": args.k, "n": n,
                             "model": args.model}, "summary": summary, "results": results_log},
                 f, indent=2)
         print(f"  Results saved to: {args.out}")
@@ -319,7 +337,9 @@ if __name__ == "__main__":
     p.add_argument("--repo", default=None,
                    help="Filter to one repo (e.g. pallets/flask) or instance-id substring")
     p.add_argument("--k", type=int, default=10, help="Top-k semantic seeds (default: 10)")
-    p.add_argument("--hop", type=int, default=1, help="Graph hops: 0=flat, 1=+AST graph (default 1)")
+    p.add_argument("--hop", default="1",
+                   help="Graph hops: 0=flat, 1=+AST graph. Comma-list builds once, queries each "
+                        "(e.g. --hop 0,1 for the head-to-head). Default: 1")
     p.add_argument("--rels", default=None, help="Comma-separated edge types (default: PyCodeKG)")
     p.add_argument("--model", default="BAAI/bge-small-en-v1.5", help="Embedding model")
     p.add_argument("--repos-cache", default="/tmp/swebench_repos", help="Cloned-repo cache dir")
@@ -328,6 +348,7 @@ if __name__ == "__main__":
     args = p.parse_args()
 
     if not args.out:
-        args.out = (f"benchmarks/swebench/results_swebench_{args.dataset}_hop{args.hop}"
+        args.out = (f"benchmarks/swebench/results_swebench_{args.dataset}"
+                    f"_hop{str(args.hop).replace(',', '-')}"
                     f"_{datetime.now().strftime('%Y%m%d_%H%M')}.json")
     run_benchmark(args)
