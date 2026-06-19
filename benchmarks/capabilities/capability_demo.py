@@ -107,6 +107,10 @@ def run_demo(repo: Path, model: str, out_path: str, top: int) -> None:
     funcs = kg.store.query_nodes(kinds=list(CODE_KINDS))
     print(f"  {len(funcs)} function/method nodes. Computing fan-in via CALLS edges ...")
 
+    from collections import Counter
+
+    name_counts: Counter = Counter((n.get("name") or "") for n in funcs)
+
     fan_in: list[tuple[int, dict]] = []
     for node in funcs:
         callers = kg.store.callers_of(node["id"], rel="CALLS")
@@ -116,9 +120,14 @@ def run_demo(repo: Path, model: str, out_path: str, top: int) -> None:
     hotspots = fan_in[:top]
     dead = [n for c, n in fan_in if c == 0]
 
-    # --- Capability 3: callers vs grep, on the top hotspot with a real fan-in ---
+    # --- Capability 3: callers vs grep ---
+    # Pick a target whose SIMPLE NAME IS UNIQUE in the repo so the comparison is honest:
+    # PyCodeKG's Python call graph resolves method calls by *name* (no type inference), so
+    # for a name shared by many classes (e.g. `get`) the caller set is an over-approximation
+    # — same failure mode as grep. For a uniquely-named function the resolution is exact and
+    # the contrast with grep's textual matching is clean.
     head_to_head = None
-    target = next((n for c, n in fan_in if c > 0), None)
+    target = next((n for c, n in fan_in if c > 0 and name_counts[n.get("name") or ""] == 1), None)
     if target is not None:
         name = target.get("name") or (target.get("qualname") or "").split(".")[-1]
         precise = kg.store.callers_of(target["id"], rel="CALLS")
@@ -141,16 +150,25 @@ def run_demo(repo: Path, model: str, out_path: str, top: int) -> None:
                  "answers imprecisely. All figures below are computed from the AST graph — "
                  "deterministic, no LLM, no embedding similarity.\n")
     st = kg.store.stats() if hasattr(kg.store, "stats") else {}
-    lines.append(f"- Graph: {st.get('nodes', '?')} nodes, {st.get('edges', '?')} edges, "
-                 f"{len(funcs)} functions/methods.\n")
+    calls_edges = (st.get("edge_counts") or {}).get("CALLS", "?")
+    lines.append(f"- Graph: {st.get('total_nodes', '?')} nodes, {st.get('total_edges', '?')} edges "
+                 f"({calls_edges} `CALLS`), {len(funcs)} functions/methods.\n")
+    lines.append("> **Honesty caveat.** PyCodeKG's Python call graph resolves method calls by "
+                 "*name* (no type inference). For a method name shared across many classes "
+                 "(e.g. `get`), the caller set is an **over-approximation** — the same failure "
+                 "mode as `grep`. The graph's clean, exact wins are for *uniquely-named* symbols "
+                 "(below) and for the *aggregate* views (dead-code set, fan-in distribution) that "
+                 "no embedding can produce at all. Names that collide are flagged in the table.\n")
 
     lines.append("\n## 1. Change blast-radius — highest fan-in functions\n")
-    lines.append("*\"If I touch this, what might break?\" — the call graph ranks it exactly. "
+    lines.append("*\"If I touch this, what might break?\" — ranked by `CALLS` in-degree. "
                  "A similarity search has no notion of this at all.*\n")
-    lines.append("\n| rank | function | fan-in (callers) | module |")
-    lines.append("|---:|---|---:|---|")
+    lines.append("\n| rank | function | fan-in | module | name shared by |")
+    lines.append("|---:|---|---:|---|---:|")
     for i, (c, n) in enumerate(hotspots, 1):
-        lines.append(f"| {i} | `{n.get('qualname')}` | {c} | `{n.get('module_path')}` |")
+        shared = name_counts[n.get("name") or ""]
+        flag = f"{shared} defs ⚠️" if shared > 1 else "unique ✓"
+        lines.append(f"| {i} | `{n.get('qualname')}` | {c} | `{n.get('module_path')}` | {flag} |")
 
     lines.append(f"\n## 2. Dead code — functions/methods with zero callers ({len(dead)})\n")
     lines.append("*Computed from in-degree on `CALLS`. (Entry points, dynamically-dispatched, "

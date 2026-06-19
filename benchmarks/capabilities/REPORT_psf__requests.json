@@ -1,0 +1,68 @@
+{
+  "repo": "/tmp/swebench_repos/psf__requests",
+  "n_functions": 651,
+  "hotspots": [
+    {
+      "qualname": "CaseInsensitiveDict.get",
+      "fan_in": 124,
+      "module": "requests/structures.py"
+    },
+    {
+      "qualname": "LookupDict.get",
+      "fan_in": 124,
+      "module": "requests/structures.py"
+    },
+    {
+      "qualname": "RequestsCookieJar.get",
+      "fan_in": 124,
+      "module": "requests/cookies.py"
+    },
+    {
+      "qualname": "Session.get",
+      "fan_in": 124,
+      "module": "requests/sessions.py"
+    },
+    {
+      "qualname": "get",
+      "fan_in": 124,
+      "module": "requests/api.py"
+    },
+    {
+      "qualname": "httpbin",
+      "fan_in": 45,
+      "module": "tests/test_requests.py"
+    },
+    {
+      "qualname": "CharDistributionAnalysis.__init__",
+      "fan_in": 39,
+      "module": "requests/packages/chardet2/chardistribution.py"
+    },
+    {
+      "qualname": "PoolError.__init__",
+      "fan_in": 35,
+      "module": "requests/packages/urllib3/exceptions.py"
+    }
+  ],
+  "dead_count": 235,
+  "head_to_head": {
+    "function": "httpbin",
+    "module": "tests/test_requests.py",
+    "pycodekg_caller_count": 45,
+    "pycodekg_callers": [
+      "tests/test_requests.py::RequestsTestSuite.test_HTTP_200_OK_GET",
+      "tests/test_requests.py::RequestsTestSuite.test_response_sent",
+      "tests/test_requests.py::RequestsTestSuite.test_HTTP_302_ALLOW_REDIRECT_GET",
+      "tests/test_requests.py::RequestsTestSuite.test_HTTP_302_GET",
+      "tests/test_requests.py::RequestsTestSuite.test_HTTP_200_OK_GET_WITH_PARAMS",
+      "tests/test_requests.py::RequestsTestSuite.test_user_agent_transfers",
+      "tests/test_requests.py::RequestsTestSuite.test_HTTP_200_OK_HEAD",
+      "tests/test_requests.py::RequestsTestSuite.test_HTTP_200_OK_PUT"
+    ],
+    "grep": {
+      "textual_hits": 98,
+      "in_test_files": 98,
+      "definition_sites": 1,
+      "comment_or_string_lines": 20
+    }
+  }
+}
