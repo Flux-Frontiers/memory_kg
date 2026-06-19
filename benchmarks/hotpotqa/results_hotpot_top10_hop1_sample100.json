@@ -1,0 +1,2149 @@
+{
+  "config": {
+    "hop": 1,
+    "k": 10,
+    "n": 100,
+    "model": "BAAI/bge-small-en-v1.5"
+  },
+  "summary": {
+    "para_recall@10": 0.825,
+    "recall_all@2": 0.36,
+    "recall_all@5": 0.61,
+    "recall_all@10": 0.67
+  },
+  "results": [
+    {
+      "question": "Were Scott Derrickson and Ed Wood of the same nationality?",
+      "answer": "yes",
+      "type": "comparison",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 0.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Scott Derrickson",
+        "Sinister (film)",
+        "Deliver Us from Evil (2014 film)",
+        "Ed Wood (film)",
+        "Ed Wood"
+      ],
+      "gold": [
+        "Ed Wood",
+        "Scott Derrickson"
+      ]
+    },
+    {
+      "question": "What government position was held by the woman who portrayed Corliss Archer in the film Kiss and Tell?",
+      "answer": "Chief of Protocol",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 0.5,
+      "recall_all@2": 0.0,
+      "recall_all@5": 0.0,
+      "recall_all@10": 0.0,
+      "retrieved_order": [
+        "Kiss and Tell (1945 film)",
+        "A Kiss for Corliss",
+        "Meet Corliss Archer (TV series)",
+        "Meet Corliss Archer",
+        "Janet Waldo"
+      ],
+      "gold": [
+        "Kiss and Tell (1945 film)",
+        "Shirley Temple"
+      ]
+    },
+    {
+      "question": "What science fantasy young adult series, told in first person, has a set of companion books narrating the stories of enslaved worlds and alien species?",
+      "answer": "Animorphs",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 0.5,
+      "recall_all@2": 0.0,
+      "recall_all@5": 0.0,
+      "recall_all@10": 0.0,
+      "retrieved_order": [
+        "Andre Norton Award",
+        "Science Fantasy (magazine)",
+        "Animorphs",
+        "Victoria Hanley",
+        "The Divide trilogy"
+      ],
+      "gold": [
+        "Animorphs",
+        "The Hork-Bajir Chronicles"
+      ]
+    },
+    {
+      "question": "Are the Laleli Mosque and Esma Sultan Mansion located in the same neighborhood?",
+      "answer": "no",
+      "type": "comparison",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 1.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Esma Sultan Mansion",
+        "Laleli Mosque",
+        "Sultan Ahmed Mosque",
+        "Esma Sultan (daughter of Ahmed III)",
+        "Gevheri Kad\u0131n",
+        "Esma Sultan (daughter of Abdul Hamid I)",
+        "Esma Sultan",
+        "Esma Sultan (daughter of Abd\u00fclaziz)"
+      ],
+      "gold": [
+        "Esma Sultan Mansion",
+        "Laleli Mosque"
+      ]
+    },
+    {
+      "question": "The director of the romantic comedy \"Big Stone Gap\" is based in what New York city?",
+      "answer": "Greenwich Village, New York City",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 0.5,
+      "recall_all@2": 0.0,
+      "recall_all@5": 0.0,
+      "recall_all@10": 0.0,
+      "retrieved_order": [
+        "Big Stone Gap (film)",
+        "Kingston Morning",
+        "I Love NY (2015 film)",
+        "Clinton, Minnesota",
+        "Nola (film)"
+      ],
+      "gold": [
+        "Adriana Trigiani",
+        "Big Stone Gap (film)"
+      ]
+    },
+    {
+      "question": "2014 S/S is the debut album of a South Korean boy group that was formed by who?",
+      "answer": "YG Entertainment",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 0.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "2014 S/S",
+        "History (band)",
+        "Winner (band)",
+        "Madtown"
+      ],
+      "gold": [
+        "2014 S/S",
+        "Winner (band)"
+      ]
+    },
+    {
+      "question": "Who was known by his stage name Aladin and helped organizations improve their performance as a consultant?",
+      "answer": "Eenasul Fateh",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 1.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Eenasul Fateh",
+        "Management consulting",
+        "ELDee",
+        "Method Man"
+      ],
+      "gold": [
+        "Eenasul Fateh",
+        "Management consulting"
+      ]
+    },
+    {
+      "question": "The arena where the Lewiston Maineiacs played their home games can seat how many people?",
+      "answer": "3,677 seated",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 0.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Lewiston Maineiacs",
+        "Dwyer Arena",
+        "Androscoggin Bank Colis\u00e9e"
+      ],
+      "gold": [
+        "Androscoggin Bank Colis\u00e9e",
+        "Lewiston Maineiacs"
+      ]
+    },
+    {
+      "question": "Who is older, Annie Morton or Terry Richardson?",
+      "answer": "Terry Richardson",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 0.0,
+      "recall_all@5": 0.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Amanda Lepore",
+        "Snoecks",
+        "Index Magazine",
+        "Kenton Richardson",
+        "Terry Richardson",
+        "Annie Morton"
+      ],
+      "gold": [
+        "Annie Morton",
+        "Terry Richardson"
+      ]
+    },
+    {
+      "question": "Are Local H and For Against both from the United States?",
+      "answer": "yes",
+      "type": "comparison",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 1.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "For Against",
+        "Local H",
+        "Hallelujah! I'm a Bum (album)"
+      ],
+      "gold": [
+        "For Against",
+        "Local H"
+      ]
+    },
+    {
+      "question": "What is the name of the fight song of the university whose main campus is in Lawrence, Kansas and whose branch campuses are in the Kansas City metropolitan area?",
+      "answer": "Kansas Song",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 1.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Kansas Song",
+        "University of Kansas",
+        "University of Missouri\u2013Kansas City"
+      ],
+      "gold": [
+        "Kansas Song",
+        "University of Kansas"
+      ]
+    },
+    {
+      "question": "What screenwriter with credits for \"Evolution\" co-wrote a film starring Nicolas Cage and T\u00e9a Leoni?",
+      "answer": "David Weissman",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 0.0,
+      "recall_all@5": 0.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Season of the Witch (2011 film)",
+        "Drive Angry",
+        "City of Angels (film)",
+        "Time to Kill (1989 film)",
+        "The Family Man",
+        "David Weissman",
+        "Gone in 60 Seconds (2000 film)"
+      ],
+      "gold": [
+        "David Weissman",
+        "The Family Man"
+      ]
+    },
+    {
+      "question": "What year did Guns N Roses perform a promo for a movie starring Arnold Schwarzenegger as a former New York Police detective?",
+      "answer": "1999",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 0.0,
+      "recall_all@2": 0.0,
+      "recall_all@5": 0.0,
+      "recall_all@10": 0.0,
+      "retrieved_order": [
+        "True Lies",
+        "Guns N' Roses discography",
+        "Last Action Hero"
+      ],
+      "gold": [
+        "End of Days (film)",
+        "Oh My God (Guns N' Roses song)"
+      ]
+    },
+    {
+      "question": "Are Random House Tower and 888 7th Avenue both used for real estate?",
+      "answer": "no",
+      "type": "comparison",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 1.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "888 7th Avenue",
+        "Random House Tower",
+        "Carl B. Stokes United States Courthouse",
+        "Villard (imprint)"
+      ],
+      "gold": [
+        "888 7th Avenue",
+        "Random House Tower"
+      ]
+    },
+    {
+      "question": "The football manager who recruited David Beckham managed Manchester United during what timeframe?",
+      "answer": "from 1986 to 2013",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 0.5,
+      "recall_all@2": 0.0,
+      "recall_all@5": 0.0,
+      "recall_all@10": 0.0,
+      "retrieved_order": [
+        "Ernest Mangnall",
+        "Alex Ferguson",
+        "Matt Busby",
+        "David Beckham Academy"
+      ],
+      "gold": [
+        "1995\u201396 Manchester United F.C. season",
+        "Alex Ferguson"
+      ]
+    },
+    {
+      "question": "Brown State Fishing Lake is in a country that has a population of how many inhabitants ?",
+      "answer": "9,984",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 1.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Brown State Fishing Lake",
+        "Brown County, Kansas",
+        "Shawnee State Fishing Lake",
+        "Neosho State Fishing Lake",
+        "Fishing Lake"
+      ],
+      "gold": [
+        "Brown County, Kansas",
+        "Brown State Fishing Lake"
+      ]
+    },
+    {
+      "question": "The Vermont Catamounts men's soccer team currently competes in a conference that was formerly known as what from 1988 to 1996?",
+      "answer": "the North Atlantic Conference",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 0.5,
+      "recall_all@2": 0.0,
+      "recall_all@5": 0.0,
+      "recall_all@10": 0.0,
+      "retrieved_order": [
+        "Vermont Catamounts men's soccer",
+        "Vermont Catamounts men's basketball",
+        "Vermont Catamounts men's ice hockey",
+        "2016\u201317 Vermont Catamounts men's basketball team",
+        "2012\u201313 Vermont Catamounts men's basketball team"
+      ],
+      "gold": [
+        "America East Conference",
+        "Vermont Catamounts men's soccer"
+      ]
+    },
+    {
+      "question": "Are Giuseppe Verdi and Ambroise Thomas both Opera composers ?",
+      "answer": "yes",
+      "type": "comparison",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 0.0,
+      "recall_all@5": 0.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Ambroise Thomas",
+        "Giuseppe Verdi (film)",
+        "Teatro Giuseppe Verdi",
+        "Verdi, the King of Melody",
+        "Ferdinando Provesi",
+        "Giuseppe Verdi"
+      ],
+      "gold": [
+        "Ambroise Thomas",
+        "Giuseppe Verdi"
+      ]
+    },
+    {
+      "question": "Roger O. Egeberg was Assistant Secretary for Health and Scientific Affairs during the administration of a president that served during what years?",
+      "answer": "1969 until 1974",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 0.5,
+      "recall_all@2": 0.0,
+      "recall_all@5": 0.0,
+      "recall_all@10": 0.0,
+      "retrieved_order": [
+        "Roger O. Egeberg",
+        "Bradford P. Campbell",
+        "Steven K. Galson"
+      ],
+      "gold": [
+        "Richard Nixon",
+        "Roger O. Egeberg"
+      ]
+    },
+    {
+      "question": "Which writer was from England, Henry Roth or Robert Erskine Childers?",
+      "answer": "Robert Erskine Childers DSC",
+      "type": "comparison",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 0.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Robert Erskine Childers",
+        "Asgard (yacht)",
+        "R509 road (Ireland)",
+        "Henry Roth",
+        "Erskine Barton Childers"
+      ],
+      "gold": [
+        "Henry Roth",
+        "Robert Erskine Childers"
+      ]
+    },
+    {
+      "question": "Which other Mexican Formula One race car driver has held the podium besides the Force India driver born in 1990?",
+      "answer": "Pedro Rodr\u00edguez",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 1.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Formula One drivers from Mexico",
+        "Sergio P\u00e9rez",
+        "Force India VJM04"
+      ],
+      "gold": [
+        "Formula One drivers from Mexico",
+        "Sergio P\u00e9rez"
+      ]
+    },
+    {
+      "question": "This singer of A Rather Blustery Day also voiced what hedgehog?",
+      "answer": "Sonic",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 1.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "A Rather Blustery Day",
+        "Jim Cummings",
+        "The Rain Rain Rain Came Down Down Down",
+        "Hip Hip Pooh-Ray!",
+        "Winnie the Pooh and the Blustery Day",
+        "Little Black Rain Cloud"
+      ],
+      "gold": [
+        "A Rather Blustery Day",
+        "Jim Cummings"
+      ]
+    },
+    {
+      "question": "Aside from the Apple Remote, what other device can control the program Apple Remote was originally designed to interact with?",
+      "answer": "keyboard function keys",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 0.5,
+      "recall_all@2": 0.0,
+      "recall_all@5": 0.0,
+      "recall_all@10": 0.0,
+      "retrieved_order": [
+        "Apple Remote",
+        "Siri Remote",
+        "Apple Remote Desktop"
+      ],
+      "gold": [
+        "Apple Remote",
+        "Front Row (software)"
+      ]
+    },
+    {
+      "question": "Which performance act has a higher instrument to person ratio, Badly Drawn Boy or Wolf Alice? ",
+      "answer": "Badly Drawn Boy",
+      "type": "comparison",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 0.5,
+      "recall_all@2": 0.0,
+      "recall_all@5": 0.0,
+      "recall_all@10": 0.0,
+      "retrieved_order": [
+        "Badly Drawn Boy",
+        "The Hour of Bewilderbeast",
+        "Badly Drawn Boy discography",
+        "Something to Talk About (Badly Drawn Boy song)"
+      ],
+      "gold": [
+        "Badly Drawn Boy",
+        "Wolf Alice"
+      ]
+    },
+    {
+      "question": "What was the father of Kasper Schmeichel voted to be by the IFFHS in 1992?",
+      "answer": "World's Best Goalkeeper",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 1.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Peter Schmeichel",
+        "Kasper Schmeichel",
+        "Pel\u00e9"
+      ],
+      "gold": [
+        "Kasper Schmeichel",
+        "Peter Schmeichel"
+      ]
+    },
+    {
+      "question": "Who was the writer of These Boots Are Made for Walkin' and who died in 2007?",
+      "answer": "Barton Lee Hazlewood",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 0.5,
+      "recall_all@2": 0.0,
+      "recall_all@5": 0.0,
+      "recall_all@10": 0.0,
+      "retrieved_order": [
+        "These Boots Are Made for Walkin'",
+        "Boots (EP)",
+        "Nancy Sinatra"
+      ],
+      "gold": [
+        "Lee Hazlewood",
+        "These Boots Are Made for Walkin'"
+      ]
+    },
+    {
+      "question": "The 2011\u201312 VCU Rams men's basketball team, led by third year head coach Shaka Smart, represented Virginia Commonwealth University which was founded in what year?",
+      "answer": "1838",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 0.5,
+      "recall_all@2": 0.0,
+      "recall_all@5": 0.0,
+      "recall_all@10": 0.0,
+      "retrieved_order": [
+        "2012\u201313 VCU Rams men's basketball team",
+        "2011\u201312 VCU Rams men's basketball team",
+        "2010\u201311 VCU Rams men's basketball team",
+        "2015\u201316 VCU Rams men's basketball team",
+        "2009\u201310 VCU Rams men's basketball team"
+      ],
+      "gold": [
+        "2011\u201312 VCU Rams men's basketball team",
+        "Virginia Commonwealth University"
+      ]
+    },
+    {
+      "question": "Are both Dictyosperma, and Huernia described as a genus?",
+      "answer": "yes",
+      "type": "comparison",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 1.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Huernia",
+        "Dictyosperma"
+      ],
+      "gold": [
+        "Dictyosperma",
+        "Huernia"
+      ]
+    },
+    {
+      "question": "Kaiser Ventures corporation was founded by an American industrialist who became known as the father of modern American shipbuilding?",
+      "answer": "Henry J. Kaiser",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 1.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Henry J. Kaiser",
+        "Kaiser Ventures",
+        "Kaiser Shipyards"
+      ],
+      "gold": [
+        "Henry J. Kaiser",
+        "Kaiser Ventures"
+      ]
+    },
+    {
+      "question": "What is the name for the adventure in \"Tunnels and Trolls\", a game designed by Ken St. Andre?",
+      "answer": "Arena of Khazan",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 0.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Tunnels &amp; Trolls",
+        "Ken St. Andre",
+        "Arena of Khazan",
+        "Tunnels &amp; Trolls: Crusaders of Khazan"
+      ],
+      "gold": [
+        "Arena of Khazan",
+        "Tunnels &amp; Trolls"
+      ]
+    },
+    {
+      "question": "When was Poison's album \"Shut Up, Make Love\" released?",
+      "answer": "2000",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 1.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Shut Up, Make Love",
+        "Poison (American band)",
+        "Be the One (Poison song)",
+        "Make Love"
+      ],
+      "gold": [
+        "Poison (American band)",
+        "Shut Up, Make Love"
+      ]
+    },
+    {
+      "question": "Hayden is a singer-songwriter from Canada, but where does Buck-Tick hail from?",
+      "answer": "Fujioka, Gunma",
+      "type": "comparison",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 1.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Hayden (musician)",
+        "Buck-Tick",
+        "Mild and Hazy"
+      ],
+      "gold": [
+        "Buck-Tick",
+        "Hayden (musician)"
+      ]
+    },
+    {
+      "question": "Which  French ace pilot and adventurer fly L'Oiseau Blanc",
+      "answer": "Charles Eug\u00e8ne",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 0.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "L'Oiseau Blanc",
+        "Levasseur PL.8",
+        "Fran\u00e7ois Coli",
+        "Gervais Raoul Lufbery",
+        "Charles Nungesser"
+      ],
+      "gold": [
+        "Charles Nungesser",
+        "L'Oiseau Blanc"
+      ]
+    },
+    {
+      "question": "Are Freakonomics and In the Realm of the Hackers both American documentaries?",
+      "answer": "no",
+      "type": "comparison",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 1.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Freakonomics (film)",
+        "In the Realm of the Hackers",
+        "Hackers (film)"
+      ],
+      "gold": [
+        "Freakonomics (film)",
+        "In the Realm of the Hackers"
+      ]
+    },
+    {
+      "question": "Which band, Letters to Cleo or Screaming Trees, had more members?",
+      "answer": "Letters to Cleo",
+      "type": "comparison",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 1.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Letters to Cleo",
+        "Screaming Trees",
+        "Change Has Come"
+      ],
+      "gold": [
+        "Letters to Cleo",
+        "Screaming Trees"
+      ]
+    },
+    {
+      "question": "Alexander Kerensky was defeated and destroyed by the Bolsheviks in the course of a civil war that ended when ?",
+      "answer": "October 1922",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 0.5,
+      "recall_all@2": 0.0,
+      "recall_all@5": 0.0,
+      "recall_all@10": 0.0,
+      "retrieved_order": [
+        "Alexander Kerensky",
+        "Russian Civil War",
+        "Kerensky\u2013Krasnov uprising"
+      ],
+      "gold": [
+        "Russian Civil War",
+        "Socialist Revolutionary Party"
+      ]
+    },
+    {
+      "question": "Seven Brief Lessons on Physics was written by an Italian physicist that has worked in France since what year?",
+      "answer": "2000",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 0.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Seven Brief Lessons on Physics",
+        "Claudio Pellegrini",
+        "Carlo Rovelli"
+      ],
+      "gold": [
+        "Carlo Rovelli",
+        "Seven Brief Lessons on Physics"
+      ]
+    },
+    {
+      "question": "The Livesey Hal War Memorial commemorates the fallen of which war, that had over 60 million casualties?",
+      "answer": "World War II",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 0.5,
+      "recall_all@2": 0.0,
+      "recall_all@5": 0.0,
+      "recall_all@10": 0.0,
+      "retrieved_order": [
+        "Livesey Hall War Memorial",
+        "Portsmouth Naval Memorial",
+        "Arras Flying Services Memorial"
+      ],
+      "gold": [
+        "Livesey Hall War Memorial",
+        "World War II casualties"
+      ]
+    },
+    {
+      "question": "Are both Elko Regional Airport and Gerald R. Ford International Airport located in Michigan?",
+      "answer": "no",
+      "type": "comparison",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 1.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Gerald R. Ford International Airport",
+        "Elko Regional Airport",
+        "Bishop International Airport"
+      ],
+      "gold": [
+        "Elko Regional Airport",
+        "Gerald R. Ford International Airport"
+      ]
+    },
+    {
+      "question": "Ralph Hefferline was a psychology professor at a university that is located in what city?",
+      "answer": "New York City",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 0.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Ralph Hefferline",
+        "Abraham Maslow",
+        "Columbia University"
+      ],
+      "gold": [
+        "Columbia University",
+        "Ralph Hefferline"
+      ]
+    },
+    {
+      "question": "Which dog's ancestors include Gordon and Irish Setters: the Manchester Terrier or the Scotch Collie?",
+      "answer": "Scotch Collie",
+      "type": "comparison",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 0.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Toy Manchester Terrier",
+        "Feist (dog)",
+        "Russkiy Toy",
+        "Scotch Collie",
+        "Manchester Terrier",
+        "English Setter"
+      ],
+      "gold": [
+        "Manchester Terrier",
+        "Scotch Collie"
+      ]
+    },
+    {
+      "question": "Where is the company that Sachin Warrier worked for as a software engineer headquartered? ",
+      "answer": "Mumbai",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 0.5,
+      "recall_all@2": 0.0,
+      "recall_all@5": 0.0,
+      "recall_all@10": 0.0,
+      "retrieved_order": [
+        "Muthuchippi Poloru",
+        "Kanave Kalayathe",
+        "Sachin Warrier",
+        "Sachin Bansal",
+        "Wes McKinney"
+      ],
+      "gold": [
+        "Sachin Warrier",
+        "Tata Consultancy Services"
+      ]
+    },
+    {
+      "question": "A Japanese manga series based on a 16 year old high school student Ichitaka Seto, is written and illustrated by someone born in what year?",
+      "answer": "1962",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 0.5,
+      "recall_all@2": 0.0,
+      "recall_all@5": 0.0,
+      "recall_all@10": 0.0,
+      "retrieved_order": [
+        "I&quot;s",
+        "Haven't You Heard? I'm Sakamoto",
+        "My Bride is a Mermaid"
+      ],
+      "gold": [
+        "I&quot;s",
+        "Masakazu Katsura"
+      ]
+    },
+    {
+      "question": "The battle in which Giuseppe Arimondi lost his life secured what for Ethiopia?",
+      "answer": "sovereignty",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 1.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Giuseppe Arimondi",
+        "Battle of Adwa",
+        "First Italo-Ethiopian War"
+      ],
+      "gold": [
+        "Battle of Adwa",
+        "Giuseppe Arimondi"
+      ]
+    },
+    {
+      "question": "Alfred Balk served as the secretary of the Committee on the Employment of Minority Groups in the News Media under which United States Vice President?",
+      "answer": "Nelson Rockefeller",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 0.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Alfred Balk",
+        "Gerald Ford",
+        "Nelson Rockefeller"
+      ],
+      "gold": [
+        "Alfred Balk",
+        "Nelson Rockefeller"
+      ]
+    },
+    {
+      "question": "A medieval fortress in Dirleton, East Lothian, Scotland borders on the south side of what coastal area?",
+      "answer": "Yellowcraig",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 0.5,
+      "recall_all@2": 0.0,
+      "recall_all@5": 0.0,
+      "recall_all@10": 0.0,
+      "retrieved_order": [
+        "Dirleton Castle",
+        "Dirleton",
+        "Dirleton Kirk",
+        "Lord Haliburton of Dirleton"
+      ],
+      "gold": [
+        "Dirleton Castle",
+        "Yellowcraigs"
+      ]
+    },
+    {
+      "question": "Who is the writer of this song that was inspired by words on a tombstone and was the first track on the box set Back to Mono?",
+      "answer": "Phil Spector",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 1.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Back to Mono (1958\u20131969)",
+        "To Know Him Is to Love Him",
+        "Led Zeppelin Boxed Set 2"
+      ],
+      "gold": [
+        "Back to Mono (1958\u20131969)",
+        "To Know Him Is to Love Him"
+      ]
+    },
+    {
+      "question": "What type of forum did a former Soviet statesman initiate?",
+      "answer": "Organizations could come together to address global issues",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 0.5,
+      "recall_all@2": 0.0,
+      "recall_all@5": 0.0,
+      "recall_all@10": 0.0,
+      "retrieved_order": [
+        "Mikhail Gorbachev",
+        "Mikhail Suslov",
+        "Andrei Kirilenko (politician)"
+      ],
+      "gold": [
+        "Mikhail Gorbachev",
+        "World Summit of Nobel Peace Laureates"
+      ]
+    },
+    {
+      "question": "Are Ferocactus and Silene both types of plant?",
+      "answer": "yes",
+      "type": "comparison",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 1.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Silene",
+        "Ferocactus",
+        "Silene conoidea",
+        "Silene stenophylla"
+      ],
+      "gold": [
+        "Ferocactus",
+        "Silene"
+      ]
+    },
+    {
+      "question": "Which British first-generation jet-powered medium bomber was used in the South West Pacific theatre of World War II?",
+      "answer": "English Electric Canberra",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 0.5,
+      "recall_all@2": 0.0,
+      "recall_all@5": 0.0,
+      "recall_all@10": 0.0,
+      "retrieved_order": [
+        "South West Pacific theatre of World War II",
+        "English Electric Canberra",
+        "South West Pacific Area (command)",
+        "Savoia-Marchetti SM.79",
+        "No. 12 Squadron RAAF"
+      ],
+      "gold": [
+        "English Electric Canberra",
+        "No. 2 Squadron RAAF"
+      ]
+    },
+    {
+      "question": "Which year and which conference was the 14th season for this conference as part of the NCAA Division that the Colorado Buffaloes played in with a record of 2-6 in conference play?",
+      "answer": "2009 Big 12 Conference",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 0.0,
+      "recall_all@2": 0.0,
+      "recall_all@5": 0.0,
+      "recall_all@10": 0.0,
+      "retrieved_order": [
+        "2014 Colorado Buffaloes football team",
+        "2014\u201315 Colorado Buffaloes men's basketball team",
+        "2012 Colorado Buffaloes football team",
+        "2015 Colorado Buffaloes football team",
+        "2015\u201316 Colorado Buffaloes men's basketball team",
+        "2011 Colorado Buffaloes football team"
+      ],
+      "gold": [
+        "2009 Big 12 Conference football season",
+        "2009 Colorado Buffaloes football team"
+      ]
+    },
+    {
+      "question": "In 1991 Euromarch\u00e9 was bought by a chain that operated how any hypermarkets at the end of 2016?",
+      "answer": "1,462",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 1.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Euromarch\u00e9",
+        "Carrefour",
+        "SavaCentre"
+      ],
+      "gold": [
+        "Carrefour",
+        "Euromarch\u00e9"
+      ]
+    },
+    {
+      "question": "What race track in the midwest hosts a 500 mile race eavery May?",
+      "answer": "Indianapolis Motor Speedway",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 0.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Indianapolis Motor Speedway",
+        "Louis Schwitzer Award",
+        "Allison Transmission",
+        "1957 Indianapolis 500",
+        "Lean Horse Ultramarathon",
+        "1964 Armstrong 500"
+      ],
+      "gold": [
+        "1957 Indianapolis 500",
+        "Indianapolis Motor Speedway"
+      ]
+    },
+    {
+      "question": "In what city did the \"Prince of tenors\" star in a film based on an opera by Giacomo Puccini?",
+      "answer": "Rome",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 0.0,
+      "recall_all@5": 0.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Festival Puccini",
+        "Cesira Ferrani",
+        "La Boh\u00e8me (1988 film)",
+        "Tosca (1956 film)",
+        "Gianni Schicchi",
+        "O mio babbino caro",
+        "Ron Bottcher",
+        "Franco Corelli"
+      ],
+      "gold": [
+        "Franco Corelli",
+        "Tosca (1956 film)"
+      ]
+    },
+    {
+      "question": "Ellie Goulding worked with what other writers on her third studio album, Delirium?",
+      "answer": "Max Martin, Savan Kotecha and Ilya Salmanzadeh",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 0.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Delirium (Ellie Goulding album)",
+        "Delirium World Tour",
+        "On My Mind (Ellie Goulding song)",
+        "Halcyon (album)"
+      ],
+      "gold": [
+        "Delirium (Ellie Goulding album)",
+        "On My Mind (Ellie Goulding song)"
+      ]
+    },
+    {
+      "question": "Which Australian city founded in 1838 contains a boarding school opened by a Prime Minister of Australia and named after a school in London of the same name.",
+      "answer": "Marion, South Australia",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 1.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Westminster School, Adelaide",
+        "Marion, South Australia",
+        "Sainik School Balachadi, Jamnagar"
+      ],
+      "gold": [
+        "Marion, South Australia",
+        "Westminster School, Adelaide"
+      ]
+    },
+    {
+      "question": "D1NZ is a series based on what oversteering technique?",
+      "answer": "Drifting",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 1.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "D1NZ",
+        "Drifting (motorsport)",
+        "Night School: the Web Series",
+        "Iron Man (TV series)",
+        "Rising Star (France)"
+      ],
+      "gold": [
+        "D1NZ",
+        "Drifting (motorsport)"
+      ]
+    },
+    {
+      "question": "who is younger Keith Bostic or Jerry Glanville ?",
+      "answer": "Keith Bostic",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 0.0,
+      "recall_all@5": 0.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "1990 Atlanta Falcons season",
+        "1987 Pittsburgh Steelers season",
+        "Mouse Davis",
+        "Portland State Vikings football under Jerry Glanville",
+        "Keith Bostic (American football)",
+        "Keith Bostic",
+        "Jerry Glanville"
+      ],
+      "gold": [
+        "Jerry Glanville",
+        "Keith Bostic (American football)"
+      ]
+    },
+    {
+      "question": "According to the 2001 census, what was the population of the city in which Kirton End is located?",
+      "answer": "35,124",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 0.5,
+      "recall_all@2": 0.0,
+      "recall_all@5": 0.0,
+      "recall_all@10": 0.0,
+      "retrieved_order": [
+        "Kirton, Nottinghamshire",
+        "Kirton End",
+        "Kirton, Suffolk",
+        "Willoughton"
+      ],
+      "gold": [
+        "Boston, Lincolnshire",
+        "Kirton End"
+      ]
+    },
+    {
+      "question": "Are both Cypress and Ajuga genera?",
+      "answer": "no",
+      "type": "comparison",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 1.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Ajuga",
+        "Cypress",
+        "Cypress-pine",
+        "Ajugeae"
+      ],
+      "gold": [
+        "Ajuga",
+        "Cypress"
+      ]
+    },
+    {
+      "question": "What distinction is held by the former NBA player who was a member of the Charlotte Hornets during their 1992-93 season and was head coach for the WNBA team Charlotte Sting?",
+      "answer": "shortest player ever to play in the National Basketball Association",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 0.5,
+      "recall_all@2": 0.0,
+      "recall_all@5": 0.0,
+      "recall_all@10": 0.0,
+      "retrieved_order": [
+        "1992\u201393 Charlotte Hornets season",
+        "List of Charlotte Hornets seasons",
+        "Charlotte Hornets",
+        "2014\u201315 Charlotte Hornets season"
+      ],
+      "gold": [
+        "1992\u201393 Charlotte Hornets season",
+        "Muggsy Bogues"
+      ]
+    },
+    {
+      "question": "What is the name of the executive producer of the film that has a score composed by Jerry Goldsmith?",
+      "answer": "Ronald Shusett",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 0.5,
+      "recall_all@2": 0.0,
+      "recall_all@5": 0.0,
+      "recall_all@10": 0.0,
+      "retrieved_order": [
+        "Legend (film score)",
+        "Alien (soundtrack)",
+        "Christus Apollo",
+        "L.A. Confidential (soundtrack)"
+      ],
+      "gold": [
+        "Alien (film)",
+        "Alien (soundtrack)"
+      ]
+    },
+    {
+      "question": "Who was born earlier, Emma Bull or Virginia Woolf?",
+      "answer": "Adeline Virginia Woolf",
+      "type": "comparison",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 0.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Emma Bull",
+        "Moments of Being",
+        "The Mark on the Wall",
+        "Virginia Woolf"
+      ],
+      "gold": [
+        "Emma Bull",
+        "Virginia Woolf"
+      ]
+    },
+    {
+      "question": "What was the Roud Folk Song Index of the nursery rhyme inspiring What Are Little Girls Made Of?",
+      "answer": "821",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 0.0,
+      "recall_all@5": 0.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "What Are Little Boys Made Of?",
+        "Billy Boy",
+        "Row, Row, Row Your Boat",
+        "Aiken Drum",
+        "Did You Ever See a Lassie?",
+        "Pretty Little Dutch Girl",
+        "Three Little Kittens",
+        "What Are Little Girls Made Of?"
+      ],
+      "gold": [
+        "What Are Little Boys Made Of?",
+        "What Are Little Girls Made Of?"
+      ]
+    },
+    {
+      "question": "Scott Parkin has been a vocal critic of Exxonmobil and another corporation that has operations in how many countries ?",
+      "answer": "more than 70 countries",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 0.5,
+      "recall_all@2": 0.0,
+      "recall_all@5": 0.0,
+      "recall_all@10": 0.0,
+      "retrieved_order": [
+        "Scott Parkin",
+        "Exxon",
+        "Mobil Producing Nigeria"
+      ],
+      "gold": [
+        "Halliburton",
+        "Scott Parkin"
+      ]
+    },
+    {
+      "question": "What WB supernatrual drama series was Jawbreaker star Rose Mcgowan best known for being in?",
+      "answer": "Charmed",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 1.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Jawbreaker (film)",
+        "Rose McGowan",
+        "Charmed (season 4)",
+        "List of Charmed characters"
+      ],
+      "gold": [
+        "Jawbreaker (film)",
+        "Rose McGowan"
+      ]
+    },
+    {
+      "question": "Vince Phillips held a junior welterweight title by an organization recognized by what larger Hall of Fame?",
+      "answer": "International Boxing Hall of Fame",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 0.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Vince Phillips",
+        "Ralph Charles",
+        "Zab Judah",
+        "International Boxing Federation"
+      ],
+      "gold": [
+        "International Boxing Federation",
+        "Vince Phillips"
+      ]
+    },
+    {
+      "question": "What is the name of the singer who's song was released as the lead single from the album \"Confessions\", and that had popular song stuck behind for eight consecutive weeks?",
+      "answer": "Usher",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 0.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "No One (Alicia Keys song)",
+        "I Don't Wanna Know",
+        "Yeah! (Usher song)"
+      ],
+      "gold": [
+        "I Don't Wanna Know",
+        "Yeah! (Usher song)"
+      ]
+    },
+    {
+      "question": "who is the younger brother of The episode guest stars of The Hard Easy ",
+      "answer": "Bill Murray",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 0.5,
+      "recall_all@2": 0.0,
+      "recall_all@5": 0.0,
+      "recall_all@10": 0.0,
+      "retrieved_order": [
+        "The Hard Easy (Adventure Time)",
+        "Brother from Another Series",
+        "The Farm (The Office)",
+        "The Hard Easy (film)"
+      ],
+      "gold": [
+        "Brian Doyle-Murray",
+        "The Hard Easy (Adventure Time)"
+      ]
+    },
+    {
+      "question": "The 2017\u201318 Wigan Athletic F.C. season will be a year in which the team competes in the league cup known as what for sponsorship reasons?",
+      "answer": "Carabao Cup",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 0.5,
+      "recall_all@2": 0.0,
+      "recall_all@5": 0.0,
+      "recall_all@10": 0.0,
+      "retrieved_order": [
+        "2017\u201318 Wigan Athletic F.C. season",
+        "List of Wigan Borough F.C. players",
+        "2007\u201308 Wigan Athletic F.C. season",
+        "Springfield Park (Wigan)",
+        "2006\u201307 Wigan Athletic F.C. season",
+        "Nick Powell",
+        "1978\u201379 Wigan Athletic F.C. season"
+      ],
+      "gold": [
+        "2017\u201318 Wigan Athletic F.C. season",
+        "EFL Cup"
+      ]
+    },
+    {
+      "question": "Which of Tara Strong major voice role in animated series is an American animated television series based on the DC Comics fictional superhero team, the \"Teen Titans\"?",
+      "answer": "Teen Titans Go!",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 0.5,
+      "recall_all@2": 0.0,
+      "recall_all@5": 0.0,
+      "recall_all@10": 0.0,
+      "retrieved_order": [
+        "Tara Strong",
+        "Tara Strong filmography",
+        "Teen Titans (season 4)",
+        "List of Teen Titans episodes"
+      ],
+      "gold": [
+        "Tara Strong",
+        "Teen Titans Go! (TV series)"
+      ]
+    },
+    {
+      "question": "What is the inhabitant of the city where  122nd SS-Standarte was formed in2014",
+      "answer": "276,170 inhabitants",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 0.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "122nd SS-Standarte",
+        "122d Fighter Squadron",
+        "Strasbourg"
+      ],
+      "gold": [
+        "122nd SS-Standarte",
+        "Strasbourg"
+      ]
+    },
+    {
+      "question": "What color clothing do people of the Netherlands wear during Oranjegekte or to celebrate the national holiday Koningsdag? ",
+      "answer": "orange",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 1.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Oranjegekte",
+        "Koningsdag",
+        "Queen's Day (disambiguation)"
+      ],
+      "gold": [
+        "Koningsdag",
+        "Oranjegekte"
+      ]
+    },
+    {
+      "question": "What was the name of the 1996 loose adaptation of William Shakespeare's \"Romeo & Juliet\" written by James Gunn?",
+      "answer": "Tromeo and Juliet",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 0.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Tromeo and Juliet",
+        "Romeo + Juliet",
+        "James Gunn",
+        "James Gunn's PG Porn",
+        "Romeo and Juliet on screen"
+      ],
+      "gold": [
+        "James Gunn",
+        "Tromeo and Juliet"
+      ]
+    },
+    {
+      "question": "Robert Suettinger was the national intelligence officer under which former Governor of Arkansas?",
+      "answer": "William Jefferson Clinton",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 1.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Robert Suettinger",
+        "Bill Clinton",
+        "National Intelligence Superior Service Medal"
+      ],
+      "gold": [
+        "Bill Clinton",
+        "Robert Suettinger"
+      ]
+    },
+    {
+      "question": "What American professional Hawaiian surfer born 18 October 1992 won the Rip Curl Pro Portugal?",
+      "answer": "John John Florence",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 0.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "MEO Rip Curl Pro Portugal",
+        "Andy Irons",
+        "John John Florence",
+        "Moche Rip Curl Pro Portugal 2015"
+      ],
+      "gold": [
+        "John John Florence",
+        "MEO Rip Curl Pro Portugal"
+      ]
+    },
+    {
+      "question": "What is the middle name of the actress who plays Bobbi Bacha in Suburban Madness?",
+      "answer": "Ann",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 0.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Bobbi Bacha",
+        "Suburban Madness",
+        "Sela Ward"
+      ],
+      "gold": [
+        "Bobbi Bacha",
+        "Sela Ward"
+      ]
+    },
+    {
+      "question": "Alvaro Mexia had a diplomatic mission with which tribe of indigenous people?",
+      "answer": "Apalachees",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 1.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Alvaro Mexia",
+        "Indigenous peoples of Florida",
+        "Diplomatic bag",
+        "Diplomatic mission",
+        "Embassy of China, London",
+        "Embassy of the United States, Nairobi"
+      ],
+      "gold": [
+        "Alvaro Mexia",
+        "Indigenous peoples of Florida"
+      ]
+    },
+    {
+      "question": "What nationality were social anthropologists Alfred Gell and Edmund Leach?",
+      "answer": "British",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 1.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Alfred Gell",
+        "Edmund Leach",
+        "Thomas Hylland Eriksen",
+        "Social Anthropology (journal)",
+        "Association of Social Anthropologists"
+      ],
+      "gold": [
+        "Alfred Gell",
+        "Edmund Leach"
+      ]
+    },
+    {
+      "question": "In which year was the King who made the 1925 Birthday Honours born?",
+      "answer": "1865",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 0.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "1925 Birthday Honours",
+        "1951 Birthday Honours",
+        "George V",
+        "2017 Birthday Honours"
+      ],
+      "gold": [
+        "1925 Birthday Honours",
+        "George V"
+      ]
+    },
+    {
+      "question": "What is the county seat of the county where East Lempster, New Hampshire is located?",
+      "answer": "Newport",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 0.5,
+      "recall_all@2": 0.0,
+      "recall_all@5": 0.0,
+      "recall_all@10": 0.0,
+      "retrieved_order": [
+        "East Lempster, New Hampshire",
+        "Lempster, New Hampshire",
+        "Miner Memorial Library",
+        "Carroll County, New Hampshire"
+      ],
+      "gold": [
+        "East Lempster, New Hampshire",
+        "Sullivan County, New Hampshire"
+      ]
+    },
+    {
+      "question": "The Album Against the Wind was the 11th Album of a Rock singer Robert C Seger born may 6 1945. What was the Rock singers stage name ?",
+      "answer": "Bob Seger",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 1.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Against the Wind (album)",
+        "Bob Seger",
+        "Stranger in Town (album)"
+      ],
+      "gold": [
+        "Against the Wind (album)",
+        "Bob Seger"
+      ]
+    },
+    {
+      "question": "Rostker v. Goldberg held that the practice of what way of filling armed forces vacancies was consitutional?",
+      "answer": "Conscription",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 1.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Rostker v. Goldberg",
+        "Conscription in the United States",
+        "Armed Forces Covenant"
+      ],
+      "gold": [
+        "Conscription in the United States",
+        "Rostker v. Goldberg"
+      ]
+    },
+    {
+      "question": "Handi-Snacks are a snack food product line sold by what American multinational confectionery, food, and beverage company that is based in Illinois?",
+      "answer": "Mondelez International, Inc.",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 1.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Mondelez International",
+        "Handi-Snacks",
+        "PepsiCo"
+      ],
+      "gold": [
+        "Handi-Snacks",
+        "Mondelez International"
+      ]
+    },
+    {
+      "question": "What was the name of a woman from the book titled \"Their Lives: The Women Targeted by the Clinton Machine \" and was also a former white house intern?",
+      "answer": "Monica Lewinsky",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 0.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Their Lives",
+        "The White House Doctor",
+        "Monica Lewinsky"
+      ],
+      "gold": [
+        "Monica Lewinsky",
+        "Their Lives"
+      ]
+    },
+    {
+      "question": "When was the American lawyer, lobbyist and political consultant who was a senior member of the presidential campaign of Donald Trump born?",
+      "answer": "April 1, 1949",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 1.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Paul Manafort",
+        "Trump campaign\u2013Russian meeting",
+        "David Urban",
+        "Tony Fabrizio",
+        "Brad Parscale"
+      ],
+      "gold": [
+        "Paul Manafort",
+        "Trump campaign\u2013Russian meeting"
+      ]
+    },
+    {
+      "question": "In what year was the novel that Louren\u00e7o Mutarelli based \"Nina\" on based first published?",
+      "answer": "1866",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 0.5,
+      "recall_all@2": 0.0,
+      "recall_all@5": 0.0,
+      "recall_all@10": 0.0,
+      "retrieved_order": [
+        "Louren\u00e7o Mutarelli",
+        "4 a.m. (novel)",
+        "Drained",
+        "The Golden Hour (novel)",
+        "Before We Say Goodbye"
+      ],
+      "gold": [
+        "Crime and Punishment",
+        "Louren\u00e7o Mutarelli"
+      ]
+    },
+    {
+      "question": "Where are Teide National Park and Garajonay National Park located?",
+      "answer": "Canary Islands, Spain",
+      "type": "comparison",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 0.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Roque Cinchado",
+        "Garajonay National Park",
+        "Teide National Park",
+        "Alpine National Park",
+        "North Cascades National Park"
+      ],
+      "gold": [
+        "Garajonay National Park",
+        "Teide National Park"
+      ]
+    },
+    {
+      "question": "How many copies of Roald Dahl's variation on a popular anecdote sold?",
+      "answer": "250 million",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 0.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Roald Dahl: Collected Stories",
+        "Roald Dahl",
+        "The Best of Roald Dahl",
+        "Roald Dahl Children's Gallery",
+        "Mrs. Bixby and the Colonel's Coat",
+        "The Roald Dahl Treasury",
+        "Roald Dahl short stories bibliography"
+      ],
+      "gold": [
+        "Mrs. Bixby and the Colonel's Coat",
+        "Roald Dahl"
+      ]
+    },
+    {
+      "question": "What occupation do Chris Menges and Aram Avakian share?",
+      "answer": "director",
+      "type": "comparison",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 0.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Aram Avakian",
+        "11 Harrowhouse",
+        "End of the Road (1970 film)",
+        "Cops and Robbers (1973 film)",
+        "Chris Menges",
+        "CrissCross",
+        "Linda Mvusi",
+        "Second Best (film)",
+        "A World Apart (film)"
+      ],
+      "gold": [
+        "Aram Avakian",
+        "Chris Menges"
+      ]
+    },
+    {
+      "question": "Andrew Jaspan was the co-founder of what not-for-profit media outlet?",
+      "answer": "The Conversation",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 0.5,
+      "recall_all@2": 0.0,
+      "recall_all@5": 0.0,
+      "recall_all@10": 0.0,
+      "retrieved_order": [
+        "Andrew Jaspan",
+        "Chicago Public Media",
+        "14ymedio"
+      ],
+      "gold": [
+        "Andrew Jaspan",
+        "The Conversation (website)"
+      ]
+    },
+    {
+      "question": "Which American film director hosted the 18th Independent Spirit Awards in 2002?",
+      "answer": "John Waters",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 0.5,
+      "recall_all@2": 0.0,
+      "recall_all@5": 0.0,
+      "recall_all@10": 0.0,
+      "retrieved_order": [
+        "18th Independent Spirit Awards",
+        "32nd Independent Spirit Awards",
+        "Independent Spirit Award for Best Cinematography",
+        "Independent Spirit Award for Best Editing",
+        "Independent Spirit Award for Best First Feature",
+        "Mihai M\u0103laimare Jr.",
+        "28th Independent Spirit Awards"
+      ],
+      "gold": [
+        "18th Independent Spirit Awards",
+        "John Waters"
+      ]
+    },
+    {
+      "question": "Where does the hotel and casino located in which Bill Cosby's third album was recorded?",
+      "answer": "Las Vegas Strip in Paradise",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 0.5,
+      "recall_all@2": 0.0,
+      "recall_all@5": 0.0,
+      "recall_all@10": 0.0,
+      "retrieved_order": [
+        "Why Is There Air?",
+        "Bill Cosby Is a Very Funny Fellow...Right!",
+        "The Original Jam Sessions 1969",
+        "Hikky Burr",
+        "Yes, Yes, Yes",
+        "Inside the Mind of Bill Cosby"
+      ],
+      "gold": [
+        "Flamingo Las Vegas",
+        "Why Is There Air?"
+      ]
+    },
+    {
+      "question": "Do the drinks Gibson and Zurracapote both contain gin?",
+      "answer": "no",
+      "type": "comparison",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 1.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Gibson (cocktail)",
+        "Zurracapote",
+        "Phillips Distilling Company"
+      ],
+      "gold": [
+        "Gibson (cocktail)",
+        "Zurracapote"
+      ]
+    },
+    {
+      "question": "In what month is the annual documentary film festival, that is presented by the fortnightly published British journal of literary essays, held? ",
+      "answer": "March and April",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 0.5,
+      "recall_all@2": 0.0,
+      "recall_all@5": 0.0,
+      "recall_all@10": 0.0,
+      "retrieved_order": [
+        "London International Documentary Festival",
+        "Chagrin Documentary Film Festival",
+        "FreedomFilmFest",
+        "British Journal",
+        "British Journal of Social Psychology",
+        "Doc NYC"
+      ],
+      "gold": [
+        "London International Documentary Festival",
+        "London Review of Books"
+      ]
+    },
+    {
+      "question": "Tysons Galleria is located in what county?",
+      "answer": "Fairfax County",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 0.5,
+      "recall_all@2": 0.0,
+      "recall_all@5": 0.0,
+      "recall_all@10": 0.0,
+      "retrieved_order": [
+        "Tysons Galleria",
+        "Tysons, Virginia",
+        "Spring Hill station",
+        "Tysons Corner Center"
+      ],
+      "gold": [
+        "McLean, Virginia",
+        "Tysons Galleria"
+      ]
+    },
+    {
+      "question": "Bordan Tkachuk was the CEO of a company that provides what sort of products?",
+      "answer": "IT products and services",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 0.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Bordan Tkachuk",
+        "BankUnited",
+        "Terren Peizer",
+        "Viglen",
+        "Jonathan Michael Ansell"
+      ],
+      "gold": [
+        "Bordan Tkachuk",
+        "Viglen"
+      ]
+    },
+    {
+      "question": "Which filmmaker was known for animation, Lev Yilmaz or Pamela B. Green?",
+      "answer": "Levni Yilmaz",
+      "type": "comparison",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 1.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Pamela B. Green",
+        "Lev Yilmaz",
+        "Pamela B. Davis"
+      ],
+      "gold": [
+        "Lev Yilmaz",
+        "Pamela B. Green"
+      ]
+    },
+    {
+      "question": "In which city is the ambassador of the Rabat-Sal\u00e9-K\u00e9nitra administrative region to China based?",
+      "answer": "Beijing",
+      "type": "bridge",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 1.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Moroccan Ambassador to China",
+        "Rabat",
+        "Hong Kong Basic Law",
+        "Wolong Special Administrative Region",
+        "Sinuiju Special Administrative Region"
+      ],
+      "gold": [
+        "Moroccan Ambassador to China",
+        "Rabat"
+      ]
+    },
+    {
+      "question": "Are Yingkou and Fuding the same level of city?",
+      "answer": "no",
+      "type": "comparison",
+      "level": "hard",
+      "n_gold": 2,
+      "para_recall@10": 1.0,
+      "recall_all@2": 1.0,
+      "recall_all@5": 1.0,
+      "recall_all@10": 1.0,
+      "retrieved_order": [
+        "Yingkou",
+        "Fuding",
+        "Yingkou Lanqi Airport",
+        "Roman Catholic Diocese of Yingkou",
+        "Fuding Railway Station",
+        "Taimushan Railway Station",
+        "Yingkou East Railway Station",
+        "Tongcheng Subdistrict, Fuding"
+      ],
+      "gold": [
+        "Fuding",
+        "Yingkou"
+      ]
+    }
+  ]
+}

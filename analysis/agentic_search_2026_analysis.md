@@ -1,0 +1,194 @@
+# Agentic Search vs. the KG Stack — Analysis (June 2026)
+
+**Source:** Abdullah Grewal, *"AI Agents Don't Need Vector Search Anymore: Inside the
+Agentic Search Stack Replacing RAG in 2026"* (Medium, 2026).
+
+**Scope of this note:** what the article actually claims, how those claims land
+against the Flux-Frontiers KG stack — **PyCodeKG** (Python code), **MemoryKG**
+(conversational memory + docs), **DocKG** (general document corpora) — and a new
+benchmark (**HotpotQA**) added to put a number on the central claim.
+
+---
+
+## 1. What the article actually argues
+
+The headline is broad; the argument is narrow. The real claim is: **for a coding
+agent operating over a live filesystem, just-in-time tool calls (`grep`/`glob`/`read`)
+beat a pre-built vector index.** Retrieval becomes a *behaviour of the agent*, not a
+system upstream of it. Supporting anecdote: Boris Cherny on Claude Code — *"It
+outperformed everything. By a lot."*
+
+Five criticisms of vector RAG:
+
+1. **Semantic similarity ≠ relevance** — flat embeddings miss explicit structure:
+   imports, call graphs, inheritance.
+2. **Identifier matching** — `processPayment` vs `handlePayment` needs exact keyword
+   search; vectors hallucinate near-misses.
+3. **Index staleness** — "every commit invalidates part of the index."
+4. **Security** — a vector index is a second copy of proprietary code on weaker infra.
+5. **Single-shot brittleness** — top-k gets one chance; miss the file → confidently
+   wrong.
+
+And the article's own concessions — where agentic `grep` loses:
+
+- **5–30× more tokens** per task; multi-agent ~15×.
+- **Latency** — seconds, 5–10 tool calls per query; unfit for interactive chat.
+- **Non-determinism** — agentic loops aren't reproducible; bad for SLAs and
+  regression tests.
+- **Massive corpora** — `ripgrep` over a 10M-file monorepo has no precomputed-index
+  advantage.
+- **Semantic synonyms** — concepts scattered as `backoff`/`requeue`/`circuit_breaker`
+  defeat literal search.
+
+---
+
+## 2. The key reframing
+
+The article is arguing against a **strawman RAG**: "flatten everything into one
+embedding, do one top-k lookup, stop." That is precisely the design the KG stack was
+built to *not* be. Across all three siblings the architecture is the same and is the
+rebuttal:
+
+> **Structure is ground truth; the vector index is an acceleration layer, not the
+> source of truth.** Semantic search *seeds*; typed-edge graph traversal *expands*;
+> a deterministic score ranks.
+
+So the honest framing is not "agentic search vs. KG." It's a **precomputed-structure
+↔ just-in-time axis**, and the two ends fail in opposite places. Every weakness the
+article concedes for agentic search — latency, determinism, massive fixed corpora,
+scattered-synonym concepts — is a KG home-game. And the KG isn't *outside* the
+agentic stack: the MCP server (`query_docs`/`query_codebase`/`pack_*`) is exactly a
+**tool an agent calls** instead of re-grepping from cold. The right posture is
+"agents should call the deterministic index," not "RAG is dead, we disagree."
+
+### Claim-by-claim
+
+| Article's criticism of "RAG" | KG-stack answer |
+|---|---|
+| Similarity ≠ structural relevance | Typed edges *are* the structure: MemoryKG `HAS_TOPIC`/`MENTIONS_ENTITY`; **PyCodeKG `CALLS`/`IMPORTS`/`INHERITS`/`CONTAINS`/`RESOLVES_TO`**. Graph proximity is a ranking signal, not an afterthought. |
+| Identifier / exact-match failure | Recall is scored by **substring containment**, not pure cosine — the stack already leans lexical. PyCodeKG's `RESOLVES_TO` resolves import aliases so fan-in is exact, not fuzzy. |
+| Single-shot brittleness | **Structural expansion**: a weak seed surfaces strongly-linked neighbours (the second hop). Multi-hop by construction, not one-shot. |
+| Index staleness | Incremental `build --update`; temporal **snapshots + diffs** track version-over-version drift deterministically. |
+| Non-deterministic, un-regression-testable | The whole stack is **deterministic, explainable, $0/query, no LLM** — the exact opposite of an agentic loop, and snapshot-diffable in CI. |
+| Massive corpora / latency | Precomputed SQLite+LanceDB answers in milliseconds; no per-query agent loop. |
+
+---
+
+## 3. PyCodeKG — the system the article is *actually* aimed at
+
+The article is about **code** search; MemoryKG is about docs/memory. The sibling that
+sits squarely in the article's crosshairs is **PyCodeKG** (v0.19.3). It is the
+strongest counter-example to criticism #1, because it does the one thing the author
+says vector search can't:
+
+- Walks the **AST** of every module/class/function/method and extracts the typed
+  relationships that "actually hold the code together": `CONTAINS`, `CALLS`,
+  `IMPORTS`, `INHERITS`, `RESOLVES_TO`.
+- Ranks functions by **structural importance** (centrality, **bridge_centrality**),
+  traces **fan-in across import aliases**, detects **circular imports** and **dead
+  code** — all from the graph, no inference.
+- A LanceDB index sits *alongside* the graph so `"authentication flow"` and
+  `verify_jwt` both find a starting node — then traversal does the rest.
+- Ships the result to an agent over **MCP** (`query_codebase`, `callers`, `explain`,
+  `centrality`, `bridge_centrality`, `framework_nodes`, `rank_nodes`).
+
+In the article's own terms: PyCodeKG is the **"structural / AST-aware" flavour** it
+lists approvingly (alongside Cline, Probe, ast-grep) — *not* the flat-embedding
+strawman it attacks. The agentic-`grep` approach recovers structure by *re-deriving*
+it at query time, every time, non-deterministically. PyCodeKG computes it **once**,
+deterministically, and hands an agent the answer. For a fixed repo analysed
+repeatedly (CI, architecture review, onboarding), precompute wins on cost, latency,
+and reproducibility — the agent's three weak spots.
+
+**Gap / opportunity:** PyCodeKG has no published retrieval benchmark (only an
+embedder micro-benchmark). The article hands us the obvious one — **SWE-bench /
+SWE-bench Verified** — where "find the file(s) to edit" is exactly graph-grounded
+retrieval. That is the highest-leverage benchmark to add next for the code sibling.
+
+> Note (per discussion): **DocKG** performs the same multi-hop graph expansion for
+> general document corpora, so structural expansion is a *stack-wide* property of all
+> three siblings, not a MemoryKG-only trick.
+
+---
+
+## 4. The real gap the article exposed — and the benchmark we added
+
+All four existing MemoryKG benchmarks (LongMemEval, LoCoMo, MemBench, ConvoMem) are
+**conversational memory**: "find the message stating fact X." None test *combining
+facts across documents* — the precise thing the article says flat retrieval fails at
+and graph expansion is built for. So we added **HotpotQA (distractor)**, a multi-hop
+Wikipedia QA benchmark: each question needs **two gold paragraphs** hidden among
+eight distractors.
+
+- Harness: `benchmarks/hotpotqa/hotpotqa_bench.py` (mirrors `convomem_bench.py`).
+- Metric: **`recall_all@N`** — fraction of questions for which *every* gold paragraph
+  is in the top-N retrieved chunks (partial recall is not credited; getting one hop
+  is not enough). LLM-free, $0/query.
+- The article's head-to-head is one flag: `--hop 0` (flat top-k, the baseline it
+  defends) vs `--hop 1` (semantic seed **+** graph expansion).
+
+### Results (100-question dev sample, BGE-small-en-v1.5, CPU)
+
+| Metric | `--hop 0` (flat top-k) | `--hop 1` (+ graph expansion) |
+|---|--:|--:|
+| Para Recall@10 (per-paragraph) | **0.855** | 0.825 |
+| recall_all@2 (both hops in top-2) | **0.43** | 0.36 |
+| recall_all@5 (both hops in top-5) | **0.70** | 0.61 |
+| recall_all@10 (both hops in top-10) | **0.71** | 0.67 |
+| bridge questions, recall_all@5 (n=79) | **0.62** | 0.53 |
+| comparison questions, recall_all@5 (n=21) | **1.00** | 0.91 |
+
+Paired diagnostic (same questions, hop 0 vs hop 1), at recall_all@5: graph
+**recovered 4** questions that flat retrieval missed, but **displaced gold in 13**
+that flat retrieval had. Chunk-coverage of the returned set is nearly identical
+(4.19 vs 4.33 chunks/question), so this is **not** a return-budget artifact — it is
+the ranking.
+
+### Reading the result — honestly
+
+**This did *not* validate the "graph recovers the second hop" thesis on HotpotQA.**
+In the default configuration MemoryKG's hybrid expansion *underperforms* a plain
+chunk-only top-k, and it does so by net-displacing gold (−13/+4 at @5). The article's
+flat baseline wins here. Reported straight, no spin.
+
+Why — three likely causes, all config/transfer issues rather than a refutation of
+graph retrieval in principle:
+
+1. **Wrong bridge edge for this corpus.** The default expansion uses entity/keyword
+   **co-occurrence** edges. On a dense 10-paragraph haystack, incidental shared
+   entities link *distractor* paragraphs to the seed, and the seed-distance ranking
+   floats them above gold. HotpotQA's real bridge is a *named-entity title overlap*,
+   not co-occurrence of arbitrary terms.
+2. **Tuned for a different shape.** The stack's expansion was tuned on conversational
+   memory — *sparse* 50-session haystacks where the answer chunk is far from
+   distractors. HotpotQA is the opposite: 8 deliberately *near* distractors. The
+   regime doesn't transfer out of the box.
+3. **Entity/keyword nodes dilute seeding.** With `seed_kinds=None`, the top-k semantic
+   seeds include entity/keyword nodes, leaving fewer *chunk* seeds (~4 chunks surface
+   per question). Flat top-k spends its whole budget on chunks.
+
+**The honest takeaway:** on this benchmark the win for the stack is *not* "graph beats
+flat" — it's that even flat MemoryKG retrieval is a legitimate, deterministic, $0,
+no-API-key baseline (0.71 both-hops@10) that the agentic-`grep` approach has to beat
+on cost and latency, not just accuracy. Making expansion *help* here is a tuning
+problem (title-overlap edges, chunk-only seeding, `--no-entities` ablation, or simply
+`hop=0` for dense haystacks), and that ablation is the obvious follow-up — but it must
+be done as honest ablation, not tuned until the graph wins.
+
+---
+
+## 5. Recommendations
+
+1. **Reposition, don't rebut.** Public messaging should be "the deterministic index
+   is the tool your agent should call," not "vector search is fine." The article's
+   audience already agrees structure matters — PyCodeKG *is* structure.
+2. **Add SWE-bench Verified to PyCodeKG.** It is the benchmark that meets the article
+   on its own ground (code retrieval) and the stack's biggest current evidence gap.
+3. **Do not publish a multi-hop "graph wins" claim yet.** The HotpotQA result is the
+   opposite: default expansion *hurts* on dense haystacks. Treat this as a tuning
+   backlog (title-overlap bridge edges, chunk-only seeding) and only publish once an
+   honest ablation shows hop>0 beating hop=0 — or publish flat MemoryKG as a strong
+   deterministic baseline and be candid that expansion is corpus-shape-dependent.
+4. **Lean into the concessions.** Determinism, $0/query, snapshot-diffable retrieval,
+   and millisecond latency on fixed corpora are the four axes where the article
+   admits agents lose. That is the stack's marketing surface.
