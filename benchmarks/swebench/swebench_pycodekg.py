@@ -83,7 +83,9 @@ CODE_KINDS = {"module", "class", "function", "method"}
 # =============================================================================
 
 
-def load_instances(dataset: str, limit: int, cache_dir: str, repo: str | None = None) -> list[dict]:
+def load_instances(
+    dataset: str, limit: int, cache_dir: str, repo: str | None = None, min_gold_files: int = 1
+) -> list[dict]:
     """Download (once) and load SWE-bench instances from the HF parquet."""
     import urllib.request
 
@@ -101,6 +103,8 @@ def load_instances(dataset: str, limit: int, cache_dir: str, repo: str | None = 
     if repo:
         wanted = {x.strip() for x in repo.split(",") if x.strip()}
         rows = [r for r in rows if r["repo"] in wanted or any(w in r["instance_id"] for w in wanted)]
+    if min_gold_files > 1:
+        rows = [r for r in rows if len(gold_files_from_patch(r["patch"])) >= min_gold_files]
     return rows[:limit] if limit else rows
 
 
@@ -334,7 +338,8 @@ def run_benchmark(args) -> None:
             "  (or run this harness inside the pycode_kg repo's virtualenv).\n"
         )
 
-    instances = load_instances(args.dataset, args.limit, args.cache_dir, repo=args.repo)
+    instances = load_instances(args.dataset, args.limit, args.cache_dir, repo=args.repo,
+                               min_gold_files=args.min_gold_files)
     print(f"  Loaded {len(instances)} instances.\n")
 
     repos_cache = Path(args.repos_cache)
@@ -409,7 +414,10 @@ if __name__ == "__main__":
     p.add_argument("--dataset", choices=list(DATASETS), default="lite", help="SWE-bench split")
     p.add_argument("--limit", type=int, default=20, help="Number of instances (default: 20)")
     p.add_argument("--repo", default=None,
-                   help="Filter to one repo (e.g. pallets/flask) or instance-id substring")
+                   help="Filter to repos (comma-list, e.g. pallets/flask) or instance-id substrings")
+    p.add_argument("--min-gold-files", type=int, default=1,
+                   help="Keep only instances whose gold patch edits >= N files (multi-file regime "
+                        "is where cross-file CALLS/IMPORTS expansion could help). Default: 1")
     p.add_argument("--k", type=int, default=10, help="Top-k semantic seeds (default: 10)")
     p.add_argument("--hop", default="1",
                    help="Graph hops: 0=flat, 1=+AST graph. Comma-list builds once, queries each "
