@@ -98,15 +98,16 @@ Then we ran the fight on the article's own turf — **SWE-bench** file localizat
 *given a real GitHub issue, find the file to edit*, driven by PyCodeKG's AST graph.
 On a 13-instance Lite sample (requests/flask/seaborn), flat semantic retrieval put the
 gold file in the top 5 on **10 of 13** instances (MRR 0.49). Turning on AST graph
-expansion changed the result by **exactly nothing** — Δ = 0.000 on every metric.
-(Why: each instance edits a single file; once seeding surfaces it, `CALLS`/`IMPORTS`
-neighbours map to files already ranked. Hop-expansion is the wrong lever for *file*-level
-localization.)
+expansion changed the result by **exactly nothing** — Δ = 0.000 on every metric. We
+then built the *harder* metric — *symbol*-level localization, does retrieval find the
+exact function the patch edits — precisely because that is where call-graph expansion
+*should* finally help. Δ symbol-MRR = **+0.006**; it recovered one gold symbol, at rank
+≤20. Essentially null again.
 
-So here is the uncomfortable, honest finding, stated plainly: **in two separate tests,
-hop-expanded ranking did not beat flat retrieval.** We are not going to tell you the
-graph reranks better, because our own numbers say it doesn't. What they *do* say is
-two things the article should sit with:
+So here is the uncomfortable, honest finding, stated plainly: **in three separate
+measurements, hop-expanded ranking did not beat flat retrieval.** We are not going to
+tell you the graph reranks better, because our own numbers say it doesn't. What they
+*do* say is two things the article should sit with:
 
 1. **A precomputed, deterministic index is already competitive** — 0.77 file-level
    recall@5, at $0 per query, in milliseconds, fully reproducible. That is the bar
@@ -114,11 +115,16 @@ two things the article should sit with:
    on a non-reproducible answer. On accuracy it's a wash; on cost, latency, and
    determinism the precomputed index wins outright.
 2. **The graph's real value isn't ranking — it's queries embeddings can't express at
-   all.** "Who calls `verify_jwt`?" "What's the fan-in of this class across import
-   aliases?" "Which modules form a circular import?" "What's dead code?" No embedding
-   answers those; `grep` answers them slowly and non-deterministically; the AST graph
-   answers them exactly, instantly, for free. *That* is the structure the article says
-   vectors miss — and it lives in typed edges, not in a similarity score.
+   all.** We measured this too, on `requests`. Ask *"who calls `httpbin`?"*: PyCodeKG
+   returns **45 exact caller functions**; `grep "\bhttpbin\s*\("` returns **98 raw
+   textual hits** with no idea which function each belongs to, mixed with comments and
+   strings. Ask *"what's the change blast-radius"* or *"what's dead code"* (235
+   functions with zero callers): no embedding produces these at all. (Honest caveat:
+   PyCodeKG resolves Python method calls *by name*, so caller sets for names shared
+   across classes — `get`, `__init__` — are over-approximations, the same failure class
+   as `grep`. The exact wins are uniquely-named symbols and the aggregate views.) Even
+   with that caveat, *this* is the structure the article says vectors miss — and it
+   lives in typed edges, not in a similarity score.
 
 The lesson from both nulls is the article's own, sharpened: *the topology of your
 retrieval has to match the topology of your data, and "more graph" is not automatically

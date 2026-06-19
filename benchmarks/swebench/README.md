@@ -77,23 +77,35 @@ Build-once / query-both-hops, identical graph per instance (~27 s/instance):
 | recall@10 / @20 | 0.769 | 0.769 |
 | MRR | 0.487 | 0.487 |
 
-**Two honest takeaways:**
+**Symbol-level scoring** (does retrieval surface the specific function/method/class the
+patch edits — node span overlaps a gold base-commit line; the regime where `CALLS`
+expansion *should* help):
+
+| metric | hop 0 | hop 1 |
+|---|--:|--:|
+| sym_recall@5 | 0.538 | 0.538 |
+| sym_recall@10 | 0.692 | 0.692 |
+| sym_recall@20 | 0.692 | **0.769** |
+| sym_mrr | 0.365 | 0.372 |
+
+**Three honest takeaways:**
 
 1. **Flat PyCodeKG retrieval is already competitive** — gold file in the top-5 on
-   10/13 instances (0.77), MRR 0.49, fully deterministic, $0/query, no LLM. That is
-   the number that matters against agentic `grep` (which pays 5–30× tokens and seconds
-   of latency for a non-reproducible answer).
-2. **Graph hop expansion changed *nothing* at file granularity (Δ = 0.000).** Every
-   Lite instance here edits a single file; once semantic seeding surfaces that file,
-   adding `CALLS`/`IMPORTS` neighbours maps to files already in the ranking. Hop
-   expansion is the wrong lever for *file*-level localization — it would matter for
-   *symbol*-level localization or multi-file fixes, and that's the next thing to
-   measure (`--rels`, symbol-granularity scoring, SWE-bench Verified at larger n).
+   10/13 (0.77), MRR 0.49, fully deterministic, $0/query, no LLM. That is the number
+   that matters against agentic `grep` (5–30× tokens, seconds of latency, non-reproducible).
+2. **Hop expansion is null at file granularity (Δ = 0.000)** — each Lite instance edits
+   one file; once seeding surfaces it, `CALLS`/`IMPORTS` neighbours map to files already
+   ranked.
+3. **Hop expansion is *essentially* null even at symbol granularity** — the regime built
+   to favour it. Δ symbol-MRR = +0.006; hop-1 recovered exactly **one** gold symbol, and
+   only at rank ≤20. Symbol localization is genuinely harder (sym_recall@10 = 0.69 vs
+   file 0.77), but the call graph does not meaningfully rerank it here.
 
-This mirrors the HotpotQA finding: **structural expansion is not a free ranking win.**
-PyCodeKG's edge over flat embeddings is its deterministic substrate and its
-*structural query capabilities* (callers, fan-in, centrality), not hop-expanded
-ranking. See `analysis/agentic_search_2026_analysis.md`.
+Across **three** measurements (HotpotQA, SWE-bench file, SWE-bench symbol), **structural
+expansion is not a free ranking win.** PyCodeKG's edge over flat embeddings is its
+deterministic substrate and its *structural query capabilities* (callers, fan-in,
+dead code — see `benchmarks/capabilities/`), not hop-expanded ranking. See
+`analysis/agentic_search_2026_analysis.md`.
 
 ## Verification status
 

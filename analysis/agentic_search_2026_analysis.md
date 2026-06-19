@@ -115,20 +115,35 @@ neighbours only map to already-ranked files. Hop-expansion is the wrong lever fo
 > general document corpora, so structural expansion is a *stack-wide* property of all
 > three siblings, not a MemoryKG-only trick.
 
-### Synthesis across both benchmarks — what actually holds up
+We also built the *symbol*-level metric — does retrieval surface the exact
+function/method the patch edits (node span overlaps a gold base-commit line) — because
+that is the regime where call-graph expansion *should* finally pay off. It didn't:
+sym_recall@10 = 0.692 for both hops, Δ symbol-MRR = **+0.006**, with hop-1 recovering
+exactly one gold symbol and only at rank ≤20.
 
-Two independent tests (HotpotQA, SWE-bench) say the same uncomfortable thing: **graph
-hop-expansion did not beat flat retrieval** — it hurt on HotpotQA and was neutral on
-SWE-bench. So the rebuttal to the article must **not** rest on "the graph reranks
-better"; our own data refutes that. It rests on two pillars the data *does* support:
+### Synthesis across THREE measurements — what actually holds up
+
+HotpotQA, SWE-bench file-level, and SWE-bench symbol-level all say the same
+uncomfortable thing: **graph hop-expansion did not beat flat retrieval** — it hurt on
+HotpotQA and was neutral on both SWE-bench granularities, even the one designed to
+favour `CALLS` expansion. So the rebuttal must **not** rest on "the graph reranks
+better"; our own data refutes that three times. It rests on two pillars the data *does*
+support:
 
 1. **A precomputed, deterministic index is already competitive** (0.77 file-level
    recall@5) at $0/query, milliseconds, fully reproducible — the axes where the
    article admits agentic `grep` loses (5–30× tokens, seconds, non-determinism).
-2. **The graph's unique value is queries embeddings cannot express at all** — callers,
-   fan-in across import aliases, centrality, circular imports, dead code. That is the
-   "structure vectors miss," and it lives in typed edges as *capability*, not as a
-   ranking trick.
+2. **The graph answers structural queries embeddings cannot express and `grep`
+   approximates badly** — measured in `benchmarks/capabilities/` on `psf/requests`:
+   - **"Who calls `httpbin`?"** PyCodeKG returns **45 exact caller functions**; `grep`
+     returns **98 raw textual hits** it cannot attribute to a function or tell apart
+     from comments/strings.
+   - **Fan-in blast-radius** and a **235-function dead-code set** — aggregate views no
+     similarity score can produce.
+   - **Honest limitation:** PyCodeKG's Python call graph resolves method calls *by name*
+     (no type inference), so caller sets for shared names (e.g. `get`) are
+     over-approximations — the same failure class as `grep`, just structured. The clean,
+     exact wins are for uniquely-named symbols and the aggregate views.
 
 Structure earns its keep as **deterministic substrate + queryable capability**, not as
 a magic reranker — and "more graph" is not automatically better.

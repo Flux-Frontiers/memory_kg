@@ -1,0 +1,772 @@
+{
+  "config": {
+    "dataset": "lite",
+    "hops": [
+      0,
+      1
+    ],
+    "k": 10,
+    "n": 13,
+    "model": "BAAI/bge-small-en-v1.5"
+  },
+  "summary": {
+    "hop0": {
+      "recall@1": 0.3076923076923077,
+      "recall@5": 0.7692307692307693,
+      "recall@10": 0.7692307692307693,
+      "recall@20": 0.7692307692307693,
+      "recall_all@10": 0.7692307692307693,
+      "recall_all@20": 0.7692307692307693,
+      "mrr": 0.48717948717948717,
+      "sym_recall@5": 0.5384615384615384,
+      "sym_recall@10": 0.6923076923076923,
+      "sym_recall@20": 0.6923076923076923,
+      "sym_mrr": 0.36538461538461536
+    },
+    "hop1": {
+      "recall@1": 0.3076923076923077,
+      "recall@5": 0.7692307692307693,
+      "recall@10": 0.7692307692307693,
+      "recall@20": 0.7692307692307693,
+      "recall_all@10": 0.7692307692307693,
+      "recall_all@20": 0.7692307692307693,
+      "mrr": 0.48717948717948717,
+      "sym_recall@5": 0.5384615384615384,
+      "sym_recall@10": 0.6923076923076923,
+      "sym_recall@20": 0.7692307692307693,
+      "sym_mrr": 0.37179487179487175
+    }
+  },
+  "results": [
+    {
+      "instance_id": "mwaskom__seaborn-2848",
+      "repo": "mwaskom/seaborn",
+      "by_hop": {
+        "0": {
+          "instance_id": "mwaskom__seaborn-2848",
+          "repo": "mwaskom/seaborn",
+          "n_gold": 1,
+          "gold": [
+            "seaborn/_oldcore.py"
+          ],
+          "ranked_top10": [
+            "seaborn/axisgrid.py",
+            "seaborn/palettes.py",
+            "seaborn/_oldcore.py",
+            "seaborn/colors/__init__.py"
+          ],
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall_all@10": 1.0,
+          "recall_all@20": 1.0,
+          "mrr": 0.3333333333333333,
+          "sym_recall@5": 0.0,
+          "sym_recall@10": 1.0,
+          "sym_recall@20": 1.0,
+          "sym_mrr": 0.16666666666666666
+        },
+        "1": {
+          "instance_id": "mwaskom__seaborn-2848",
+          "repo": "mwaskom/seaborn",
+          "n_gold": 1,
+          "gold": [
+            "seaborn/_oldcore.py"
+          ],
+          "ranked_top10": [
+            "seaborn/axisgrid.py",
+            "seaborn/palettes.py",
+            "seaborn/_oldcore.py",
+            "seaborn/colors/__init__.py"
+          ],
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall_all@10": 1.0,
+          "recall_all@20": 1.0,
+          "mrr": 0.3333333333333333,
+          "sym_recall@5": 0.0,
+          "sym_recall@10": 1.0,
+          "sym_recall@20": 1.0,
+          "sym_mrr": 0.16666666666666666
+        }
+      }
+    },
+    {
+      "instance_id": "mwaskom__seaborn-3010",
+      "repo": "mwaskom/seaborn",
+      "by_hop": {
+        "0": {
+          "instance_id": "mwaskom__seaborn-3010",
+          "repo": "mwaskom/seaborn",
+          "n_gold": 1,
+          "gold": [
+            "seaborn/_stats/regression.py"
+          ],
+          "ranked_top10": [
+            "seaborn/_core/plot.py",
+            "seaborn/_stats/regression.py",
+            "seaborn/_core/data.py",
+            "seaborn/objects.py"
+          ],
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall_all@10": 1.0,
+          "recall_all@20": 1.0,
+          "mrr": 0.5,
+          "sym_recall@5": 1.0,
+          "sym_recall@10": 1.0,
+          "sym_recall@20": 1.0,
+          "sym_mrr": 0.3333333333333333
+        },
+        "1": {
+          "instance_id": "mwaskom__seaborn-3010",
+          "repo": "mwaskom/seaborn",
+          "n_gold": 1,
+          "gold": [
+            "seaborn/_stats/regression.py"
+          ],
+          "ranked_top10": [
+            "seaborn/_core/plot.py",
+            "seaborn/_stats/regression.py",
+            "seaborn/_core/data.py",
+            "seaborn/objects.py"
+          ],
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall_all@10": 1.0,
+          "recall_all@20": 1.0,
+          "mrr": 0.5,
+          "sym_recall@5": 1.0,
+          "sym_recall@10": 1.0,
+          "sym_recall@20": 1.0,
+          "sym_mrr": 0.3333333333333333
+        }
+      }
+    },
+    {
+      "instance_id": "mwaskom__seaborn-3190",
+      "repo": "mwaskom/seaborn",
+      "by_hop": {
+        "0": {
+          "instance_id": "mwaskom__seaborn-3190",
+          "repo": "mwaskom/seaborn",
+          "n_gold": 1,
+          "gold": [
+            "seaborn/_core/scales.py"
+          ],
+          "ranked_top10": [
+            "seaborn/axisgrid.py",
+            "seaborn/_core/plot.py",
+            "seaborn/_oldcore.py",
+            "seaborn/_core/properties.py"
+          ],
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "recall@20": 0.0,
+          "recall_all@10": 0.0,
+          "recall_all@20": 0.0,
+          "mrr": 0.0,
+          "sym_recall@5": 0.0,
+          "sym_recall@10": 0.0,
+          "sym_recall@20": 0.0,
+          "sym_mrr": 0.0
+        },
+        "1": {
+          "instance_id": "mwaskom__seaborn-3190",
+          "repo": "mwaskom/seaborn",
+          "n_gold": 1,
+          "gold": [
+            "seaborn/_core/scales.py"
+          ],
+          "ranked_top10": [
+            "seaborn/axisgrid.py",
+            "seaborn/_core/plot.py",
+            "seaborn/_oldcore.py",
+            "seaborn/_core/properties.py"
+          ],
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "recall@20": 0.0,
+          "recall_all@10": 0.0,
+          "recall_all@20": 0.0,
+          "mrr": 0.0,
+          "sym_recall@5": 0.0,
+          "sym_recall@10": 0.0,
+          "sym_recall@20": 0.0,
+          "sym_mrr": 0.0
+        }
+      }
+    },
+    {
+      "instance_id": "mwaskom__seaborn-3407",
+      "repo": "mwaskom/seaborn",
+      "by_hop": {
+        "0": {
+          "instance_id": "mwaskom__seaborn-3407",
+          "repo": "mwaskom/seaborn",
+          "n_gold": 1,
+          "gold": [
+            "seaborn/axisgrid.py"
+          ],
+          "ranked_top10": [
+            "seaborn/axisgrid.py",
+            "seaborn/_core/plot.py",
+            "tests/test_axisgrid.py"
+          ],
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall_all@10": 1.0,
+          "recall_all@20": 1.0,
+          "mrr": 1.0,
+          "sym_recall@5": 1.0,
+          "sym_recall@10": 1.0,
+          "sym_recall@20": 1.0,
+          "sym_mrr": 0.25
+        },
+        "1": {
+          "instance_id": "mwaskom__seaborn-3407",
+          "repo": "mwaskom/seaborn",
+          "n_gold": 1,
+          "gold": [
+            "seaborn/axisgrid.py"
+          ],
+          "ranked_top10": [
+            "seaborn/axisgrid.py",
+            "seaborn/_core/plot.py",
+            "tests/test_axisgrid.py"
+          ],
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall_all@10": 1.0,
+          "recall_all@20": 1.0,
+          "mrr": 1.0,
+          "sym_recall@5": 1.0,
+          "sym_recall@10": 1.0,
+          "sym_recall@20": 1.0,
+          "sym_mrr": 0.25
+        }
+      }
+    },
+    {
+      "instance_id": "pallets__flask-4045",
+      "repo": "pallets/flask",
+      "by_hop": {
+        "0": {
+          "instance_id": "pallets__flask-4045",
+          "repo": "pallets/flask",
+          "n_gold": 1,
+          "gold": [
+            "src/flask/blueprints.py"
+          ],
+          "ranked_top10": [
+            "tests/test_blueprints.py",
+            "src/flask/blueprints.py",
+            "src/flask/helpers.py"
+          ],
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall_all@10": 1.0,
+          "recall_all@20": 1.0,
+          "mrr": 0.5,
+          "sym_recall@5": 0.0,
+          "sym_recall@10": 0.0,
+          "sym_recall@20": 0.0,
+          "sym_mrr": 0.0
+        },
+        "1": {
+          "instance_id": "pallets__flask-4045",
+          "repo": "pallets/flask",
+          "n_gold": 1,
+          "gold": [
+            "src/flask/blueprints.py"
+          ],
+          "ranked_top10": [
+            "tests/test_blueprints.py",
+            "src/flask/blueprints.py",
+            "src/flask/helpers.py"
+          ],
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall_all@10": 1.0,
+          "recall_all@20": 1.0,
+          "mrr": 0.5,
+          "sym_recall@5": 0.0,
+          "sym_recall@10": 0.0,
+          "sym_recall@20": 1.0,
+          "sym_mrr": 0.08333333333333333
+        }
+      }
+    },
+    {
+      "instance_id": "pallets__flask-4992",
+      "repo": "pallets/flask",
+      "by_hop": {
+        "0": {
+          "instance_id": "pallets__flask-4992",
+          "repo": "pallets/flask",
+          "n_gold": 1,
+          "gold": [
+            "src/flask/config.py"
+          ],
+          "ranked_top10": [
+            "src/flask/config.py",
+            "src/flask/json/__init__.py",
+            "src/flask/helpers.py",
+            "src/flask/scaffold.py",
+            "src/flask/app.py"
+          ],
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall_all@10": 1.0,
+          "recall_all@20": 1.0,
+          "mrr": 1.0,
+          "sym_recall@5": 1.0,
+          "sym_recall@10": 1.0,
+          "sym_recall@20": 1.0,
+          "sym_mrr": 1.0
+        },
+        "1": {
+          "instance_id": "pallets__flask-4992",
+          "repo": "pallets/flask",
+          "n_gold": 1,
+          "gold": [
+            "src/flask/config.py"
+          ],
+          "ranked_top10": [
+            "src/flask/config.py",
+            "src/flask/json/__init__.py",
+            "src/flask/helpers.py",
+            "src/flask/scaffold.py",
+            "src/flask/app.py"
+          ],
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall_all@10": 1.0,
+          "recall_all@20": 1.0,
+          "mrr": 1.0,
+          "sym_recall@5": 1.0,
+          "sym_recall@10": 1.0,
+          "sym_recall@20": 1.0,
+          "sym_mrr": 1.0
+        }
+      }
+    },
+    {
+      "instance_id": "pallets__flask-5063",
+      "repo": "pallets/flask",
+      "by_hop": {
+        "0": {
+          "instance_id": "pallets__flask-5063",
+          "repo": "pallets/flask",
+          "n_gold": 1,
+          "gold": [
+            "src/flask/cli.py"
+          ],
+          "ranked_top10": [
+            "src/flask/cli.py",
+            "src/flask/app.py",
+            "tests/test_basic.py",
+            "tests/test_blueprints.py",
+            "src/flask/sessions.py",
+            "src/flask/blueprints.py",
+            "tests/test_testing.py"
+          ],
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall_all@10": 1.0,
+          "recall_all@20": 1.0,
+          "mrr": 1.0,
+          "sym_recall@5": 1.0,
+          "sym_recall@10": 1.0,
+          "sym_recall@20": 1.0,
+          "sym_mrr": 1.0
+        },
+        "1": {
+          "instance_id": "pallets__flask-5063",
+          "repo": "pallets/flask",
+          "n_gold": 1,
+          "gold": [
+            "src/flask/cli.py"
+          ],
+          "ranked_top10": [
+            "src/flask/cli.py",
+            "src/flask/app.py",
+            "tests/test_basic.py",
+            "tests/test_blueprints.py",
+            "src/flask/sessions.py",
+            "src/flask/blueprints.py",
+            "tests/test_testing.py"
+          ],
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall_all@10": 1.0,
+          "recall_all@20": 1.0,
+          "mrr": 1.0,
+          "sym_recall@5": 1.0,
+          "sym_recall@10": 1.0,
+          "sym_recall@20": 1.0,
+          "sym_mrr": 1.0
+        }
+      }
+    },
+    {
+      "instance_id": "psf__requests-1963",
+      "repo": "psf/requests",
+      "by_hop": {
+        "0": {
+          "instance_id": "psf__requests-1963",
+          "repo": "psf/requests",
+          "n_gold": 1,
+          "gold": [
+            "requests/sessions.py"
+          ],
+          "ranked_top10": [
+            "requests/sessions.py",
+            "requests/models.py",
+            "requests/packages/urllib3/response.py",
+            "requests/packages/urllib3/connectionpool.py",
+            "test_requests.py",
+            "requests/adapters.py"
+          ],
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall_all@10": 1.0,
+          "recall_all@20": 1.0,
+          "mrr": 1.0,
+          "sym_recall@5": 1.0,
+          "sym_recall@10": 1.0,
+          "sym_recall@20": 1.0,
+          "sym_mrr": 1.0
+        },
+        "1": {
+          "instance_id": "psf__requests-1963",
+          "repo": "psf/requests",
+          "n_gold": 1,
+          "gold": [
+            "requests/sessions.py"
+          ],
+          "ranked_top10": [
+            "requests/sessions.py",
+            "requests/models.py",
+            "requests/packages/urllib3/response.py",
+            "requests/packages/urllib3/connectionpool.py",
+            "test_requests.py",
+            "requests/adapters.py"
+          ],
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall_all@10": 1.0,
+          "recall_all@20": 1.0,
+          "mrr": 1.0,
+          "sym_recall@5": 1.0,
+          "sym_recall@10": 1.0,
+          "sym_recall@20": 1.0,
+          "sym_mrr": 1.0
+        }
+      }
+    },
+    {
+      "instance_id": "psf__requests-2148",
+      "repo": "psf/requests",
+      "by_hop": {
+        "0": {
+          "instance_id": "psf__requests-2148",
+          "repo": "psf/requests",
+          "n_gold": 1,
+          "gold": [
+            "requests/models.py"
+          ],
+          "ranked_top10": [
+            "requests/packages/urllib3/util/retry.py",
+            "requests/exceptions.py",
+            "requests/packages/urllib3/exceptions.py"
+          ],
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "recall@20": 0.0,
+          "recall_all@10": 0.0,
+          "recall_all@20": 0.0,
+          "mrr": 0.0,
+          "sym_recall@5": 0.0,
+          "sym_recall@10": 0.0,
+          "sym_recall@20": 0.0,
+          "sym_mrr": 0.0
+        },
+        "1": {
+          "instance_id": "psf__requests-2148",
+          "repo": "psf/requests",
+          "n_gold": 1,
+          "gold": [
+            "requests/models.py"
+          ],
+          "ranked_top10": [
+            "requests/packages/urllib3/util/retry.py",
+            "requests/exceptions.py",
+            "requests/packages/urllib3/exceptions.py"
+          ],
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "recall@20": 0.0,
+          "recall_all@10": 0.0,
+          "recall_all@20": 0.0,
+          "mrr": 0.0,
+          "sym_recall@5": 0.0,
+          "sym_recall@10": 0.0,
+          "sym_recall@20": 0.0,
+          "sym_mrr": 0.0
+        }
+      }
+    },
+    {
+      "instance_id": "psf__requests-2317",
+      "repo": "psf/requests",
+      "by_hop": {
+        "0": {
+          "instance_id": "psf__requests-2317",
+          "repo": "psf/requests",
+          "n_gold": 1,
+          "gold": [
+            "requests/sessions.py"
+          ],
+          "ranked_top10": [
+            "test_requests.py",
+            "requests/__init__.py",
+            "requests/sessions.py"
+          ],
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall_all@10": 1.0,
+          "recall_all@20": 1.0,
+          "mrr": 0.3333333333333333,
+          "sym_recall@5": 1.0,
+          "sym_recall@10": 1.0,
+          "sym_recall@20": 1.0,
+          "sym_mrr": 0.3333333333333333
+        },
+        "1": {
+          "instance_id": "psf__requests-2317",
+          "repo": "psf/requests",
+          "n_gold": 1,
+          "gold": [
+            "requests/sessions.py"
+          ],
+          "ranked_top10": [
+            "test_requests.py",
+            "requests/__init__.py",
+            "requests/sessions.py"
+          ],
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall_all@10": 1.0,
+          "recall_all@20": 1.0,
+          "mrr": 0.3333333333333333,
+          "sym_recall@5": 1.0,
+          "sym_recall@10": 1.0,
+          "sym_recall@20": 1.0,
+          "sym_mrr": 0.3333333333333333
+        }
+      }
+    },
+    {
+      "instance_id": "psf__requests-2674",
+      "repo": "psf/requests",
+      "by_hop": {
+        "0": {
+          "instance_id": "psf__requests-2674",
+          "repo": "psf/requests",
+          "n_gold": 1,
+          "gold": [
+            "requests/adapters.py"
+          ],
+          "ranked_top10": [
+            "requests/packages/urllib3/exceptions.py"
+          ],
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "recall@20": 0.0,
+          "recall_all@10": 0.0,
+          "recall_all@20": 0.0,
+          "mrr": 0.0,
+          "sym_recall@5": 0.0,
+          "sym_recall@10": 0.0,
+          "sym_recall@20": 0.0,
+          "sym_mrr": 0.0
+        },
+        "1": {
+          "instance_id": "psf__requests-2674",
+          "repo": "psf/requests",
+          "n_gold": 1,
+          "gold": [
+            "requests/adapters.py"
+          ],
+          "ranked_top10": [
+            "requests/packages/urllib3/exceptions.py"
+          ],
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "recall@20": 0.0,
+          "recall_all@10": 0.0,
+          "recall_all@20": 0.0,
+          "mrr": 0.0,
+          "sym_recall@5": 0.0,
+          "sym_recall@10": 0.0,
+          "sym_recall@20": 0.0,
+          "sym_mrr": 0.0
+        }
+      }
+    },
+    {
+      "instance_id": "psf__requests-3362",
+      "repo": "psf/requests",
+      "by_hop": {
+        "0": {
+          "instance_id": "psf__requests-3362",
+          "repo": "psf/requests",
+          "n_gold": 1,
+          "gold": [
+            "requests/utils.py"
+          ],
+          "ranked_top10": [
+            "requests/models.py",
+            "tests/test_requests.py",
+            "requests/utils.py",
+            "requests/packages/urllib3/response.py"
+          ],
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall_all@10": 1.0,
+          "recall_all@20": 1.0,
+          "mrr": 0.3333333333333333,
+          "sym_recall@5": 0.0,
+          "sym_recall@10": 1.0,
+          "sym_recall@20": 1.0,
+          "sym_mrr": 0.16666666666666666
+        },
+        "1": {
+          "instance_id": "psf__requests-3362",
+          "repo": "psf/requests",
+          "n_gold": 1,
+          "gold": [
+            "requests/utils.py"
+          ],
+          "ranked_top10": [
+            "requests/models.py",
+            "tests/test_requests.py",
+            "requests/utils.py",
+            "requests/packages/urllib3/response.py"
+          ],
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall_all@10": 1.0,
+          "recall_all@20": 1.0,
+          "mrr": 0.3333333333333333,
+          "sym_recall@5": 0.0,
+          "sym_recall@10": 1.0,
+          "sym_recall@20": 1.0,
+          "sym_mrr": 0.16666666666666666
+        }
+      }
+    },
+    {
+      "instance_id": "psf__requests-863",
+      "repo": "psf/requests",
+      "by_hop": {
+        "0": {
+          "instance_id": "psf__requests-863",
+          "repo": "psf/requests",
+          "n_gold": 1,
+          "gold": [
+            "requests/models.py"
+          ],
+          "ranked_top10": [
+            "requests/hooks.py",
+            "tests/test_requests.py",
+            "requests/models.py",
+            "requests/__init__.py",
+            "requests/packages/urllib3/packages/ordered_dict.py",
+            "requests/utils.py"
+          ],
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall_all@10": 1.0,
+          "recall_all@20": 1.0,
+          "mrr": 0.3333333333333333,
+          "sym_recall@5": 1.0,
+          "sym_recall@10": 1.0,
+          "sym_recall@20": 1.0,
+          "sym_mrr": 0.5
+        },
+        "1": {
+          "instance_id": "psf__requests-863",
+          "repo": "psf/requests",
+          "n_gold": 1,
+          "gold": [
+            "requests/models.py"
+          ],
+          "ranked_top10": [
+            "requests/hooks.py",
+            "tests/test_requests.py",
+            "requests/models.py",
+            "requests/__init__.py",
+            "requests/packages/urllib3/packages/ordered_dict.py",
+            "requests/utils.py"
+          ],
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall_all@10": 1.0,
+          "recall_all@20": 1.0,
+          "mrr": 0.3333333333333333,
+          "sym_recall@5": 1.0,
+          "sym_recall@10": 1.0,
+          "sym_recall@20": 1.0,
+          "sym_mrr": 0.5
+        }
+      }
+    }
+  ]
+}
