@@ -72,7 +72,7 @@ blob:
 |---|---|
 | Similarity ≠ structural relevance | The edges **are** the structure. PyCodeKG extracts `CALLS`, `IMPORTS`, `INHERITS`, `CONTAINS`, `RESOLVES_TO` straight from the AST. Graph proximity is a first-class ranking signal, not an afterthought. |
 | Identifier exact-match | Retrieval is scored by lexical containment, not pure cosine, and `RESOLVES_TO` resolves import aliases so fan-in is **exact**, not fuzzy. |
-| Single-shot brittleness | Expansion is multi-hop **by construction** — a strong seed pulls in its structurally-linked neighbours (the second hop). One shot is not the design. |
+| Single-shot brittleness | The retrieval is a *tool the agent re-queries*, not a one-shot pipeline — and the index is deterministic, so a follow-up query returns the same thing every time. (Honesty note: graph *hop-expansion* did **not** improve ranking in our tests — see below. The fix for brittleness is cheap, reproducible re-querying, not a hop trick.) |
 | Staleness on every commit | Incremental rebuilds + temporal **snapshots and diffs**: you can ask "what changed structurally between v1 and v2," deterministically. |
 | Non-deterministic, un-testable | The whole pipeline is deterministic, explainable, snapshot-diffable, and free per query — the *opposite* of an agentic loop. |
 
@@ -92,18 +92,39 @@ against the same retriever with graph expansion turned on.
 **Graph expansion lost.** On a 100-question sample, flat top-k got both supporting
 paragraphs into the top 5 on 70% of questions; turning on the default entity-based
 expansion *dropped* it to 61%, net-displacing gold on 13 questions while rescuing only
-4. We're reporting that straight because it's the whole point: **structure is not a
-free lunch — it has to be the *right* structure.** Generic "entities co-occur" edges
-are the wrong glue for dense Wikipedia QA, just as flat embeddings are the wrong glue
-for code. The lesson isn't "graphs don't work." It's the same lesson the article is
-really teaching: *the topology of your retrieval has to match the topology of your
-data.* For code, that topology is the call/import graph — which is precisely why
-PyCodeKG parses the AST instead of hoping cosine similarity reconstructs it.
+4.
 
-So the benchmark we're building next is the one that meets the article head-on:
-SWE-bench file localization — *given a real GitHub issue, find the file to edit* —
-driven by PyCodeKG's AST graph. That is the fair fight, on the article's own turf, and
-it's the right way to settle this rather than trading anecdotes.
+Then we ran the fight on the article's own turf — **SWE-bench** file localization,
+*given a real GitHub issue, find the file to edit*, driven by PyCodeKG's AST graph.
+On a 13-instance Lite sample (requests/flask/seaborn), flat semantic retrieval put the
+gold file in the top 5 on **10 of 13** instances (MRR 0.49). Turning on AST graph
+expansion changed the result by **exactly nothing** — Δ = 0.000 on every metric.
+(Why: each instance edits a single file; once seeding surfaces it, `CALLS`/`IMPORTS`
+neighbours map to files already ranked. Hop-expansion is the wrong lever for *file*-level
+localization.)
+
+So here is the uncomfortable, honest finding, stated plainly: **in two separate tests,
+hop-expanded ranking did not beat flat retrieval.** We are not going to tell you the
+graph reranks better, because our own numbers say it doesn't. What they *do* say is
+two things the article should sit with:
+
+1. **A precomputed, deterministic index is already competitive** — 0.77 file-level
+   recall@5, at $0 per query, in milliseconds, fully reproducible. That is the bar
+   agentic `grep` has to clear while spending 5–30× the tokens and seconds of latency
+   on a non-reproducible answer. On accuracy it's a wash; on cost, latency, and
+   determinism the precomputed index wins outright.
+2. **The graph's real value isn't ranking — it's queries embeddings can't express at
+   all.** "Who calls `verify_jwt`?" "What's the fan-in of this class across import
+   aliases?" "Which modules form a circular import?" "What's dead code?" No embedding
+   answers those; `grep` answers them slowly and non-deterministically; the AST graph
+   answers them exactly, instantly, for free. *That* is the structure the article says
+   vectors miss — and it lives in typed edges, not in a similarity score.
+
+The lesson from both nulls is the article's own, sharpened: *the topology of your
+retrieval has to match the topology of your data, and "more graph" is not automatically
+better.* Structure earns its keep as **deterministic substrate + queryable capability**,
+not as a magic reranker. We'd rather publish that than a number we tuned until it
+flattered us.
 
 ## What to actually do on Monday
 
@@ -126,5 +147,5 @@ Don't embed your repo. **Graph it.**
 
 *PyCodeKG, MemoryKG, and DocKG are open-source structural knowledge-graph builders
 (AST graph for code; semantic+structural graph for docs and memory), each exposed to
-agents over MCP. The HotpotQA harness and the in-progress SWE-bench harness referenced
-above are in the `benchmarks/` directory.*
+agents over MCP. The HotpotQA and SWE-bench harnesses referenced above — including the
+null results — are in the `benchmarks/` directory, runnable and reproducible.*

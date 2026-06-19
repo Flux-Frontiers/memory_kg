@@ -100,14 +100,38 @@ deterministically, and hands an agent the answer. For a fixed repo analysed
 repeatedly (CI, architecture review, onboarding), precompute wins on cost, latency,
 and reproducibility — the agent's three weak spots.
 
-**Gap / opportunity:** PyCodeKG has no published retrieval benchmark (only an
-embedder micro-benchmark). The article hands us the obvious one — **SWE-bench /
-SWE-bench Verified** — where "find the file(s) to edit" is exactly graph-grounded
-retrieval. That is the highest-leverage benchmark to add next for the code sibling.
+**SWE-bench result (now measured).** PyCodeKG had no retrieval benchmark (only an
+embedder micro-benchmark), so we built one (`benchmarks/swebench/`) and ran it: real
+GitHub issue → AST KG over the repo@base_commit → query → score whether retrieval
+surfaces the file(s) the gold patch edits. On a 13-instance Lite sample
+(requests/flask/seaborn), **flat semantic retrieval put the gold file in the top-5 on
+10/13 instances (recall@5 = 0.77, MRR = 0.49)** — competitive, deterministic,
+$0/query. **AST graph hop-expansion changed nothing (Δ = 0.000 on every metric):**
+each Lite instance edits one file, so once seeding surfaces it, `CALLS`/`IMPORTS`
+neighbours only map to already-ranked files. Hop-expansion is the wrong lever for
+*file*-level localization (it would matter for symbol-level or multi-file fixes).
 
 > Note (per discussion): **DocKG** performs the same multi-hop graph expansion for
 > general document corpora, so structural expansion is a *stack-wide* property of all
 > three siblings, not a MemoryKG-only trick.
+
+### Synthesis across both benchmarks — what actually holds up
+
+Two independent tests (HotpotQA, SWE-bench) say the same uncomfortable thing: **graph
+hop-expansion did not beat flat retrieval** — it hurt on HotpotQA and was neutral on
+SWE-bench. So the rebuttal to the article must **not** rest on "the graph reranks
+better"; our own data refutes that. It rests on two pillars the data *does* support:
+
+1. **A precomputed, deterministic index is already competitive** (0.77 file-level
+   recall@5) at $0/query, milliseconds, fully reproducible — the axes where the
+   article admits agentic `grep` loses (5–30× tokens, seconds, non-determinism).
+2. **The graph's unique value is queries embeddings cannot express at all** — callers,
+   fan-in across import aliases, centrality, circular imports, dead code. That is the
+   "structure vectors miss," and it lives in typed edges as *capability*, not as a
+   ranking trick.
+
+Structure earns its keep as **deterministic substrate + queryable capability**, not as
+a magic reranker — and "more graph" is not automatically better.
 
 ---
 
@@ -182,13 +206,18 @@ be done as honest ablation, not tuned until the graph wins.
 1. **Reposition, don't rebut.** Public messaging should be "the deterministic index
    is the tool your agent should call," not "vector search is fine." The article's
    audience already agrees structure matters — PyCodeKG *is* structure.
-2. **Add SWE-bench Verified to PyCodeKG.** It is the benchmark that meets the article
-   on its own ground (code retrieval) and the stack's biggest current evidence gap.
-3. **Do not publish a multi-hop "graph wins" claim yet.** The HotpotQA result is the
-   opposite: default expansion *hurts* on dense haystacks. Treat this as a tuning
-   backlog (title-overlap bridge edges, chunk-only seeding) and only publish once an
-   honest ablation shows hop>0 beating hop=0 — or publish flat MemoryKG as a strong
-   deterministic baseline and be candid that expansion is corpus-shape-dependent.
+2. **Scale the SWE-bench harness (now built).** The Lite pilot (n=13) shows flat
+   retrieval at 0.77 file-recall@5. Run SWE-bench Verified at larger n, add
+   *symbol*-granularity scoring and multi-file instances — that is where AST expansion
+   (`callers`/`CALLS`) might actually move the needle, since file-level localization
+   provably doesn't exercise it.
+3. **Do not publish any "graph reranks better" claim — our own data refutes it.** Both
+   HotpotQA (expansion hurts) and SWE-bench (Δ = 0.000) say hop-expansion is not a
+   ranking win. Lead instead with the two defensible pillars: (a) competitive
+   *deterministic, $0, reproducible* retrieval, and (b) structural query capabilities
+   (callers, fan-in, centrality, dead code) that embeddings cannot express at all.
+   Expansion is corpus-shape-dependent and must only ever be claimed from honest
+   ablation, never tuned until it flatters.
 4. **Lean into the concessions.** Determinism, $0/query, snapshot-diffable retrieval,
    and millisecond latency on fixed corpora are the four axes where the article
    admits agents lose. That is the stack's marketing surface.

@@ -66,6 +66,35 @@ structure on *every* query, non-deterministically. For a repo analysed repeatedl
 (CI, review, onboarding) the precomputed graph wins on cost, latency, and
 reproducibility.
 
+## First results (SWE-bench Lite, n=13: requests/flask/seaborn, BGE-small, CPU)
+
+Build-once / query-both-hops, identical graph per instance (~27 s/instance):
+
+| metric | hop 0 (flat) | hop 1 (+AST graph) |
+|---|--:|--:|
+| recall@1 | 0.308 | 0.308 |
+| recall@5 | **0.769** | **0.769** |
+| recall@10 / @20 | 0.769 | 0.769 |
+| MRR | 0.487 | 0.487 |
+
+**Two honest takeaways:**
+
+1. **Flat PyCodeKG retrieval is already competitive** — gold file in the top-5 on
+   10/13 instances (0.77), MRR 0.49, fully deterministic, $0/query, no LLM. That is
+   the number that matters against agentic `grep` (which pays 5–30× tokens and seconds
+   of latency for a non-reproducible answer).
+2. **Graph hop expansion changed *nothing* at file granularity (Δ = 0.000).** Every
+   Lite instance here edits a single file; once semantic seeding surfaces that file,
+   adding `CALLS`/`IMPORTS` neighbours maps to files already in the ranking. Hop
+   expansion is the wrong lever for *file*-level localization — it would matter for
+   *symbol*-level localization or multi-file fixes, and that's the next thing to
+   measure (`--rels`, symbol-granularity scoring, SWE-bench Verified at larger n).
+
+This mirrors the HotpotQA finding: **structural expansion is not a free ranking win.**
+PyCodeKG's edge over flat embeddings is its deterministic substrate and its
+*structural query capabilities* (callers, fan-in, centrality), not hop-expanded
+ranking. See `analysis/agentic_search_2026_analysis.md`.
+
 ## Verification status
 
 - ✅ Dataset download (HF parquet), instance loading, gold-file parsing — verified on
