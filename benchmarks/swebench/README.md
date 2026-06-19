@@ -70,6 +70,13 @@ reproducibility.
 
 - ✅ Dataset download (HF parquet), instance loading, gold-file parsing — verified on
   real SWE-bench Lite.
-- ✅ PyCodeKG integration (`PyCodeKG(...).build()/.query()`, `module_path` → file
-  localization) — wired to the confirmed v0.19.3 API.
-- See `results_*.json` for committed sample runs.
+- ✅ **Full end-to-end verified** on `pallets__flask-4045` with PyCodeKG v0.19.3
+  (clone → AST KG build → query → score): gold file `src/flask/blueprints.py`
+  retrieved at **rank 2** (`tests/test_blueprints.py` ranked first), `recall@5=1.0`,
+  MRR=0.5, ~147 s for the one instance (build-dominated). See
+  `results_swebench_lite_hop1_flask4045.json`.
+- Note the realistic localization nuance even in this single case: the *test* file
+  out-ranked the *source* file by semantic similarity alone — exactly the kind of
+  near-miss the AST graph (`CONTAINS`/`CALLS` from the failing test to the
+  implementation) is meant to correct. That's the signal the full hop-0 vs hop-1
+  sweep is designed to measure.
