@@ -117,6 +117,39 @@ def gold_files_from_patch(patch: str) -> set[str]:
     return files
 
 
+def gold_lines_from_patch(patch: str) -> dict[str, set[int]]:
+    """Map each modified file to the *base-commit* (old-side) line numbers it touches.
+
+    The KG is built at ``base_commit`` (pre-fix), so symbol localization must compare
+    against old-side line numbers. For each hunk ``@@ -old,_ +new,_ @@`` we walk the
+    body: context lines advance the old pointer, ``-`` lines are recorded (modified),
+    and ``+`` lines record the current old pointer (the insertion site within the
+    enclosing base symbol). This yields the base lines whose enclosing function/method/
+    class the patch edits.
+    """
+    files: dict[str, set[int]] = defaultdict(set)
+    cur: str | None = None
+    old = 0
+    for line in (patch or "").splitlines():
+        if line.startswith("+++ b/"):
+            cur = line[6:].strip()
+            cur = None if cur == "/dev/null" else cur
+        elif line.startswith("---") or line.startswith("diff --git") or line.startswith("index "):
+            continue
+        elif line.startswith("@@"):
+            m = re.search(r"-(\d+)", line)
+            old = int(m.group(1)) if m else 0
+        elif cur is not None and line:
+            if line.startswith("-"):
+                files[cur].add(old)
+                old += 1
+            elif line.startswith("+"):
+                files[cur].add(old)
+            elif line.startswith(" "):
+                old += 1
+    return files
+
+
 # =============================================================================
 # REPO CHECKOUT
 # =============================================================================
@@ -173,16 +206,48 @@ def _ranked_files(result, limit: int) -> list[str]:
     return ordered
 
 
-def _score(inst: dict, gold: set[str], result) -> dict:
-    """Score one query result for file localization against the gold patch files."""
+def _symbol_first_rank(result, gold_lines: dict[str, set[int]], limit: int = 50) -> int | None:
+    """Rank (1-based) of the first retrieved code node whose span overlaps a gold edit.
+
+    A node hits if it is a function/method/class in a gold file whose
+    ``[lineno, end_lineno]`` span contains any base-commit line the patch touches.
+    This is *symbol*-level localization — strictly harder than file-level and the
+    regime where call-graph expansion (``CALLS``) can actually help.
+    """
+    rank = 0
+    for node in result.nodes:
+        if node.get("kind") not in {"function", "method", "class"}:
+            continue
+        rank += 1
+        if rank > limit:
+            break
+        path = str(node.get("module_path") or "").lstrip("./")
+        touched = gold_lines.get(path)
+        if not touched:
+            continue
+        lo, hi = node.get("lineno"), node.get("end_lineno")
+        if lo is None:
+            continue
+        hi = hi if hi is not None else lo
+        if any(lo <= ln <= hi for ln in touched):
+            return rank
+    return None
+
+
+def _score(inst: dict, gold: set[str], gold_lines: dict[str, set[int]], result) -> dict:
+    """Score one query result for file- AND symbol-level localization."""
     ranked = _ranked_files(result, limit=50)
     rank_of_first = next((i + 1 for i, f in enumerate(ranked) if f in gold), None)
+    sym_rank = _symbol_first_rank(result, gold_lines)
 
     def recall_any(k: int) -> float:
         return float(bool(gold & set(ranked[:k])))
 
     def recall_all(k: int) -> float:
         return float(gold and gold.issubset(set(ranked[:k])))
+
+    def sym_recall(k: int) -> float:
+        return float(sym_rank is not None and sym_rank <= k)
 
     return {
         "instance_id": inst["instance_id"],
@@ -197,6 +262,10 @@ def _score(inst: dict, gold: set[str], result) -> dict:
         "recall_all@10": recall_all(10),
         "recall_all@20": recall_all(20),
         "mrr": 1.0 / rank_of_first if rank_of_first else 0.0,
+        "sym_recall@5": sym_recall(5),
+        "sym_recall@10": sym_recall(10),
+        "sym_recall@20": sym_recall(20),
+        "sym_mrr": 1.0 / sym_rank if sym_rank else 0.0,
     }
 
 
@@ -215,6 +284,7 @@ def retrieve_for_instance(
     *identical* built graph is both ~2x faster and methodologically cleaner.
     """
     gold = gold_files_from_patch(inst["patch"])
+    gold_lines = gold_lines_from_patch(inst["patch"])
 
     kg = PyCodeKG(
         repo_root=repo_dir,
@@ -228,7 +298,7 @@ def retrieve_for_instance(
     out: dict[int, dict] = {}
     for hop in hops:
         result = kg.query(inst["problem_statement"], k=top_k, hop=hop, rels=rels)
-        out[hop] = _score(inst, gold, result)
+        out[hop] = _score(inst, gold, gold_lines, result)
     with contextlib.suppress(Exception):
         kg.close()
     return out
@@ -238,7 +308,10 @@ def retrieve_for_instance(
 # BENCHMARK RUNNER
 # =============================================================================
 
-METRICS = ["recall@1", "recall@5", "recall@10", "recall@20", "recall_all@10", "recall_all@20", "mrr"]
+METRICS = [
+    "recall@1", "recall@5", "recall@10", "recall@20", "recall_all@10", "recall_all@20", "mrr",
+    "sym_recall@5", "sym_recall@10", "sym_recall@20", "sym_mrr",
+]
 
 
 def run_benchmark(args) -> None:
@@ -311,9 +384,10 @@ def run_benchmark(args) -> None:
         print(row)
     if len(hops) > 1:
         h0, h1 = hops[0], hops[1]
-        print(f"\n  Δ(hop{h1}-hop{h0}) recall@10 = "
-              f"{(sum(agg[h1]['recall@10']) - sum(agg[h0]['recall@10'])) / n:+.3f}   "
-              f"MRR = {(sum(agg[h1]['mrr']) - sum(agg[h0]['mrr'])) / n:+.3f}")
+        d = lambda m: (sum(agg[h1][m]) - sum(agg[h0][m])) / n  # noqa: E731
+        print(f"\n  Δ(hop{h1}-hop{h0})  file recall@10 = {d('recall@10'):+.3f}  file MRR = {d('mrr'):+.3f}")
+        print(f"  Δ(hop{h1}-hop{h0})  symbol recall@10 = {d('sym_recall@10'):+.3f}  "
+              f"symbol MRR = {d('sym_mrr'):+.3f}   <- where CALLS expansion should matter")
     print(f"\n{'=' * 60}\n")
 
     if args.out:
