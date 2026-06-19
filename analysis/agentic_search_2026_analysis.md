@@ -121,14 +121,28 @@ that is the regime where call-graph expansion *should* finally pay off. It didn'
 sym_recall@10 = 0.692 for both hops, Δ symbol-MRR = **+0.006**, with hop-1 recovering
 exactly one gold symbol and only at rank ≤20.
 
-### Synthesis across THREE measurements — what actually holds up
+### Synthesis — structural expansion is regime-specific (and we found the regime)
 
-HotpotQA, SWE-bench file-level, and SWE-bench symbol-level all say the same
-uncomfortable thing: **graph hop-expansion did not beat flat retrieval** — it hurt on
-HotpotQA and was neutral on both SWE-bench granularities, even the one designed to
-favour `CALLS` expansion. So the rebuttal must **not** rest on "the graph reranks
-better"; our own data refutes that three times. It rests on two pillars the data *does*
-support:
+Five measurements, and the pattern is precise rather than uniform:
+
+| benchmark / regime | does hop>0 help? |
+|---|---|
+| HotpotQA (dense passage QA, co-occurrence edges) | **hurts** (−0.09 recall_all@5) |
+| SWE-bench single-file, file-level | null (Δ 0.000) |
+| SWE-bench single-file, symbol-level | ~null (Δ MRR +0.006) |
+| SWE-bench **multi-file, file-level** | null (Δ 0.000) |
+| SWE-bench **multi-file, symbol-level** (n=14) | **helps** (+0.21 sym_recall@20; 3/14 recovered, 0 regressed) |
+
+The multi-file/symbol result is the one positive, and it is exactly where theory
+predicts: a fix spanning several files has an edited symbol that pure similarity to the
+issue text misses, but cross-file `CALLS`/`IMPORTS` expansion reaches. All three wins
+are the **pylint multi-file patches (2–4 gold files)**; the gain grows with file count,
+and nothing regresses. So the honest claim is **not** "the graph always reranks better"
+— four of five measurements say it doesn't — but rather: **retrieval topology must
+match data topology, and when the answer is genuinely cross-file and structural,
+structural expansion recovers what flat retrieval cannot.** That is a *confirmation* of
+the article's own deepest point ("similarity ≠ structural relevance"), now with a sign
+and a magnitude. The rebuttal rests on three things the data supports:
 
 1. **A precomputed, deterministic index is already competitive** (0.77 file-level
    recall@5) at $0/query, milliseconds, fully reproducible — the axes where the
@@ -143,10 +157,16 @@ support:
    - **Honest limitation:** PyCodeKG's Python call graph resolves method calls *by name*
      (no type inference), so caller sets for shared names (e.g. `get`) are
      over-approximations — the same failure class as `grep`, just structured. The clean,
-     exact wins are for uniquely-named symbols and the aggregate views.
+     exact wins are for uniquely-named symbols and the aggregate views. (Filed as a
+     finding: `analysis/pycodekg_call_resolution_finding.md`.)
+3. **Structural expansion helps in its own regime** — multi-file, symbol-level code
+   localization: +0.21 sym_recall@20 over flat retrieval, recovering cross-file symbols
+   similarity misses. Not a universal reranker, but a real, measurable win where the
+   answer is cross-file and structural.
 
-Structure earns its keep as **deterministic substrate + queryable capability**, not as
-a magic reranker — and "more graph" is not automatically better.
+Structure earns its keep as **deterministic substrate + queryable capability +
+regime-matched expansion** — not as a magic reranker, and "more graph" is not
+automatically better.
 
 ---
 

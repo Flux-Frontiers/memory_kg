@@ -1,0 +1,910 @@
+{
+  "config": {
+    "dataset": "verified",
+    "hops": [
+      0,
+      1
+    ],
+    "k": 10,
+    "n": 14,
+    "model": "BAAI/bge-small-en-v1.5"
+  },
+  "summary": {
+    "hop0": {
+      "recall@1": 0.35714285714285715,
+      "recall@5": 0.8571428571428571,
+      "recall@10": 0.9285714285714286,
+      "recall@20": 0.9285714285714286,
+      "recall_all@10": 0.21428571428571427,
+      "recall_all@20": 0.21428571428571427,
+      "mrr": 0.5637755102040816,
+      "sym_recall@5": 0.5714285714285714,
+      "sym_recall@10": 0.5714285714285714,
+      "sym_recall@20": 0.5714285714285714,
+      "sym_mrr": 0.35714285714285715
+    },
+    "hop1": {
+      "recall@1": 0.35714285714285715,
+      "recall@5": 0.8571428571428571,
+      "recall@10": 0.9285714285714286,
+      "recall@20": 0.9285714285714286,
+      "recall_all@10": 0.21428571428571427,
+      "recall_all@20": 0.21428571428571427,
+      "mrr": 0.5637755102040816,
+      "sym_recall@5": 0.5714285714285714,
+      "sym_recall@10": 0.6428571428571429,
+      "sym_recall@20": 0.7857142857142857,
+      "sym_mrr": 0.37559523809523815
+    }
+  },
+  "results": [
+    {
+      "instance_id": "mwaskom__seaborn-3187",
+      "repo": "mwaskom/seaborn",
+      "by_hop": {
+        "0": {
+          "instance_id": "mwaskom__seaborn-3187",
+          "repo": "mwaskom/seaborn",
+          "n_gold": 2,
+          "gold": [
+            "seaborn/_core/scales.py",
+            "seaborn/utils.py"
+          ],
+          "ranked_top10": [
+            "seaborn/_core/scales.py",
+            "seaborn/_core/properties.py",
+            "seaborn/_oldcore.py",
+            "seaborn/axisgrid.py",
+            "seaborn/_core/moves.py"
+          ],
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall_all@10": 0.0,
+          "recall_all@20": 0.0,
+          "mrr": 1.0,
+          "sym_recall@5": 0.0,
+          "sym_recall@10": 0.0,
+          "sym_recall@20": 0.0,
+          "sym_mrr": 0.0
+        },
+        "1": {
+          "instance_id": "mwaskom__seaborn-3187",
+          "repo": "mwaskom/seaborn",
+          "n_gold": 2,
+          "gold": [
+            "seaborn/_core/scales.py",
+            "seaborn/utils.py"
+          ],
+          "ranked_top10": [
+            "seaborn/_core/scales.py",
+            "seaborn/_core/properties.py",
+            "seaborn/_oldcore.py",
+            "seaborn/axisgrid.py",
+            "seaborn/_core/moves.py"
+          ],
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall_all@10": 0.0,
+          "recall_all@20": 0.0,
+          "mrr": 1.0,
+          "sym_recall@5": 0.0,
+          "sym_recall@10": 0.0,
+          "sym_recall@20": 0.0,
+          "sym_mrr": 0.0
+        }
+      }
+    },
+    {
+      "instance_id": "pydata__xarray-3095",
+      "repo": "pydata/xarray",
+      "by_hop": {
+        "0": {
+          "instance_id": "pydata__xarray-3095",
+          "repo": "pydata/xarray",
+          "n_gold": 2,
+          "gold": [
+            "xarray/core/indexing.py",
+            "xarray/core/variable.py"
+          ],
+          "ranked_top10": [
+            "xarray/core/dataset.py",
+            "xarray/core/variable.py",
+            "xarray/core/dataarray.py",
+            "xarray/tests/test_variable.py"
+          ],
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall_all@10": 0.0,
+          "recall_all@20": 0.0,
+          "mrr": 0.5,
+          "sym_recall@5": 1.0,
+          "sym_recall@10": 1.0,
+          "sym_recall@20": 1.0,
+          "sym_mrr": 0.5
+        },
+        "1": {
+          "instance_id": "pydata__xarray-3095",
+          "repo": "pydata/xarray",
+          "n_gold": 2,
+          "gold": [
+            "xarray/core/indexing.py",
+            "xarray/core/variable.py"
+          ],
+          "ranked_top10": [
+            "xarray/core/dataset.py",
+            "xarray/core/variable.py",
+            "xarray/core/dataarray.py",
+            "xarray/tests/test_variable.py"
+          ],
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall_all@10": 0.0,
+          "recall_all@20": 0.0,
+          "mrr": 0.5,
+          "sym_recall@5": 1.0,
+          "sym_recall@10": 1.0,
+          "sym_recall@20": 1.0,
+          "sym_mrr": 0.5
+        }
+      }
+    },
+    {
+      "instance_id": "pydata__xarray-3305",
+      "repo": "pydata/xarray",
+      "by_hop": {
+        "0": {
+          "instance_id": "pydata__xarray-3305",
+          "repo": "pydata/xarray",
+          "n_gold": 2,
+          "gold": [
+            "xarray/core/dataset.py",
+            "xarray/core/variable.py"
+          ],
+          "ranked_top10": [
+            "xarray/tests/test_dataarray.py",
+            "xarray/core/dataarray.py",
+            "xarray/tests/test_computation.py",
+            "xarray/core/dataset.py",
+            "xarray/tests/test_variable.py",
+            "xarray/tests/test_dataset.py",
+            "xarray/core/groupby.py"
+          ],
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall_all@10": 0.0,
+          "recall_all@20": 0.0,
+          "mrr": 0.25,
+          "sym_recall@5": 1.0,
+          "sym_recall@10": 1.0,
+          "sym_recall@20": 1.0,
+          "sym_mrr": 0.25
+        },
+        "1": {
+          "instance_id": "pydata__xarray-3305",
+          "repo": "pydata/xarray",
+          "n_gold": 2,
+          "gold": [
+            "xarray/core/dataset.py",
+            "xarray/core/variable.py"
+          ],
+          "ranked_top10": [
+            "xarray/tests/test_dataarray.py",
+            "xarray/core/dataarray.py",
+            "xarray/tests/test_computation.py",
+            "xarray/core/dataset.py",
+            "xarray/tests/test_variable.py",
+            "xarray/tests/test_dataset.py",
+            "xarray/core/groupby.py"
+          ],
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall_all@10": 0.0,
+          "recall_all@20": 0.0,
+          "mrr": 0.25,
+          "sym_recall@5": 1.0,
+          "sym_recall@10": 1.0,
+          "sym_recall@20": 1.0,
+          "sym_mrr": 0.25
+        }
+      }
+    },
+    {
+      "instance_id": "pydata__xarray-3993",
+      "repo": "pydata/xarray",
+      "by_hop": {
+        "0": {
+          "instance_id": "pydata__xarray-3993",
+          "repo": "pydata/xarray",
+          "n_gold": 2,
+          "gold": [
+            "xarray/core/dataarray.py",
+            "xarray/core/dataset.py"
+          ],
+          "ranked_top10": [
+            "xarray/core/dataset.py",
+            "xarray/core/combine.py",
+            "xarray/core/dataarray.py",
+            "xarray/tests/test_dataset.py",
+            "xarray/core/coordinates.py"
+          ],
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall_all@10": 1.0,
+          "recall_all@20": 1.0,
+          "mrr": 1.0,
+          "sym_recall@5": 1.0,
+          "sym_recall@10": 1.0,
+          "sym_recall@20": 1.0,
+          "sym_mrr": 1.0
+        },
+        "1": {
+          "instance_id": "pydata__xarray-3993",
+          "repo": "pydata/xarray",
+          "n_gold": 2,
+          "gold": [
+            "xarray/core/dataarray.py",
+            "xarray/core/dataset.py"
+          ],
+          "ranked_top10": [
+            "xarray/core/dataset.py",
+            "xarray/core/combine.py",
+            "xarray/core/dataarray.py",
+            "xarray/tests/test_dataset.py",
+            "xarray/core/coordinates.py"
+          ],
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall_all@10": 1.0,
+          "recall_all@20": 1.0,
+          "mrr": 1.0,
+          "sym_recall@5": 1.0,
+          "sym_recall@10": 1.0,
+          "sym_recall@20": 1.0,
+          "sym_mrr": 1.0
+        }
+      }
+    },
+    {
+      "instance_id": "pydata__xarray-6938",
+      "repo": "pydata/xarray",
+      "by_hop": {
+        "0": {
+          "instance_id": "pydata__xarray-6938",
+          "repo": "pydata/xarray",
+          "n_gold": 2,
+          "gold": [
+            "xarray/core/dataset.py",
+            "xarray/core/variable.py"
+          ],
+          "ranked_top10": [
+            "xarray/core/dataset.py",
+            "xarray/core/dataarray.py",
+            "xarray/core/variable.py"
+          ],
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall_all@10": 1.0,
+          "recall_all@20": 1.0,
+          "mrr": 1.0,
+          "sym_recall@5": 1.0,
+          "sym_recall@10": 1.0,
+          "sym_recall@20": 1.0,
+          "sym_mrr": 1.0
+        },
+        "1": {
+          "instance_id": "pydata__xarray-6938",
+          "repo": "pydata/xarray",
+          "n_gold": 2,
+          "gold": [
+            "xarray/core/dataset.py",
+            "xarray/core/variable.py"
+          ],
+          "ranked_top10": [
+            "xarray/core/dataset.py",
+            "xarray/core/dataarray.py",
+            "xarray/core/variable.py"
+          ],
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall_all@10": 1.0,
+          "recall_all@20": 1.0,
+          "mrr": 1.0,
+          "sym_recall@5": 1.0,
+          "sym_recall@10": 1.0,
+          "sym_recall@20": 1.0,
+          "sym_mrr": 1.0
+        }
+      }
+    },
+    {
+      "instance_id": "pydata__xarray-6992",
+      "repo": "pydata/xarray",
+      "by_hop": {
+        "0": {
+          "instance_id": "pydata__xarray-6992",
+          "repo": "pydata/xarray",
+          "n_gold": 2,
+          "gold": [
+            "xarray/core/dataset.py",
+            "xarray/core/indexes.py"
+          ],
+          "ranked_top10": [
+            "xarray/core/dataset.py",
+            "xarray/core/dataarray.py"
+          ],
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall_all@10": 0.0,
+          "recall_all@20": 0.0,
+          "mrr": 1.0,
+          "sym_recall@5": 1.0,
+          "sym_recall@10": 1.0,
+          "sym_recall@20": 1.0,
+          "sym_mrr": 1.0
+        },
+        "1": {
+          "instance_id": "pydata__xarray-6992",
+          "repo": "pydata/xarray",
+          "n_gold": 2,
+          "gold": [
+            "xarray/core/dataset.py",
+            "xarray/core/indexes.py"
+          ],
+          "ranked_top10": [
+            "xarray/core/dataset.py",
+            "xarray/core/dataarray.py"
+          ],
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall_all@10": 0.0,
+          "recall_all@20": 0.0,
+          "mrr": 1.0,
+          "sym_recall@5": 1.0,
+          "sym_recall@10": 1.0,
+          "sym_recall@20": 1.0,
+          "sym_mrr": 1.0
+        }
+      }
+    },
+    {
+      "instance_id": "pylint-dev__pylint-4551",
+      "repo": "pylint-dev/pylint",
+      "by_hop": {
+        "0": {
+          "instance_id": "pylint-dev__pylint-4551",
+          "repo": "pylint-dev/pylint",
+          "n_gold": 4,
+          "gold": [
+            "pylint/pyreverse/diagrams.py",
+            "pylint/pyreverse/inspector.py",
+            "pylint/pyreverse/utils.py",
+            "pylint/pyreverse/writer.py"
+          ],
+          "ranked_top10": [
+            "pylint/pyreverse/main.py",
+            "pylint/pyreverse/utils.py",
+            "pylint/pyreverse/inspector.py",
+            "pylint/pyreverse/__init__.py",
+            "pylint/__init__.py"
+          ],
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall_all@10": 0.0,
+          "recall_all@20": 0.0,
+          "mrr": 0.5,
+          "sym_recall@5": 0.0,
+          "sym_recall@10": 0.0,
+          "sym_recall@20": 0.0,
+          "sym_mrr": 0.0
+        },
+        "1": {
+          "instance_id": "pylint-dev__pylint-4551",
+          "repo": "pylint-dev/pylint",
+          "n_gold": 4,
+          "gold": [
+            "pylint/pyreverse/diagrams.py",
+            "pylint/pyreverse/inspector.py",
+            "pylint/pyreverse/utils.py",
+            "pylint/pyreverse/writer.py"
+          ],
+          "ranked_top10": [
+            "pylint/pyreverse/main.py",
+            "pylint/pyreverse/utils.py",
+            "pylint/pyreverse/inspector.py",
+            "pylint/pyreverse/__init__.py",
+            "pylint/__init__.py"
+          ],
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall_all@10": 0.0,
+          "recall_all@20": 0.0,
+          "mrr": 0.5,
+          "sym_recall@5": 0.0,
+          "sym_recall@10": 0.0,
+          "sym_recall@20": 1.0,
+          "sym_mrr": 0.05
+        }
+      }
+    },
+    {
+      "instance_id": "pylint-dev__pylint-4604",
+      "repo": "pylint-dev/pylint",
+      "by_hop": {
+        "0": {
+          "instance_id": "pylint-dev__pylint-4604",
+          "repo": "pylint-dev/pylint",
+          "n_gold": 2,
+          "gold": [
+            "pylint/checkers/variables.py",
+            "pylint/constants.py"
+          ],
+          "ranked_top10": [
+            "tests/functional/u/unused/unused_import_class_def_keyword.py",
+            "tests/functional/u/unused/unused_import_everything_disabled.py",
+            "tests/functional/u/unused/unused_typing_imports.py",
+            "tests/functional/u/unused/unused_import_positional_only_py38.py",
+            "pylint/epylint.py",
+            "tests/regrtest_data/import_package_subpackage_module.py",
+            "pylint/checkers/imports.py",
+            "pylint/checkers/logging.py",
+            "pylint/checkers/deprecated.py"
+          ],
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "recall@20": 0.0,
+          "recall_all@10": 0.0,
+          "recall_all@20": 0.0,
+          "mrr": 0.0,
+          "sym_recall@5": 0.0,
+          "sym_recall@10": 0.0,
+          "sym_recall@20": 0.0,
+          "sym_mrr": 0.0
+        },
+        "1": {
+          "instance_id": "pylint-dev__pylint-4604",
+          "repo": "pylint-dev/pylint",
+          "n_gold": 2,
+          "gold": [
+            "pylint/checkers/variables.py",
+            "pylint/constants.py"
+          ],
+          "ranked_top10": [
+            "tests/functional/u/unused/unused_import_class_def_keyword.py",
+            "tests/functional/u/unused/unused_import_everything_disabled.py",
+            "tests/functional/u/unused/unused_typing_imports.py",
+            "tests/functional/u/unused/unused_import_positional_only_py38.py",
+            "pylint/epylint.py",
+            "tests/regrtest_data/import_package_subpackage_module.py",
+            "pylint/checkers/imports.py",
+            "pylint/checkers/logging.py",
+            "pylint/checkers/deprecated.py"
+          ],
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 0.0,
+          "recall@20": 0.0,
+          "recall_all@10": 0.0,
+          "recall_all@20": 0.0,
+          "mrr": 0.0,
+          "sym_recall@5": 0.0,
+          "sym_recall@10": 0.0,
+          "sym_recall@20": 0.0,
+          "sym_mrr": 0.0
+        }
+      }
+    },
+    {
+      "instance_id": "pylint-dev__pylint-4661",
+      "repo": "pylint-dev/pylint",
+      "by_hop": {
+        "0": {
+          "instance_id": "pylint-dev__pylint-4661",
+          "repo": "pylint-dev/pylint",
+          "n_gold": 2,
+          "gold": [
+            "pylint/config/__init__.py",
+            "setup.cfg"
+          ],
+          "ranked_top10": [
+            "pylint/epylint.py",
+            "pylint/__init__.py",
+            "pylint/pyreverse/vcgutils.py",
+            "pylint/utils/file_state.py",
+            "pylint/constants.py",
+            "pylint/lint/utils.py",
+            "pylint/config/__init__.py",
+            "tests/regrtest_data/bad_package/wrong.py",
+            "doc/exts/pylint_extensions.py"
+          ],
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall_all@10": 0.0,
+          "recall_all@20": 0.0,
+          "mrr": 0.14285714285714285,
+          "sym_recall@5": 0.0,
+          "sym_recall@10": 0.0,
+          "sym_recall@20": 0.0,
+          "sym_mrr": 0.0
+        },
+        "1": {
+          "instance_id": "pylint-dev__pylint-4661",
+          "repo": "pylint-dev/pylint",
+          "n_gold": 2,
+          "gold": [
+            "pylint/config/__init__.py",
+            "setup.cfg"
+          ],
+          "ranked_top10": [
+            "pylint/epylint.py",
+            "pylint/__init__.py",
+            "pylint/pyreverse/vcgutils.py",
+            "pylint/utils/file_state.py",
+            "pylint/constants.py",
+            "pylint/lint/utils.py",
+            "pylint/config/__init__.py",
+            "tests/regrtest_data/bad_package/wrong.py",
+            "doc/exts/pylint_extensions.py"
+          ],
+          "recall@1": 0.0,
+          "recall@5": 0.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall_all@10": 0.0,
+          "recall_all@20": 0.0,
+          "mrr": 0.14285714285714285,
+          "sym_recall@5": 0.0,
+          "sym_recall@10": 0.0,
+          "sym_recall@20": 0.0,
+          "sym_mrr": 0.0
+        }
+      }
+    },
+    {
+      "instance_id": "pylint-dev__pylint-6386",
+      "repo": "pylint-dev/pylint",
+      "by_hop": {
+        "0": {
+          "instance_id": "pylint-dev__pylint-6386",
+          "repo": "pylint-dev/pylint",
+          "n_gold": 4,
+          "gold": [
+            "pylint/config/argument.py",
+            "pylint/config/arguments_manager.py",
+            "pylint/config/utils.py",
+            "pylint/lint/base_options.py"
+          ],
+          "ranked_top10": [
+            "pylint/config/utils.py",
+            "pylint/config/arguments_manager.py",
+            "pylint/config/argument.py",
+            "tests/functional/t/too/too_many_locals.py",
+            "pylint/extensions/broad_try_clause.py",
+            "tests/functional/l/line_too_long.py",
+            "pylint/config/callback_actions.py"
+          ],
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall_all@10": 0.0,
+          "recall_all@20": 0.0,
+          "mrr": 1.0,
+          "sym_recall@5": 0.0,
+          "sym_recall@10": 0.0,
+          "sym_recall@20": 0.0,
+          "sym_mrr": 0.0
+        },
+        "1": {
+          "instance_id": "pylint-dev__pylint-6386",
+          "repo": "pylint-dev/pylint",
+          "n_gold": 4,
+          "gold": [
+            "pylint/config/argument.py",
+            "pylint/config/arguments_manager.py",
+            "pylint/config/utils.py",
+            "pylint/lint/base_options.py"
+          ],
+          "ranked_top10": [
+            "pylint/config/utils.py",
+            "pylint/config/arguments_manager.py",
+            "pylint/config/argument.py",
+            "tests/functional/t/too/too_many_locals.py",
+            "pylint/extensions/broad_try_clause.py",
+            "tests/functional/l/line_too_long.py",
+            "pylint/config/callback_actions.py"
+          ],
+          "recall@1": 1.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall_all@10": 0.0,
+          "recall_all@20": 0.0,
+          "mrr": 1.0,
+          "sym_recall@5": 0.0,
+          "sym_recall@10": 1.0,
+          "sym_recall@20": 1.0,
+          "sym_mrr": 0.125
+        }
+      }
+    },
+    {
+      "instance_id": "pylint-dev__pylint-6528",
+      "repo": "pylint-dev/pylint",
+      "by_hop": {
+        "0": {
+          "instance_id": "pylint-dev__pylint-6528",
+          "repo": "pylint-dev/pylint",
+          "n_gold": 2,
+          "gold": [
+            "pylint/lint/expand_modules.py",
+            "pylint/lint/pylinter.py"
+          ],
+          "ranked_top10": [
+            "tests/functional/t/too/too_many_locals.py",
+            "pylint/checkers/utils.py",
+            "pylint/lint/expand_modules.py",
+            "pylint/checkers/variables.py",
+            "pylint/checkers/spelling.py",
+            "pylint/extensions/code_style.py"
+          ],
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall_all@10": 0.0,
+          "recall_all@20": 0.0,
+          "mrr": 0.3333333333333333,
+          "sym_recall@5": 0.0,
+          "sym_recall@10": 0.0,
+          "sym_recall@20": 0.0,
+          "sym_mrr": 0.0
+        },
+        "1": {
+          "instance_id": "pylint-dev__pylint-6528",
+          "repo": "pylint-dev/pylint",
+          "n_gold": 2,
+          "gold": [
+            "pylint/lint/expand_modules.py",
+            "pylint/lint/pylinter.py"
+          ],
+          "ranked_top10": [
+            "tests/functional/t/too/too_many_locals.py",
+            "pylint/checkers/utils.py",
+            "pylint/lint/expand_modules.py",
+            "pylint/checkers/variables.py",
+            "pylint/checkers/spelling.py",
+            "pylint/extensions/code_style.py"
+          ],
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall_all@10": 0.0,
+          "recall_all@20": 0.0,
+          "mrr": 0.3333333333333333,
+          "sym_recall@5": 0.0,
+          "sym_recall@10": 0.0,
+          "sym_recall@20": 1.0,
+          "sym_mrr": 0.08333333333333333
+        }
+      }
+    },
+    {
+      "instance_id": "pylint-dev__pylint-8898",
+      "repo": "pylint-dev/pylint",
+      "by_hop": {
+        "0": {
+          "instance_id": "pylint-dev__pylint-8898",
+          "repo": "pylint-dev/pylint",
+          "n_gold": 3,
+          "gold": [
+            "pylint/config/argument.py",
+            "pylint/utils/__init__.py",
+            "pylint/utils/utils.py"
+          ],
+          "ranked_top10": [
+            "pylint/checkers/strings.py",
+            "pylint/checkers/unicode.py",
+            "pylint/utils/utils.py",
+            "pylint/config/argument.py",
+            "tests/checkers/unittest_unicode/unittest_bad_chars.py",
+            "doc/data/messages/u/useless-option-value/bad.py"
+          ],
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall_all@10": 0.0,
+          "recall_all@20": 0.0,
+          "mrr": 0.3333333333333333,
+          "sym_recall@5": 1.0,
+          "sym_recall@10": 1.0,
+          "sym_recall@20": 1.0,
+          "sym_mrr": 0.25
+        },
+        "1": {
+          "instance_id": "pylint-dev__pylint-8898",
+          "repo": "pylint-dev/pylint",
+          "n_gold": 3,
+          "gold": [
+            "pylint/config/argument.py",
+            "pylint/utils/__init__.py",
+            "pylint/utils/utils.py"
+          ],
+          "ranked_top10": [
+            "pylint/checkers/strings.py",
+            "pylint/checkers/unicode.py",
+            "pylint/utils/utils.py",
+            "pylint/config/argument.py",
+            "tests/checkers/unittest_unicode/unittest_bad_chars.py",
+            "doc/data/messages/u/useless-option-value/bad.py"
+          ],
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall_all@10": 0.0,
+          "recall_all@20": 0.0,
+          "mrr": 0.3333333333333333,
+          "sym_recall@5": 1.0,
+          "sym_recall@10": 1.0,
+          "sym_recall@20": 1.0,
+          "sym_mrr": 0.25
+        }
+      }
+    },
+    {
+      "instance_id": "pytest-dev__pytest-5840",
+      "repo": "pytest-dev/pytest",
+      "by_hop": {
+        "0": {
+          "instance_id": "pytest-dev__pytest-5840",
+          "repo": "pytest-dev/pytest",
+          "n_gold": 2,
+          "gold": [
+            "src/_pytest/config/__init__.py",
+            "src/_pytest/pathlib.py"
+          ],
+          "ranked_top10": [
+            "testing/example_scripts/config/collect_pytest_prefix/conftest.py",
+            "testing/example_scripts/issue88_initial_file_multinodes/conftest.py",
+            "src/_pytest/config/__init__.py",
+            "src/_pytest/capture.py",
+            "doc/en/example/nonpython/conftest.py",
+            "testing/example_scripts/collect/package_infinite_recursion/conftest.py"
+          ],
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall_all@10": 0.0,
+          "recall_all@20": 0.0,
+          "mrr": 0.3333333333333333,
+          "sym_recall@5": 1.0,
+          "sym_recall@10": 1.0,
+          "sym_recall@20": 1.0,
+          "sym_mrr": 0.5
+        },
+        "1": {
+          "instance_id": "pytest-dev__pytest-5840",
+          "repo": "pytest-dev/pytest",
+          "n_gold": 2,
+          "gold": [
+            "src/_pytest/config/__init__.py",
+            "src/_pytest/pathlib.py"
+          ],
+          "ranked_top10": [
+            "testing/example_scripts/config/collect_pytest_prefix/conftest.py",
+            "testing/example_scripts/issue88_initial_file_multinodes/conftest.py",
+            "src/_pytest/config/__init__.py",
+            "src/_pytest/capture.py",
+            "doc/en/example/nonpython/conftest.py",
+            "testing/example_scripts/collect/package_infinite_recursion/conftest.py"
+          ],
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall_all@10": 0.0,
+          "recall_all@20": 0.0,
+          "mrr": 0.3333333333333333,
+          "sym_recall@5": 1.0,
+          "sym_recall@10": 1.0,
+          "sym_recall@20": 1.0,
+          "sym_mrr": 0.5
+        }
+      }
+    },
+    {
+      "instance_id": "pytest-dev__pytest-8399",
+      "repo": "pytest-dev/pytest",
+      "by_hop": {
+        "0": {
+          "instance_id": "pytest-dev__pytest-8399",
+          "repo": "pytest-dev/pytest",
+          "n_gold": 2,
+          "gold": [
+            "src/_pytest/python.py",
+            "src/_pytest/unittest.py"
+          ],
+          "ranked_top10": [
+            "src/_pytest/doctest.py",
+            "src/_pytest/python.py",
+            "src/_pytest/unittest.py",
+            "src/_pytest/fixtures.py",
+            "testing/python/fixtures.py"
+          ],
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall_all@10": 1.0,
+          "recall_all@20": 1.0,
+          "mrr": 0.5,
+          "sym_recall@5": 1.0,
+          "sym_recall@10": 1.0,
+          "sym_recall@20": 1.0,
+          "sym_mrr": 0.5
+        },
+        "1": {
+          "instance_id": "pytest-dev__pytest-8399",
+          "repo": "pytest-dev/pytest",
+          "n_gold": 2,
+          "gold": [
+            "src/_pytest/python.py",
+            "src/_pytest/unittest.py"
+          ],
+          "ranked_top10": [
+            "src/_pytest/doctest.py",
+            "src/_pytest/python.py",
+            "src/_pytest/unittest.py",
+            "src/_pytest/fixtures.py",
+            "testing/python/fixtures.py"
+          ],
+          "recall@1": 0.0,
+          "recall@5": 1.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall_all@10": 1.0,
+          "recall_all@20": 1.0,
+          "mrr": 0.5,
+          "sym_recall@5": 1.0,
+          "sym_recall@10": 1.0,
+          "sym_recall@20": 1.0,
+          "sym_mrr": 0.5
+        }
+      }
+    }
+  ]
+}

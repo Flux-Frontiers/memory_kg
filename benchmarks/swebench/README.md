@@ -101,11 +101,45 @@ expansion *should* help):
    only at rank ≤20. Symbol localization is genuinely harder (sym_recall@10 = 0.69 vs
    file 0.77), but the call graph does not meaningfully rerank it here.
 
-Across **three** measurements (HotpotQA, SWE-bench file, SWE-bench symbol), **structural
-expansion is not a free ranking win.** PyCodeKG's edge over flat embeddings is its
-deterministic substrate and its *structural query capabilities* (callers, fan-in,
-dead code — see `benchmarks/capabilities/`), not hop-expanded ranking. See
-`analysis/agentic_search_2026_analysis.md`.
+## Multi-file regime (SWE-bench Verified, n=14, gold patch edits ≥2 files)
+
+Run with `--dataset verified --min-gold-files 2` on light-ish repos
+(seaborn/xarray/pylint/pytest) — the regime where cross-file `CALLS`/`IMPORTS`
+expansion *should* help, because the second file's edited symbol is reachable
+structurally but not necessarily by similarity to the issue text.
+
+| metric | hop 0 | hop 1 | Δ |
+|---|--:|--:|--:|
+| file recall@10 | 0.929 | 0.929 | 0.000 |
+| file recall_all@10 (both files) | 0.214 | 0.214 | 0.000 |
+| sym_recall@10 | 0.571 | 0.643 | **+0.071** |
+| sym_recall@20 | 0.571 | **0.786** | **+0.214** |
+| sym_mrr | 0.357 | 0.376 | +0.018 |
+
+**This is the first place hop-expansion helps — and it does, cleanly.** 3 of 14
+instances recovered a gold symbol that flat retrieval missed entirely (sym@20 0→1),
+**zero regressed**, and all three wins are the **pylint multi-file fixes (2–4 gold
+files)** — the gain grows with how many files the change spans. The recovered symbols
+surface at deeper ranks (the lift is at @20, modest at @10), so expansion *finds* the
+cross-file bridge symbol but ranks it only moderately. File-level and `recall_all` are
+unchanged: getting *both* files is hard (0.21) and expansion doesn't help there.
+
+## The full picture — structural expansion is regime-specific
+
+| benchmark / regime | does hop>0 help? |
+|---|---|
+| HotpotQA (dense passage QA, co-occurrence edges) | **hurts** (−0.09 recall_all@5) |
+| SWE-bench single-file, file-level | null (Δ 0.000) |
+| SWE-bench single-file, symbol-level | ~null (Δ MRR +0.006) |
+| SWE-bench **multi-file, file-level** | null (Δ 0.000) |
+| SWE-bench **multi-file, symbol-level** | **helps** (+0.21 sym_recall@20, 3/14, no regressions) |
+
+The honest conclusion is not "graphs win" or "graphs don't help" — it's that
+**retrieval topology must match data topology.** Cross-file AST expansion helps exactly
+where the answer is cross-file and structural (multi-file symbol localization) and
+nowhere else. Alongside that, PyCodeKG's deterministic substrate and *structural query
+capabilities* (callers, fan-in, dead code — see `benchmarks/capabilities/`) are value
+flat embeddings can't provide at all. See `analysis/agentic_search_2026_analysis.md`.
 
 ## Verification status
 

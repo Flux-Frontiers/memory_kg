@@ -72,7 +72,7 @@ blob:
 |---|---|
 | Similarity ≠ structural relevance | The edges **are** the structure. PyCodeKG extracts `CALLS`, `IMPORTS`, `INHERITS`, `CONTAINS`, `RESOLVES_TO` straight from the AST. Graph proximity is a first-class ranking signal, not an afterthought. |
 | Identifier exact-match | Retrieval is scored by lexical containment, not pure cosine, and `RESOLVES_TO` resolves import aliases so fan-in is **exact**, not fuzzy. |
-| Single-shot brittleness | The retrieval is a *tool the agent re-queries*, not a one-shot pipeline — and the index is deterministic, so a follow-up query returns the same thing every time. (Honesty note: graph *hop-expansion* did **not** improve ranking in our tests — see below. The fix for brittleness is cheap, reproducible re-querying, not a hop trick.) |
+| Single-shot brittleness | Two answers: (a) the index is a *tool the agent re-queries* deterministically, not a one-shot pipeline; and (b) graph expansion measurably recovers cross-file targets that single-shot similarity misses — **+0.21 symbol-recall@20 on multi-file SWE-bench fixes** — though only in that regime (see the regime map below). |
 | Staleness on every commit | Incremental rebuilds + temporal **snapshots and diffs**: you can ask "what changed structurally between v1 and v2," deterministically. |
 | Non-deterministic, un-testable | The whole pipeline is deterministic, explainable, snapshot-diffable, and free per query — the *opposite* of an agentic loop. |
 
@@ -94,20 +94,33 @@ paragraphs into the top 5 on 70% of questions; turning on the default entity-bas
 expansion *dropped* it to 61%, net-displacing gold on 13 questions while rescuing only
 4.
 
-Then we ran the fight on the article's own turf — **SWE-bench** file localization,
-*given a real GitHub issue, find the file to edit*, driven by PyCodeKG's AST graph.
-On a 13-instance Lite sample (requests/flask/seaborn), flat semantic retrieval put the
-gold file in the top 5 on **10 of 13** instances (MRR 0.49). Turning on AST graph
-expansion changed the result by **exactly nothing** — Δ = 0.000 on every metric. We
-then built the *harder* metric — *symbol*-level localization, does retrieval find the
-exact function the patch edits — precisely because that is where call-graph expansion
-*should* finally help. Δ symbol-MRR = **+0.006**; it recovered one gold symbol, at rank
-≤20. Essentially null again.
+Then we ran the fight on the article's own turf — **SWE-bench** code localization,
+*given a real GitHub issue, find what to edit*, driven by PyCodeKG's AST graph. We ran
+it five ways, and the result is not a slogan in either direction — it's a *map* of
+where structure helps:
 
-So here is the uncomfortable, honest finding, stated plainly: **in three separate
-measurements, hop-expanded ranking did not beat flat retrieval.** We are not going to
-tell you the graph reranks better, because our own numbers say it doesn't. What they
-*do* say is two things the article should sit with:
+| benchmark / regime | does graph expansion help? |
+|---|---|
+| HotpotQA (dense passage QA) | **hurts** (−0.09) |
+| SWE-bench single-file, file-level | null |
+| SWE-bench single-file, symbol-level | ~null (+0.006) |
+| SWE-bench multi-file, file-level | null |
+| **SWE-bench multi-file, symbol-level** | **helps (+0.21 recall@20)** |
+
+Flat retrieval is already strong on the easy regimes (gold file in the top-5 on 10/13
+single-file instances, $0/query, deterministic). And for four of five regimes, turning
+on graph expansion does *nothing* or hurts — so we are **not** going to tell you the
+graph is a magic reranker. But in the fifth — multi-file fixes, scored at the level of
+the exact function being changed — expansion recovered **3 of 14** gold symbols that
+flat retrieval missed *entirely* (symbol-recall@20 0.57 → 0.79), with **zero
+regressions**, and every win was one of the patches that spans the most files. That is
+the article's own deepest claim — *similarity isn't structural relevance* — confirmed
+with a sign and a magnitude: when the answer is genuinely cross-file and structural,
+the call graph reaches it and cosine doesn't.
+
+So the honest finding, stated plainly: **graph expansion is regime-specific, not a
+universal win** — and we can now point to exactly the regime where it pays. Two more
+things the data says the article should sit with:
 
 1. **A precomputed, deterministic index is already competitive** — 0.77 file-level
    recall@5, at $0 per query, in milliseconds, fully reproducible. That is the bar
