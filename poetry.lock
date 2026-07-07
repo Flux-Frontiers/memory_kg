@@ -4104,4 +4104,4 @@ viz = ["plotly", "pyvis", "streamlit"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<3.14"
-content-hash = "6ed1ee4fa188802160ab23ce10b8be3b71fb449ca0fbb0c41cc5c6f322e4857c"
+content-hash = "cdb91c030173eb17f317954b8c4efa6db711a0d0785993994b6431e1a74bd3d3"
