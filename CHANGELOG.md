@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Removed
+
+### Fixed
+
+## [0.5.2] - 2026-07-09
+
+### Added
 - `benchmarks/membench/membench_bench.py`: Complete MemBench benchmark harness (ACL 2025) — 1,100 items across 11 memory categories (simple, highlevel, knowledge_update, comparative, conditional, noisy, aggregative, highlevel_rec, lowlevel_rec, RecMultiSession, post_processing) and 3 topics (movie, food, book); prepare/run/all subcommand architecture; per-item haystack scoping essential (without it recall collapses from 87.7% to 8.9%); results: **87.7% recall@k20** (k=10: 81.6%, k=50: 88.9%)
 - `benchmarks/membench/BENCHMARKS_MEMBENCH.md`: Full MemBench results record — per-category recall table, k-ablation, scoping ablation, and architectural notes
 - `benchmarks/membench/membench_article.md` + `.tex` + `.pdf`: Academic writeup for MemBench evaluation
@@ -42,6 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `pyproject.toml`: the cross-KG sibling integrations (`pycode-kg`, `doc-kg`) are now **optional manual installs** rather than a resolved `kgdeps` extra. They are never imported by memory_kg's core code, and pinning them forced poetry's universal lock resolution to reconcile their newer `transformers>=4.57.6` requirement against this project's `transformers<4.57` cap — which had left `poetry.lock` unbuildable. Removing them unblocks `poetry lock`
 - `poetry.lock`: regenerated — now consistent with `pyproject.toml` (`poetry check --lock` passes); previously stale since the `transformers<4.57` cap was introduced
+- `pyproject.toml`: relaxed the `transformers` constraint to `>=4.40.0,<4.57` (widened lower bound) for broader environment compatibility
 
 ### Removed
 - **`pylint` dropped** in favour of `ruff` (which already enforces the pylint-derived `PLE`/`PLW` rules): removed `pylint>=4.0.5` from dev/all deps, the `[tool.pylint.messages_control]` config, and the `pylint` pre-commit hook
@@ -52,6 +63,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Old ConvoMem result files with inflated scores from the scoring bug
 
 ### Fixed
+- `src/memory_kg/memorykg.py`: **Parse-phase segfault** (`malloc: pointer being freed was not allocated` → SIGSEGV). The 8-thread `ThreadPoolExecutor` in `parse_corpus` gave each worker its own chunker but all wrapped the *same* shared `SentenceTransformer`/torch embedder; semantic chunking's concurrent `encode()` calls corrupted the native heap. Now parses serially whenever a shared embedder is in use (mirroring `doc_kg`); threaded parsing stays for the embedder-free strategies (`fixed`/`heading`/`sentence_group`), where per-file work is pure Python
+- `src/memory_kg/cli`: `--version` reported the wrong distribution name (`doc-kg` → `memory-kg`)
 - `benchmarks/convomem/convomem_bench.py`: Scoring bug in `retrieve_for_item()` — empty `node_text` was always counted as a substring match (empty string is a substring of any string), artificially inflating recall to 100%; fixed with `node_text and (...)` guard; corrected tier-1 recall: 96.3% (vs. 92.9% MemPal, still +3.4 pp)
 - `tests/test_embedder_worker.py`: Updated `test_pipeline_model_constant_value` to respect `DOCKG_MODEL` env var override rather than asserting the old hardcoded model name
 
