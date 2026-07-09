@@ -15,6 +15,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+## [0.6.0] - 2026-07-09
+
+### Added
+- `src/memory_kg/store.py`: streaming reads for memory-bounded index builds — `GraphStore.count_nodes()` (row counts without loading text) and `GraphStore.iter_nodes()` (paged cursor generator). The builder now streams nodes instead of materialising the whole corpus in RAM.
+- `benchmarks/longmemeval/longmemeval_memkg.py`: `--device {cpu,mps,cuda,auto}` flag on `prepare`/`all` (sets `KG_EMBED_DEVICE` in-process; default `auto`).
+
+### Changed
+- **`src/memory_kg/index.py`: `SemanticIndex.build()` `encode_batch_size` default 1024 → 128.** Attention memory scales with `batch × seq²`; at 1024 a single encode of long (heading) chunks allocated ~7–9 GB, ballooning peak RSS to 25 GB on CPU / 32 GB on MPS (and stalling MPS around 230k rows). Throughput is flat above ~128 on both CPU and MPS, so 128 cuts peak RAM ~7× at no speed cost. A 528k-node MPS build now peaks **~4 GB, flat** (was 25–32 GB).
+- `src/memory_kg/index.py`: embedder consolidated onto `kg_utils.embedder` — `Embedder` and `SentenceTransformerEmbedder` are now imported and re-exported from the shared module (single source of truth for model loading + device handling) rather than defined locally. Existing `from memory_kg.index import SentenceTransformerEmbedder` imports are unchanged.
+- `src/memory_kg/index.py`: device resolution unified on `KG_EMBED_DEVICE` (precedence: explicit → env → auto-detect cuda→mps→cpu), matching every other KG module. `SemanticIndex.search()` remains an exact flat cosine scan — retrieval recall stays exact, which the benchmark suites depend on.
+- `src/memory_kg/index.py`: LanceDB write batch floored at 4096 rows, decoupled from the (smaller) encode batch, to keep fragment count and per-commit cost bounded.
+- `benchmarks/longmemeval/longmemeval_memkg.py`: banner now prints the actually-resolved embedding device.
+
+### Removed
+- `src/memory_kg/index.py`: GPU-drift mitigation machinery in `build()` — adaptive + fixed embedder refresh, dynamic encode-batch shrink, per-window `torch.mps/cuda.empty_cache()` + `gc.collect()`, and the `is_gpu` gating. All of it was compensating for the oversized encode batch; once that is right-sized the machinery is unnecessary, and on MPS its `embed_ms ≥ 0.6` refresh trigger misfired in steady state (~1.9 ms/row), reloading the model every window and dragging throughput down. The embed loop is now a lean stream: page → encode → buffer → write. Also removed the now-orphaned local `make_embedder` helper.
+- `DOCKG_DEVICE` environment variable — superseded by `KG_EMBED_DEVICE`.
+
+### Fixed
+- Out-of-memory / stall on large-corpus embedding (Phase 2). Combined fix: streaming node reads (`iter_nodes`) + a pre-allocated contiguous `(n_chunks × dim)` float32 matrix for SIMILAR_TO discovery (replacing a Python list-of-lists) + the right-sized encode batch. A 528,083-node MPS build now completes with **flat ~4 GB peak RSS** and no mid-run stalls.
+
 ## [0.5.3] - 2026-07-09
 
 ### Changed
