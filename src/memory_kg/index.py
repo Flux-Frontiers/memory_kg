@@ -4,7 +4,7 @@ index.py
 
 SemanticIndex — LanceDB vector index for MemoryKG.
 
-Mirrors CodeKG's index.py with the following additions:
+Mirrors DocKG's index.py with the following additions:
 
 1. Default model is ``BAAI/bge-small-en-v1.5`` (384-dim) via ``DEFAULT_MODEL``
    from ``kg_utils.embed``; override with ``KGRAG_MODEL_DIR`` env var or ``--model``.
@@ -19,6 +19,7 @@ Mirrors CodeKG's index.py with the following additions:
    section context, and chunk text instead of kind/qualname/docstring.
 
 Author: Eric G. Suchanek, PhD
+Last Revision: 2026-07-09 14:38:45
 """
 
 # pylint: disable=C0415
@@ -27,12 +28,15 @@ from __future__ import annotations
 
 import contextlib
 import logging
+import os
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
-from kg_utils.embed import DEFAULT_MODEL, resolve_model_path
+from kg_utils.embed import resolve_model_path
+from kg_utils.embedder import Embedder, SentenceTransformerEmbedder
+from rich.console import Console
 
 if TYPE_CHECKING:
     from memory_kg.store import GraphStore
@@ -53,6 +57,36 @@ def _local_model_path(model_name: str) -> Path:
     :return: Absolute :class:`~pathlib.Path` to the cached model directory.
     """
     return resolve_model_path(model_name, local_fallback=Path.cwd() / ".memorykg" / "models")
+
+
+def _resolve_device(explicit: str | None = None) -> str:
+    """Resolve the embedding device the same way ``kg_utils.embedder`` does.
+
+    Precedence: explicit arg > ``KG_EMBED_DEVICE`` env > auto-detect
+    (``cuda`` → ``mps`` → ``cpu``).  This is a read-only mirror of the resolution
+    inside :func:`kg_utils.embedder.load_sentence_transformer` — use it to *report*
+    the device (e.g. in a CLI banner), not to construct the embedder.  Pinning
+    ``KG_EMBED_DEVICE=cpu`` is the robust escape hatch on Apple Silicon: it
+    sidesteps the MPS allocator cliff that stalls very large ingests.
+
+    :param explicit: Explicit device (``"cpu"``/``"mps"``/``"cuda"``), or
+                     ``None``/``"auto"`` to defer to env / auto-detect.
+    :return: A concrete device string.
+    """
+    sel = (explicit or "").strip().lower()
+    if sel and sel != "auto":
+        return sel
+    env = os.environ.get("KG_EMBED_DEVICE", "").strip().lower()
+    if env:
+        return env
+    try:
+        import torch  # pylint: disable=import-outside-toplevel
+
+        if torch.cuda.is_available():
+            return "cuda"
+        return "mps" if torch.backends.mps.is_available() else "cpu"
+    except (ImportError, AttributeError):
+        return "cpu"
 
 
 # ---------------------------------------------------------------------------
@@ -96,108 +130,12 @@ def suppress_ingestion_logging() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Embedder interface (identical to CodeKG — pluggable)
+# Embedder — the concrete backend lives in ``kg_utils.embedder`` so the
+# local_files_only guard, model-alias resolution, and KG_EMBED_DEVICE handling
+# are defined exactly once for every KG module.  ``Embedder`` and
+# ``SentenceTransformerEmbedder`` are re-exported above for backward-compatible
+# imports (``from memory_kg.index import SentenceTransformerEmbedder``).
 # ---------------------------------------------------------------------------
-
-
-class Embedder:
-    """Abstract embedding backend.
-
-    :param dim: Embedding dimension (must be set by subclass ``__init__``).
-    """
-
-    dim: int
-
-    def embed_texts(self, texts: list[str]) -> list[list[float]]:
-        """Embed a list of strings.
-
-        :param texts: Input strings.
-        :return: List of float32 vectors, one per input.
-        """
-        raise NotImplementedError
-
-    def embed_query(self, query: str) -> list[float]:
-        """Embed a single query string.
-
-        :param query: Query string.
-        :return: Float32 vector.
-        """
-        return self.embed_texts([query])[0]
-
-
-class SentenceTransformerEmbedder(Embedder):
-    """Local embedding via ``sentence-transformers``.
-
-    Default model is ``BAAI/bge-small-en-v1.5`` (384-dim).  Override by
-    passing ``model_name`` directly or setting ``KGRAG_MODEL_DIR`` to redirect
-    the model cache system-wide.
-
-    :param model_name: HuggingFace model name or local path.
-    """
-
-    def __init__(self, model_name: str = DEFAULT_MODEL) -> None:
-        """Load the SentenceTransformer model and determine its embedding dimension."""
-        import os  # pylint: disable=import-outside-toplevel
-
-        from sentence_transformers import (  # pylint: disable=import-outside-toplevel
-            SentenceTransformer,
-        )
-        from transformers import (  # pylint: disable=import-outside-toplevel
-            logging as hf_logging,
-        )
-
-        hf_logging.set_verbosity_error()
-
-        trust_remote = "nomic-ai/" in model_name
-        local_path = _local_model_path(model_name)
-        _prev_tqdm = os.environ.get("TQDM_DISABLE")
-        os.environ["TQDM_DISABLE"] = "1"
-        device = os.environ.get("DOCKG_DEVICE", "mps")
-        try:
-            if local_path.exists():
-                self.model = SentenceTransformer(
-                    str(local_path), trust_remote_code=trust_remote, device=device
-                )
-            else:
-                try:
-                    self.model = SentenceTransformer(
-                        model_name,
-                        local_files_only=True,
-                        trust_remote_code=trust_remote,
-                        device=device,
-                    )
-                except OSError:
-                    self.model = SentenceTransformer(
-                        model_name, trust_remote_code=trust_remote, device=device
-                    )
-        finally:
-            if _prev_tqdm is None:
-                os.environ.pop("TQDM_DISABLE", None)
-            else:
-                os.environ["TQDM_DISABLE"] = _prev_tqdm
-        self.model_name = model_name
-        get_dim = getattr(self.model, "get_embedding_dimension", None) or getattr(
-            self.model, "get_sentence_embedding_dimension", None
-        )
-        self.dim: int = (get_dim() if get_dim is not None else None) or 384
-
-    def embed_texts(self, texts: list[str]) -> list[list[float]]:
-        """Embed a list of strings into float32 vectors."""
-        import numpy as np  # pylint: disable=import-outside-toplevel
-
-        vecs = self.model.encode(texts, normalize_embeddings=True, show_progress_bar=False)
-        return [np.asarray(v, dtype="float32").tolist() for v in vecs]
-
-    def embed_query(self, query: str) -> list[float]:
-        """Embed a single query string into a float32 vector."""
-        import numpy as np  # pylint: disable=import-outside-toplevel
-
-        vec = self.model.encode([query], normalize_embeddings=True)[0]
-        return np.asarray(vec, dtype="float32").tolist()
-
-    def __repr__(self) -> str:
-        """Return string representation."""
-        return f"SentenceTransformerEmbedder(model={self.model_name!r}, dim={self.dim})"
 
 
 # ---------------------------------------------------------------------------
@@ -242,6 +180,10 @@ class SemanticIndex:
     stores the vectors in LanceDB.  The index is **derived and disposable** —
     it can be rebuilt from SQLite at any time without data loss.
 
+    ``search`` uses an exact flat cosine scan (no ANN index): retrieval recall
+    is exact, which the benchmark suites depend on.  Search cost grows linearly
+    with corpus size but stays well within budget at the scales in use.
+
     After building the vector index, optionally runs a SIMILAR_TO edge
     discovery pass that writes semantic similarity edges back to the store.
 
@@ -285,92 +227,123 @@ class SemanticIndex:
         store: GraphStore,
         *,
         wipe: bool = False,
-        batch_size: int = 1024,
+        batch_size: int = 8192,
+        encode_batch_size: int = 128,
         quiet: bool = True,
         discover_similar: bool = True,
         similar_k: int = 5,
         similarity_edge_threshold: float = 0.85,
-        n_workers: int = 8,
+        similar_max_degree: int = 0,
+        n_workers: int = 8,  # pylint: disable=unused-argument
     ) -> dict:
         """Build (or rebuild) the vector index from *store*.
 
-        After indexing, optionally discovers SIMILAR_TO edges between
-        semantically close chunk nodes and writes them back to *store*.
+        Nodes are streamed from SQLite in pages (never the whole corpus in RAM),
+        embedded, and written to LanceDB in large fragments.  Chunk vectors are
+        accumulated into a single pre-allocated ``(n_chunks × dim)`` float32
+        matrix so the SIMILAR_TO pass sees a compact array rather than hundreds
+        of thousands of loose Python lists.  After indexing, optionally discovers
+        SIMILAR_TO edges between semantically close chunk nodes.
 
         :param store: Authoritative :class:`~memory_kg.store.GraphStore`.
         :param wipe: If ``True``, delete all existing vectors first.
-        :param batch_size: Number of nodes to embed per batch.
+        :param batch_size: LanceDB write batch size (rows buffered per ``add``).
+        :param encode_batch_size: Texts fed to ``model.encode()`` per call
+                                  (default 128).  Attention memory scales with
+                                  ``batch x seq^2``; on both CPU and MPS throughput
+                                  is flat above ~128 for small models, so a larger
+                                  value only inflates peak RAM.  Raise it only for
+                                  large models on a large-VRAM CUDA GPU.
         :param quiet: Suppress progress output.
-        :param n_workers: Number of parallel embedding workers (>1 enables
-                          multi-process embedding via :class:`~memory_kg.embedder_worker.CorpusEmbedder`).
         :param discover_similar: If ``True``, run SIMILAR_TO edge discovery.
         :param similar_k: k-nearest neighbors to examine per chunk.
         :param similarity_edge_threshold: Minimum cosine similarity to emit a
                                           SIMILAR_TO edge (0–1).
+        :param similar_max_degree: Cap total SIMILAR_TO edges per node (0 = unlimited).
+        :param n_workers: Accepted for call-site compatibility; ignored. Phase 2
+                          embedding runs single-process — multi-process spawn
+                          deadlocks on macOS with MPS and the GPU batch loop is
+                          already hardware-accelerated.
         :return: Stats dict.
         """
         if quiet:
             suppress_ingestion_logging()
 
-        nodes = self._read_nodes(store)
+        import numpy as np  # pylint: disable=import-outside-toplevel
+
+        # Count without loading any text — used for the progress bar and chunk pre-alloc.
+        n_total = store.count_nodes(kinds=list(self.index_kinds))
+        n_chunks = store.count_nodes(kinds=["chunk"]) if discover_similar else 0
+
+        if not quiet:
+            Console().print(f"  nodes    : {n_total:,} to embed")
         tbl = self._open_table(wipe=wipe)
 
         indexed = 0
-        # Accumulators for SIMILAR_TO discovery; only populated when discover_similar.
-        # Skipping the .extend() calls below saves ~800 MB RAM for a 528K-node
-        # corpus at 384 dims.
-        all_ids: list[str] = []
-        all_vecs: list[list[float]] = []
-
-        # NOTE: n_workers is accepted but Phase 2 embedding runs single-process.
-        # Multi-process spawn (CorpusEmbedder) deadlocks on macOS with MPS; the
-        # GPU batch loop below is already hardware-accelerated.
+        # Buffer LanceDB writes into large fragments regardless of the (smaller)
+        # encode batch: each add() commits a fragment and rewrites the manifest,
+        # so many small writes make fragment count — and thus per-commit cost —
+        # grow over the build.  Floor at 4096.
+        write_batch_size = max(int(batch_size), int(encode_batch_size), 4096)
+        pending_rows: list[dict[str, Any]] = []
+        # Pre-allocate a contiguous (n_chunks x dim) matrix for chunk vectors so
+        # the SIMILAR_TO pass has a compact array rather than 300K+ loose ndarrays.
+        chunk_pair_ids: list[str] = []
+        chunk_pair_vecs: Any = (
+            np.empty((n_chunks, self.embedder.dim), dtype=np.float32)
+            if discover_similar and n_chunks > 0
+            else None
+        )
+        chunk_vec_idx = 0
 
         if not quiet:
             from rich.progress import (  # pylint: disable=import-outside-toplevel
                 BarColumn,
                 MofNCompleteColumn,
                 Progress,
+                SpinnerColumn,
+                TextColumn,
                 TimeElapsedColumn,
+                TimeRemainingColumn,
             )
 
             _progress_ctx: contextlib.AbstractContextManager = Progress(
-                "[progress.description]{task.description}",
+                SpinnerColumn(),
+                TextColumn("[progress.description]{task.description}"),
                 BarColumn(),
                 MofNCompleteColumn(),
                 TimeElapsedColumn(),
-                transient=True,
+                TimeRemainingColumn(),
             )
         else:
             _progress_ctx = contextlib.nullcontext()
 
-        # On wipe builds the table is empty — accumulate rows and write in large
-        # batches to avoid LanceDB fragment churn. On incremental builds, delete
-        # + add per embedding batch to handle updates correctly.
-        lance_batch_size = 4096
-        pending_rows: list[dict] = []
-
-        def _flush(force: bool = False) -> None:
-            """Write pending rows to LanceDB; flushes unconditionally when *force* is True."""
-            nonlocal indexed
-            if not pending_rows:
-                return
-            if force or len(pending_rows) >= lance_batch_size:
-                tbl.add(pending_rows)
-                indexed += len(pending_rows)
-                pending_rows.clear()
-
         with _progress_ctx as prog:
-            task_id = prog.add_task("  Embedding", total=len(nodes)) if prog is not None else None
-            for i in range(0, len(nodes), batch_size):
-                chunk = nodes[i : i + batch_size]
-                texts = [_build_index_text(n) for n in chunk]
-                vecs = self.embedder.embed_texts(texts)
+            task_id = prog.add_task("  Embedding", total=n_total) if prog is not None else None
+            # Stream nodes in encode_batch_size pages — never hold all node dicts in
+            # RAM, and keep each encode call's attention memory (batch x seq^2) bounded.
+            for enc_nodes in store.iter_nodes(
+                kinds=list(self.index_kinds), batch_size=encode_batch_size
+            ):
+                enc_texts = [_build_index_text(n) for n in enc_nodes]
+                # The page is already sized to encode_batch_size (iter_nodes above),
+                # so this hands the model one bounded batch — no sub-batching needed.
+                enc_vecs = self.embedder.embed_texts(enc_texts)
 
-                ids = [n["id"] for n in chunk]
+                if discover_similar and chunk_pair_vecs is not None:
+                    enc_arr = np.asarray(enc_vecs, dtype=np.float32)
+                    for node, vec in zip(enc_nodes, enc_arr, strict=True):
+                        if node["id"].startswith("chunk:"):
+                            chunk_pair_ids.append(node["id"])
+                            chunk_pair_vecs[chunk_vec_idx] = vec
+                            chunk_vec_idx += 1
 
-                if not wipe and ids:
-                    # Incremental: delete stale vectors before re-adding
+                ids = [n["id"] for n in enc_nodes]
+
+                # On wipe builds the table starts empty — skip delete to avoid
+                # scanning a growing fragment list (O(n²) slowdown). On incremental
+                # builds, delete stale rows before re-adding.
+                if not wipe:
                     pred = " OR ".join([f"id = '{_escape(nid)}'" for nid in ids])
                     tbl.delete(pred)
 
@@ -384,35 +357,35 @@ class SemanticIndex:
                         "text": text,
                         "vector": vec,
                     }
-                    for n, text, vec in zip(chunk, texts, vecs, strict=True)
+                    for n, text, vec in zip(enc_nodes, enc_texts, enc_vecs, strict=True)
                 ]
+                pending_rows.extend(rows)
 
-                if wipe:
-                    pending_rows.extend(rows)
-                    _flush()
-                else:
-                    tbl.add(rows)
-                    indexed += len(rows)
+                if len(pending_rows) >= write_batch_size:
+                    tbl.add(pending_rows)
+                    indexed += len(pending_rows)
+                    pending_rows = []
 
-                if discover_similar:
-                    all_ids.extend(ids)
-                    all_vecs.extend(vecs)
-                if task_id is not None and prog is not None:
-                    prog.advance(task_id, len(rows))
+                if prog is not None and task_id is not None:
+                    prog.advance(task_id, len(enc_nodes))
 
-            _flush(force=True)  # write any remaining rows
+        if pending_rows:
+            tbl.add(pending_rows)
+            indexed += len(pending_rows)
 
         self._tbl = tbl
 
-        # SIMILAR_TO edge discovery
+        # SIMILAR_TO edge discovery — blocked BLAS matmul over the compact matrix.
         similar_edges_added = 0
-        if discover_similar and all_vecs:
+        if discover_similar and chunk_pair_ids and chunk_pair_vecs is not None:
             similar_edges_added = self._discover_similar_edges(
                 store,
-                all_ids,
-                all_vecs,
+                tbl,
+                chunk_pair_ids,
+                chunk_pair_vecs[:chunk_vec_idx],
                 k=similar_k,
                 threshold=similarity_edge_threshold,
+                max_degree=similar_max_degree,
                 quiet=quiet,
             )
 
@@ -433,96 +406,194 @@ class SemanticIndex:
     def _discover_similar_edges(
         self,
         store: GraphStore,
-        node_ids: list[str],
-        vecs: list[list[float]],
+        tbl: Any,
+        chunk_ids: list[str],
+        chunk_vecs: Any,
         *,
         k: int,
         threshold: float,
-        quiet: bool,  # pylint: disable=unused-argument
+        max_degree: int = 0,
+        quiet: bool,
+        flush_every: int = 1000,
+        block_size: int = 512,
     ) -> int:
         """Find semantically similar chunk pairs and write SIMILAR_TO edges.
 
-        Only chunk nodes participate in SIMILAR_TO (sections and documents
-        are already structurally connected via CONTAINS).
+        Replaces the per-chunk LanceDB ANN loop with a blocked NumPy matmul.
+        Since all chunk vectors are L2-normalised by the embedder
+        (``normalize_embeddings=True``), cosine similarity equals the dot
+        product, so one BLAS SGEMM call per block gives exact similarities with
+        no per-query Python↔LanceDB round-trip overhead.
+
+        The ``(block_size × n_chunks)`` sims matrix is clamped adaptively to stay
+        under ~256 MB regardless of corpus size.  Pairs above *threshold* are
+        emitted as undirected SIMILAR_TO edges (canonicalized as ``(lo_id,
+        hi_id)`` where ``lo_id < hi_id`` lexicographically); the SQLite PRIMARY
+        KEY on ``(src, rel, dst)`` deduplicates the symmetric pairs.
+
+        When *max_degree* > 0 the scan collects candidates first, then enforces a
+        hard per-node cap with a greedy high-similarity selection pass.
 
         :param store: GraphStore to write edges into.
-        :param node_ids: Node IDs in the same order as *vecs*.
-        :param vecs: Embedding vectors for each node.
-        :param k: k-nearest neighbors to examine.
-        :param threshold: Minimum cosine similarity for an edge.
+        :param tbl: Accepted for call-site compatibility; not used.
+        :param chunk_ids: Chunk node IDs in the same order as *chunk_vecs*.
+        :param chunk_vecs: Float32 ndarray of shape ``(n_chunks, dim)``, L2-normalised.
+        :param k: Maximum SIMILAR_TO out-edges per source chunk (0 = unlimited).
+        :param threshold: Minimum cosine similarity for a SIMILAR_TO edge (0–1).
+        :param max_degree: Cap total SIMILAR_TO edges per node (0 = unlimited).
         :param quiet: Suppress progress output.
-        :return: Number of edges added.
+        :param flush_every: Flush accumulated edges to SQLite after this many
+            (ignored when *max_degree* > 0 — writes are deferred until pruning).
+        :param block_size: Source rows per matmul block before adaptive clamping.
+        :return: Total number of edges added.
         """
-        from memory_kg.memorykg import (  # pylint: disable=import-outside-toplevel
-            DocEdge,
-        )
-
-        # Only chunk nodes get SIMILAR_TO edges
-        chunk_indices = [i for i, nid in enumerate(node_ids) if nid.startswith("chunk:")]
-        if not chunk_indices:
-            return 0
+        import heapq  # pylint: disable=import-outside-toplevel
 
         import numpy as np  # pylint: disable=import-outside-toplevel
 
-        chunk_ids = [node_ids[i] for i in chunk_indices]
-        chunk_id_to_idx: dict[str, int] = {nid: idx for idx, nid in enumerate(chunk_ids)}
-        chunk_vecs = np.asarray([vecs[i] for i in chunk_indices], dtype="float32")
-
-        edges: list[DocEdge] = []
-        seen: set[frozenset] = set()
-
-        tbl = self._tbl
-        if tbl is None:
-            return 0
-
-        from rich.progress import (  # pylint: disable=import-outside-toplevel
-            BarColumn,
-            MofNCompleteColumn,
-            Progress,
-            TimeElapsedColumn,
+        from memory_kg.memorykg import (
+            DocEdge,  # pylint: disable=import-outside-toplevel
         )
 
-        with Progress(
-            "[progress.description]{task.description}",
-            BarColumn(),
-            MofNCompleteColumn(),
-            TimeElapsedColumn(),
-            transient=True,
-        ) as prog:
-            task = prog.add_task("  SIMILAR_TO", total=len(chunk_ids))
-            for ci, (nid, qvec) in enumerate(zip(chunk_ids, chunk_vecs, strict=True)):
-                raw = tbl.search(qvec.tolist()).limit(k + 1).to_list()
-                for row in raw:
-                    candidate = row["id"]
-                    if candidate == nid or not candidate.startswith("chunk:"):
-                        continue
-                    pair = frozenset([nid, candidate])
-                    if pair in seen:
-                        continue
-                    seen.add(pair)
+        if not chunk_ids:
+            return 0
 
-                    ci2 = chunk_id_to_idx.get(candidate, -1)
-                    if ci2 == -1:
-                        continue
-                    a, b = chunk_vecs[ci], chunk_vecs[ci2]
-                    na, nb = np.linalg.norm(a), np.linalg.norm(b)
-                    sim = float(np.dot(a, b) / (na * nb)) if na > 0 and nb > 0 else 0.0
+        n_chunks = len(chunk_ids)
 
-                    if sim >= threshold:
-                        edges.append(
-                            DocEdge(
-                                src=nid,
-                                rel="SIMILAR_TO",
-                                dst=candidate,
-                                evidence={"similarity": round(sim, 4)},
+        # Contiguous float32 is required for BLAS SGEMM.
+        X = np.ascontiguousarray(chunk_vecs, dtype=np.float32)
+
+        # Clamp block_size so the (B x N) sims matrix stays under ~256 MB.
+        _bytes_per_row = n_chunks * 4
+        eff_block = max(64, min(block_size, (256 * 1024 * 1024) // max(_bytes_per_row, 1)))
+
+        # k=0 means no cap — include all neighbours above threshold.
+        eff_k = min(k, n_chunks - 1) if k > 0 else n_chunks - 1
+
+        edges: list[DocEdge] = []
+        total_edges = 0
+
+        # Per-node degree cap: {node_id: min-heap of (sim, lo_id, hi_id)}
+        node_heap: dict[str, list] = {}
+
+        if not quiet:
+            from rich.progress import (  # pylint: disable=import-outside-toplevel
+                BarColumn,
+                MofNCompleteColumn,
+                Progress,
+                SpinnerColumn,
+                TextColumn,
+                TimeElapsedColumn,
+                TimeRemainingColumn,
+            )
+
+            _sim_ctx: contextlib.AbstractContextManager = Progress(
+                SpinnerColumn(),
+                TextColumn("[progress.description]{task.description}"),
+                BarColumn(),
+                MofNCompleteColumn(),
+                TimeElapsedColumn(),
+                TimeRemainingColumn(),
+            )
+        else:
+            _sim_ctx = contextlib.nullcontext()
+
+        with _sim_ctx as sim_prog:
+            sim_task = (
+                sim_prog.add_task("  SIMILAR_TO scan", total=n_chunks)
+                if sim_prog is not None
+                else None
+            )
+
+            for block_start in range(0, n_chunks, eff_block):
+                block_end = min(block_start + eff_block, n_chunks)
+
+                # (B, dim) @ (dim, N) → (B, N) exact cosine similarities via BLAS.
+                sims = X[block_start:block_end] @ X.T
+
+                for i in range(block_end - block_start):
+                    src_idx = block_start + i
+                    src_id = chunk_ids[src_idx]
+                    row = sims[i]
+
+                    row[src_idx] = -1.0  # exclude self-match
+
+                    # All neighbours at or above the threshold.
+                    (above,) = np.where(row >= threshold)
+                    if not above.size:
+                        continue
+
+                    # Keep top-eff_k by similarity (argpartition: O(N), not O(N log N)).
+                    if above.size > eff_k:
+                        top_idx = np.argpartition(row[above], -eff_k)[-eff_k:]
+                        above = above[top_idx]
+
+                    for j in above.tolist():
+                        sim = float(row[j])
+                        dst_id = chunk_ids[j]
+                        lo_id, hi_id = (src_id, dst_id) if src_id < dst_id else (dst_id, src_id)
+
+                        if max_degree > 0:
+                            entry = (sim, lo_id, hi_id)
+                            for nid in (lo_id, hi_id):
+                                h = node_heap.setdefault(nid, [])
+                                heapq.heappush(h, entry)
+                                if len(h) > max_degree:
+                                    heapq.heappop(h)  # drop weakest
+                        else:
+                            edges.append(
+                                DocEdge(
+                                    src=lo_id,
+                                    rel="SIMILAR_TO",
+                                    dst=hi_id,
+                                    evidence={"similarity": round(sim, 4)},
+                                )
                             )
-                        )
-                prog.advance(task)
+                            if len(edges) >= flush_every:
+                                store._upsert_edges(edges)
+                                total_edges += len(edges)
+                                edges = []
+
+                del sims  # release block memory before next allocation
+
+                if sim_prog is not None and sim_task is not None:
+                    sim_prog.advance(sim_task, block_end - block_start)
+
+        if max_degree > 0:
+            # Candidate set: union of per-node top-max_degree heaps.
+            candidates: dict[tuple[str, str], float] = {}
+            for heap in node_heap.values():
+                for sim, lo, hi in heap:
+                    key = (lo, hi)
+                    if key not in candidates or sim > candidates[key]:
+                        candidates[key] = sim
+
+            # Hard cap selection: highest-similarity edges first while both
+            # endpoints still have degree budget available.
+            degree: dict[str, int] = {}
+            selected: list[DocEdge] = []
+            ordered = sorted(candidates.items(), key=lambda item: item[1], reverse=True)
+            for (lo, hi), sim in ordered:
+                if degree.get(lo, 0) >= max_degree or degree.get(hi, 0) >= max_degree:
+                    continue
+                selected.append(
+                    DocEdge(
+                        src=lo,
+                        rel="SIMILAR_TO",
+                        dst=hi,
+                        evidence={"similarity": round(sim, 4)},
+                    )
+                )
+                degree[lo] = degree.get(lo, 0) + 1
+                degree[hi] = degree.get(hi, 0) + 1
+
+            edges = selected
 
         if edges:
             store._upsert_edges(edges)
+            total_edges += len(edges)
 
-        return len(edges)
+        return total_edges
 
     # ------------------------------------------------------------------
     # Search
@@ -582,10 +653,6 @@ class SemanticIndex:
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
-
-    def _read_nodes(self, store: GraphStore) -> list[dict]:
-        """Return all nodes of the configured *index_kinds* from *store*."""
-        return store.query_nodes(kinds=list(self.index_kinds))
 
     def _open_table(self, *, wipe: bool = False):
         """Open (or create) the LanceDB table, optionally wiping first."""

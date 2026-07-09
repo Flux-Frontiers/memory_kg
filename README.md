@@ -1,7 +1,7 @@
 [![CI](https://github.com/Flux-Frontiers/memory_kg/actions/workflows/ci.yml/badge.svg)](https://github.com/Flux-Frontiers/memory_kg/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.12%20%7C%203.13-blue.svg)](https://www.python.org/)
 [![License: Elastic-2.0](https://img.shields.io/badge/License-Elastic%202.0-blue.svg)](https://www.elastic.co/licensing/elastic-license)
-[![Version](https://img.shields.io/badge/version-0.5.3-blue.svg)](https://github.com/Flux-Frontiers/memory_kg/releases)
+[![Version](https://img.shields.io/badge/version-0.6.0-blue.svg)](https://github.com/Flux-Frontiers/memory_kg/releases)
 [![Poetry](https://img.shields.io/endpoint?url=https://python-poetry.org/badge/v0.json)](https://python-poetry.org/)
 [![DOI](https://zenodo.org/badge/1205364687.svg)](https://zenodo.org/badge/latestdoi/1205364687)
 
@@ -223,7 +223,7 @@ If you use MemoryKG in your research or project, please cite it:
 
 **APA**
 
-> Suchanek, E. G. (2026). *MemoryKG: Hybrid Semantic-Graph Knowledge Base for Conversational Memory* (Version 0.5.3) [Software]. Flux-Frontiers. https://github.com/Flux-Frontiers/memory_kg
+> Suchanek, E. G. (2026). *MemoryKG: Hybrid Semantic-Graph Knowledge Base for Conversational Memory* (Version 0.6.0) [Software]. Flux-Frontiers. https://github.com/Flux-Frontiers/memory_kg
 
 **BibTeX**
 
@@ -231,7 +231,7 @@ If you use MemoryKG in your research or project, please cite it:
 @software{suchanek_memory_kg,
   author    = {Suchanek, Eric G.},
   title     = {{MemoryKG}: Hybrid Semantic-Graph Knowledge Base for Conversational Memory},
-  version   = {0.5.3},
+  version   = {0.6.0},
   year      = {2026},
   publisher = {Flux-Frontiers},
   url       = {https://github.com/Flux-Frontiers/memory_kg},

@@ -275,6 +275,25 @@ class GraphStore:
     # Read — filtered node lists
     # ------------------------------------------------------------------
 
+    def count_nodes(self, *, kinds: Sequence[str] | None = None) -> int:
+        """Return total count of nodes matching an optional kind filter.
+
+        Used by the index builder to size the progress bar and pre-allocate the
+        SIMILAR_TO chunk-vector matrix without loading any node text into RAM.
+
+        :param kinds: Restrict to these node kinds.
+        :return: Row count.
+        """
+        if kinds:
+            placeholders = ",".join("?" for _ in kinds)
+            row = self.con.execute(
+                f"SELECT COUNT(*) FROM nodes WHERE kind IN ({placeholders})",
+                list(kinds),
+            ).fetchone()
+        else:
+            row = self.con.execute("SELECT COUNT(*) FROM nodes").fetchone()
+        return int(row[0]) if row else 0
+
     def query_nodes(
         self,
         *,
@@ -309,6 +328,45 @@ class GraphStore:
             params,
         ).fetchall()
         return [_row_to_node(r) for r in rows]
+
+    def iter_nodes(
+        self,
+        *,
+        kinds: Sequence[str] | None = None,
+        batch_size: int = 512,
+    ):
+        """Yield node dicts in batches without loading all rows into RAM.
+
+        Streams the result cursor in ``batch_size`` pages so the index builder
+        never holds the full corpus text in memory at once.
+
+        :param kinds: Restrict to these node kinds.
+        :param batch_size: Rows per yielded batch.
+        :return: Generator of ``list[dict]`` batches.
+        """
+        clauses: list[str] = []
+        params: list[object] = []
+
+        if kinds:
+            placeholders = ",".join("?" for _ in kinds)
+            clauses.append(f"kind IN ({placeholders})")
+            params.extend(kinds)
+
+        where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
+        cursor = self.con.execute(
+            f"""
+            SELECT id, kind, name, title, file_path, char_start, char_end, heading_level, text
+            FROM nodes {where}
+            ORDER BY file_path, char_start
+            """,
+            params,
+        )
+
+        while True:
+            rows = cursor.fetchmany(batch_size)
+            if not rows:
+                break
+            yield [_row_to_node(r) for r in rows]
 
     # ------------------------------------------------------------------
     # Read — edges
