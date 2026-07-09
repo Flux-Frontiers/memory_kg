@@ -15,6 +15,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+## [0.5.3] - 2026-07-09
+
+### Changed
+- `.github/workflows/ci.yml`, `.github/workflows/release.yml`: bumped `actions/checkout@v4 → v5` and `actions/setup-python@v5 → v6` so CI runs on Node 24 (Node 20 is deprecated on GitHub-hosted runners)
+- `.gitignore`: enabled the previously commented-out `dist/` ignore so built wheels/sdist (rebuilt by the release workflow and attached to each GitHub Release) are no longer tracked
+
+### Fixed
+- `README.md`: the CI status badge pointed at the renamed `publish.yml` workflow (404 on GitHub, so it never rendered); repointed to the actual `ci.yml` workflow
+
 ## [0.5.2] - 2026-07-09
 
 ### Added
