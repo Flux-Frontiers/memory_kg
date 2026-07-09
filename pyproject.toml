@@ -82,7 +82,7 @@ dependencies = [
     "sentence-transformers>=5.4.1",
     "torch>=2.5.1",
     "transformers>=4.40.0,<4.57",
-    "kgmodule-utils>=0.4.4",
+    "kgmodule-utils>=0.4.6",
 ]
 
 [project.optional-dependencies]
