@@ -17,6 +17,7 @@ authors:
     email: suchanek@flux-frontiers.com
     affiliation: "Flux-Frontiers"
 version: "0.5.3"
+doi: "10.5281/zenodo.21282909"
 date-released: "2026-07-09"
 license-url: "https://www.elastic.co/licensing/elastic-license"
 repository-code: "https://github.com/Flux-Frontiers/memory_kg"

@@ -235,7 +235,7 @@ If you use MemoryKG in your research or project, please cite it:
   year      = {2026},
   publisher = {Flux-Frontiers},
   url       = {https://github.com/Flux-Frontiers/memory_kg},
-  doi       = {10.5281/zenodo.TBD},
+  doi       = {10.5281/zenodo.21282909},
 }
 ```
 ---
