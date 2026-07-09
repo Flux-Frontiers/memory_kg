@@ -558,7 +558,13 @@ def parse_corpus(
     nodes: dict[str, DocNode] = {}
     edges: dict[tuple[str, str, str], DocEdge] = {}
 
-    effective_workers = max(1, min(n_workers, len(abs_files)))
+    # A shared embedder wraps one torch model, which is NOT safe for concurrent
+    # encode() calls across threads — doing so corrupts the native heap ("pointer
+    # being freed was not allocated" → segfault). When semantic chunking needs the
+    # embedder, parse serially (mirroring doc_kg). Threaded parsing stays available
+    # for the embedder-free strategies (fixed/heading/sentence_group), where the
+    # per-file work is pure Python.
+    effective_workers = 1 if embedder is not None else max(1, min(n_workers, len(abs_files)))
 
     with ThreadPoolExecutor(max_workers=effective_workers) as executor:
         futures = {executor.submit(_parse_one_file, p): p for p in abs_files}
