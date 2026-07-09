@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- `src/__init__.py`: removed a vestigial, misplaced package init. It re-exported a stale subset of the public API and carried a **second** `__version__` that shadowed the real one — the earlier 0.6.0 bump left it at `0.5.3` while `memory_kg.__version__` (from `src/memory_kg/__init__.py`) stayed correct. The canonical package init is `src/memory_kg/__init__.py`; nothing imported `src`, and only `memory_kg` is packaged. Removing it gives a single source of truth for the version.
+
 ### Fixed
 
 ## [0.6.0] - 2026-07-09
