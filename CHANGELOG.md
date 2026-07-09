@@ -11,8 +11,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- `pyproject.toml`: require `kgmodule-utils>=0.4.6` (was `>=0.4.4`). kg_utils 0.4.6 lowers the shared embedder's default per-call encode batch 512 → 128, bounding `model.encode` memory (attention scales `batch × seq²`). memory_kg's own build already caps the encode at 128; this aligns the shared embedder default and pins the fix.
-
 ### Removed
 
 ### Fixed
@@ -29,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `src/memory_kg/index.py`: device resolution unified on `KG_EMBED_DEVICE` (precedence: explicit → env → auto-detect cuda→mps→cpu), matching every other KG module. `SemanticIndex.search()` remains an exact flat cosine scan — retrieval recall stays exact, which the benchmark suites depend on.
 - `src/memory_kg/index.py`: LanceDB write batch floored at 4096 rows, decoupled from the (smaller) encode batch, to keep fragment count and per-commit cost bounded.
 - `benchmarks/longmemeval/longmemeval_memkg.py`: banner now prints the actually-resolved embedding device.
+- `pyproject.toml`: require `kgmodule-utils>=0.4.6` (was `>=0.4.4`). kg_utils 0.4.6 lowers the shared embedder's default per-call encode batch 512 → 128, aligning the shared embedder default with this module's own 128 cap and pinning the fix so the dependency can't regress it.
 
 ### Removed
 - `src/memory_kg/index.py`: GPU-drift mitigation machinery in `build()` — adaptive + fixed embedder refresh, dynamic encode-batch shrink, per-window `torch.mps/cuda.empty_cache()` + `gc.collect()`, and the `is_gpu` gating. All of it was compensating for the oversized encode batch; once that is right-sized the machinery is unnecessary, and on MPS its `embed_ms ≥ 0.6` refresh trigger misfired in steady state (~1.9 ms/row), reloading the model every window and dragging throughput down. The embed loop is now a lean stream: page → encode → buffer → write. Also removed the now-orphaned local `make_embedder` helper.
