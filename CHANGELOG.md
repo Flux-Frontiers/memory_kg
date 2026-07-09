@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `pyproject.toml`: require `kgmodule-utils>=0.4.6` (was `>=0.4.4`). kg_utils 0.4.6 lowers the shared embedder's default per-call encode batch 512 → 128, bounding `model.encode` memory (attention scales `batch × seq²`). memory_kg's own build already caps the encode at 128; this aligns the shared embedder default and pins the fix.
+
 ### Removed
 
 ### Fixed
