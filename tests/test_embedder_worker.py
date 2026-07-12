@@ -1,8 +1,18 @@
 """Tests for embedder_worker.py — PIPELINE_MODEL, EmbeddingCache, save/load roundtrip."""
 
 import json
+from pathlib import Path
+from unittest.mock import MagicMock, patch
 
-from memory_kg.embedder_worker import PIPELINE_MODEL, CorpusEmbedder, EmbeddingCache
+import numpy as np
+
+from memory_kg.embedder_worker import (
+    PIPELINE_MODEL,
+    CorpusEmbedder,
+    EmbeddingCache,
+    _embed_shard,
+    _resolve_device,
+)
 
 # ---------------------------------------------------------------------------
 # PIPELINE_MODEL constant
@@ -262,3 +272,222 @@ def test_save_cache_n_vectors_matches(tmp_path):
 
     assert data["n_vectors"] == 3
     assert len(data["embeddings"]) == 3
+
+
+def test_save_load_cache_gzip_roundtrip(tmp_path):
+    """A .gz suffix writes and reads a gzip-compressed cache."""
+    cache = _make_cache(n=4, dim=8)
+    out = tmp_path / "embeddings.json.gz"
+    CorpusEmbedder.save_cache(cache, out)
+    assert out.exists()
+
+    loaded = CorpusEmbedder.load_cache(out)
+    assert loaded.model == cache.model
+    assert loaded.texts == cache.texts
+    assert loaded.n_vectors == cache.n_vectors
+
+
+# ---------------------------------------------------------------------------
+# _resolve_device
+# ---------------------------------------------------------------------------
+
+
+def test_resolve_device_explicit_arg_wins(monkeypatch):
+    monkeypatch.setenv("KG_EMBED_DEVICE", "cuda")
+    assert _resolve_device("cpu") == "cpu"
+
+
+def test_resolve_device_env_var_used_when_no_explicit_arg(monkeypatch):
+    monkeypatch.setenv("KG_EMBED_DEVICE", "mps")
+    assert _resolve_device(None) == "mps"
+
+
+def test_resolve_device_normalizes_case_and_whitespace(monkeypatch):
+    monkeypatch.delenv("KG_EMBED_DEVICE", raising=False)
+    assert _resolve_device("  CPU  ") == "cpu"
+
+
+def test_resolve_device_falls_back_to_auto_detect(monkeypatch):
+    monkeypatch.delenv("KG_EMBED_DEVICE", raising=False)
+    resolved = _resolve_device(None)
+    assert resolved in {"cpu", "mps", "cuda", None}
+
+
+# ---------------------------------------------------------------------------
+# GPU devices force single-process embedding (the OOM-prevention guard)
+# ---------------------------------------------------------------------------
+
+
+def test_embed_forces_sequential_on_mps_even_with_many_texts_and_workers():
+    """A GPU device can't be shared across spawn workers; embed() must not
+    fan out into _embed_parallel regardless of corpus size or n_workers."""
+    embedder = CorpusEmbedder(n_workers=4, device="mps")
+    texts = [f"text {i}" for i in range(200)]
+
+    with (
+        patch.object(embedder, "_embed_sequential", return_value=[[0.0]] * 200) as seq,
+        patch.object(embedder, "_embed_parallel") as par,
+    ):
+        embedder.embed(texts)
+
+    seq.assert_called_once()
+    par.assert_not_called()
+
+
+def test_embed_forces_sequential_on_cuda():
+    embedder = CorpusEmbedder(n_workers=4, device="cuda")
+    texts = [f"text {i}" for i in range(200)]
+
+    with (
+        patch.object(embedder, "_embed_sequential", return_value=[[0.0]] * 200) as seq,
+        patch.object(embedder, "_embed_parallel") as par,
+    ):
+        embedder.embed(texts)
+
+    seq.assert_called_once()
+    par.assert_not_called()
+
+
+def test_embed_uses_parallel_on_cpu_with_enough_texts_and_workers():
+    embedder = CorpusEmbedder(n_workers=4, device="cpu")
+    texts = [f"text {i}" for i in range(200)]
+
+    with (
+        patch.object(embedder, "_embed_sequential") as seq,
+        patch.object(embedder, "_embed_parallel", return_value=[[0.0]] * 200) as par,
+    ):
+        embedder.embed(texts)
+
+    par.assert_called_once()
+    seq.assert_not_called()
+
+
+def test_corpus_embedder_device_defaults_to_resolved_value(monkeypatch):
+    monkeypatch.setenv("KG_EMBED_DEVICE", "cpu")
+    embedder = CorpusEmbedder()
+    assert embedder.device == "cpu"
+
+
+# ---------------------------------------------------------------------------
+# resolve_model_path (canonical location: kg_utils.embed)
+# ---------------------------------------------------------------------------
+
+
+def test_resolve_model_path_available_from_kg_utils():
+    """The local-model-path resolver is centralized in kg_utils.embed."""
+    from kg_utils.embed import resolve_model_path
+
+    result = resolve_model_path("BAAI/bge-small-en-v1.5")
+    assert isinstance(result, Path)
+    assert "bge-small-en-v1.5" in str(result)
+
+
+# ---------------------------------------------------------------------------
+# _embed_shard model resolution and device pinning
+# ---------------------------------------------------------------------------
+
+
+def _make_fake_st(dim: int = 4):
+    """Return a mock SentenceTransformer that produces deterministic vectors."""
+    fake = MagicMock()
+    fake.encode.return_value = np.zeros((1, dim), dtype="float32")
+    # load_sentence_transformer() ends with `model = model.to(device)`; the
+    # mock must return itself so the configured `.encode` survives the move.
+    fake.to.return_value = fake
+    return fake
+
+
+def test_embed_shard_uses_local_path_when_exists(tmp_path):
+    """When the resolved local path exists, ST is loaded with local_files_only=True."""
+    model_name = "BAAI/bge-small-en-v1.5"
+    fake_local = tmp_path / "BAAI" / "bge-small-en-v1.5"
+    fake_local.mkdir(parents=True)
+
+    fake_st = _make_fake_st()
+    with (
+        patch("kg_utils.embedder.resolve_model_path", return_value=fake_local),
+        patch("sentence_transformers.SentenceTransformer", return_value=fake_st) as mock_cls,
+    ):
+        _embed_shard((["hello"], model_name, 8, 0, None, None))
+
+    assert mock_cls.call_args.kwargs.get("local_files_only") is True
+
+
+def test_embed_shard_falls_back_to_network_when_local_files_only_fails(tmp_path):
+    """When local_files_only raises OSError, falls back to a plain network load."""
+    model_name = "BAAI/bge-small-en-v1.5"
+    fake_st = _make_fake_st()
+    missing = tmp_path / "nonexistent"
+
+    def side_effect(name, **kwargs):
+        if kwargs.get("local_files_only"):
+            raise OSError("not cached")
+        return fake_st
+
+    with (
+        patch("kg_utils.embedder.resolve_model_path", return_value=missing),
+        patch("sentence_transformers.SentenceTransformer", side_effect=side_effect) as mock_cls,
+    ):
+        _embed_shard((["hello"], model_name, 8, 0, None, None))
+
+    assert mock_cls.call_count == 2
+
+
+def test_embed_shard_returns_correct_shape(tmp_path):
+    """_embed_shard returns (worker_id, list_of_vectors) of expected length."""
+    texts = ["a", "b", "c"]
+    model_name = "BAAI/bge-small-en-v1.5"
+    fake_st = MagicMock()
+    fake_st.encode.side_effect = lambda batch, **kw: np.zeros((len(batch), 4), dtype="float32")
+    fake_st.to.return_value = fake_st  # survive load_sentence_transformer's model.to(device)
+    missing = tmp_path / "nonexistent"
+
+    with (
+        patch("kg_utils.embedder.resolve_model_path", return_value=missing),
+        patch("sentence_transformers.SentenceTransformer", return_value=fake_st),
+    ):
+        worker_id, vectors = _embed_shard((texts, model_name, 8, 7, None, None))
+
+    assert worker_id == 7
+    assert len(vectors) == 3
+    assert len(vectors[0]) == 4
+
+
+def test_embed_shard_pins_device_when_given(tmp_path):
+    """A concrete device pins the loaded model via model.to(device) —
+    what keeps N parallel CPU workers from each auto-selecting MPS."""
+    texts = ["a"]
+    model_name = "BAAI/bge-small-en-v1.5"
+    fake_st = MagicMock()
+    fake_st.encode.side_effect = lambda batch, **kw: np.zeros((len(batch), 4), dtype="float32")
+    fake_st.to.return_value = fake_st
+    missing = tmp_path / "nonexistent"
+
+    with (
+        patch("kg_utils.embedder.resolve_model_path", return_value=missing),
+        patch("sentence_transformers.SentenceTransformer", return_value=fake_st),
+    ):
+        _embed_shard((texts, model_name, 8, 0, None, "cpu"))
+
+    fake_st.to.assert_called_with("cpu")
+
+
+def test_embed_shard_reports_progress(tmp_path):
+    """A non-None progress_queue receives per-batch counts and a None sentinel."""
+    texts = ["a", "b", "c", "d", "e"]
+    model_name = "BAAI/bge-small-en-v1.5"
+    fake_st = MagicMock()
+    fake_st.encode.side_effect = lambda batch, **kw: np.zeros((len(batch), 4), dtype="float32")
+    fake_st.to.return_value = fake_st
+    missing = tmp_path / "nonexistent"
+    queue = MagicMock()
+
+    with (
+        patch("kg_utils.embedder.resolve_model_path", return_value=missing),
+        patch("sentence_transformers.SentenceTransformer", return_value=fake_st),
+    ):
+        _embed_shard((texts, model_name, 2, 0, queue, None))
+
+    # 3 batches of size <= 2 (2, 2, 1) plus a trailing None sentinel.
+    assert queue.put.call_count == 4
+    assert queue.put.call_args_list[-1].args == (None,)

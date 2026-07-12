@@ -201,6 +201,17 @@ def pipeline_run(
 @pipeline_model_option
 @click.option("--workers", default=None, type=int, help="Number of parallel workers.")
 @click.option("--batch-size", default=64, show_default=True, help="Per-worker batch size.")
+@click.option(
+    "--device",
+    default=None,
+    type=click.Choice(["cpu", "mps", "cuda"]),
+    help=(
+        "Embedding device (default: KG_EMBED_DEVICE env var, then auto-detect). "
+        "mps/cuda always run single-process — a GPU can't be shared across "
+        "spawn workers, so N parallel workers would stack N allocations into "
+        "an OOM. Only cpu fans out to --workers."
+    ),
+)
 @click.option("--sample-n", default=None, type=int, help="Evenly sample N texts before embedding.")
 @click.option(
     "--cache",
@@ -214,6 +225,7 @@ def pipeline_embed(
     model: str,
     workers: int | None,
     batch_size: int,
+    device: str | None,
     sample_n: int | None,
     cache: str | None,
     force: bool,
@@ -262,14 +274,22 @@ def pipeline_embed(
         console.print("[red]No text files found.[/red]")
         return
 
+    embedder = CorpusEmbedder(model, n_workers=workers, batch_size=batch_size, device=device)
+    on_gpu = embedder.device in {"mps", "cuda"}
+    mode = (
+        f"streaming (single-process on {embedder.device}; GPU can't be shared across workers)"
+        if on_gpu
+        else f"parallel (CPU multiprocessing, {embedder.n_workers} workers)"
+    )
+
     console.print("\n[bold]Corpus Embedding[/bold]")
     console.print(f"  Model:   {model}")
     console.print(f"  Files:   {len(texts)}")
+    console.print(f"  Device:  {embedder.device}")
+    console.print(f"  Mode:    {mode}")
     if sample_n:
         console.print(f"  Sample:  {sample_n}")
     console.print()
-
-    embedder = CorpusEmbedder(model, n_workers=workers, batch_size=batch_size)
     result = embedder.embed(texts, metadata, sample_n=sample_n)
 
     CorpusEmbedder.save_cache(result, cache_path)
