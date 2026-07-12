@@ -13,13 +13,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **`src/memory_kg/embedder_worker.py`: `CorpusEmbedder` ported onto doc_kg's fixed design (device pinning, GPU guard, shard recycling).** This file was a stale pre-0.15.9 fork of doc_kg's `embedder_worker.py` — it never received the fixes that a real production incident forced onto doc_kg (see `gutenberg_kg/SUMMARY.md`, 2026-06-16/17: a 683k-node consolidated build degraded/OOM'd on Apple Silicon). Concretely, memory_kg's parallel `CorpusEmbedder` had **no device pinning at all**: `_embed_shard` loaded a bare `SentenceTransformer` with no `.to(device)` call, and `_embed_parallel` fanned out to `n_workers` processes unconditionally whenever the corpus had 50+ texts — the exact pattern that let N spawned workers each auto-select MPS and stack N GPU allocations into an OOM. `memorykg pipeline embed`/`pipeline run` default `--workers` to `cpu_count/2`, so this was reachable by default, not just on an unusual flag combination. Ported fixes:
-  - `_resolve_device()` (explicit arg > `KG_EMBED_DEVICE` env > auto-detect) + `CorpusEmbedder(device=...)`; `_embed_shard` now pins the worker via `model.to(device)` after an auto-detect load, sourced through `kg_utils.embedder.load_sentence_transformer` (the same shared loader `memory_kg/index.py` already consolidated onto).
-  - **GPU → single-process guard.** `embed()` now forces sequential embedding whenever the resolved device is `mps`/`cuda`, regardless of `n_workers` or corpus size — only CPU fans out.
-  - **Shard recycling.** `_embed_parallel` now splits into many small shards (`_RECYCLE_SHARD=25_000`) with `Pool(maxtasksperchild=1)`, so a fresh worker process handles each shard instead of one giant shard per worker running for the whole corpus — long-lived workers were the other half of the incident (~16% throughput decay past ~320k items from accumulated allocator/heap/GC state).
-  - `save_cache`/`load_cache` now support a `.gz` suffix for gzip-compressed caches (large corpora produce multi-GB JSON).
-  - Rich per-batch progress reporting during parallel embedding (previously silent until the whole pool finished).
-  - `tests/test_embedder_worker.py`: added coverage for `_resolve_device` precedence, the GPU-guard (`embed()` never calls `_embed_parallel` on `mps`/`cuda` regardless of `n_workers`/corpus size), `_embed_shard` device pinning and progress reporting, and gzip cache roundtrip.
+- **`src/memory_kg/embedder_worker.py`: `CorpusEmbedder`/`EmbeddingCache` moved to `kg_utils.corpus_embedder`.**
+  This file was a stale pre-0.15.9 fork of doc_kg's `embedder_worker.py` — it never received
+  the device-pinning/GPU-guard/shard-recycling fixes that a real production incident forced
+  onto doc_kg (see `gutenberg_kg/SUMMARY.md`, 2026-06-16/17: a 683k-node consolidated build
+  degraded/OOM'd on Apple Silicon). Concretely, memory_kg's parallel `CorpusEmbedder` had **no
+  device pinning at all**: `_embed_shard` loaded a bare `SentenceTransformer` with no
+  `.to(device)` call, and `_embed_parallel` fanned out to `n_workers` processes unconditionally
+  whenever the corpus had 50+ texts — the exact pattern that let N spawned workers each
+  auto-select MPS and stack N GPU allocations into an OOM. `memorykg pipeline embed`/
+  `pipeline run` default `--workers` to `cpu_count/2`, so this was reachable by default.
+  Rather than re-fork the fixed implementation locally (a second copy that could drift again —
+  this was the *third* independent fork across doc_kg/memory_kg/diary_kg), the implementation
+  now lives in `kgmodule-utils>=0.4.7` (`kg_utils.corpus_embedder`), carrying the GPU→
+  single-process guard, shard recycling (`_RECYCLE_SHARD=25_000` + `maxtasksperchild=1`), gzip
+  cache support, and per-batch progress reporting. `memory_kg.embedder_worker` re-exports
+  `CorpusEmbedder`/`EmbeddingCache`/`PIPELINE_MODEL` (the `DOCKG_MODEL` env-var default is
+  still memory_kg-specific) for backward compatibility, so no caller-facing change.
+  `tests/test_embedder_worker.py` now only tests memory_kg's own surface (`PIPELINE_MODEL`'s
+  env override, re-export identity, the GPU fan-out guard through memory_kg's import path);
+  the low-level `_embed_shard`/cache-internals unit coverage moved to `kg_utils`'s own suite.
 
 ### Removed
 
