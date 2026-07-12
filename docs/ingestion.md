@@ -500,9 +500,9 @@ over time) while excluding the heavy artifacts, use a more granular set:
 |---------|-------|------|-----|
 | Core build (`memorykg build`) | `BAAI/bge-small-en-v1.5` | 384 | Default (`DOCKG_MODEL` env override); fast, strong for code+text |
 | Core build (alternative) | `all-mpnet-base-v2` | 768 | Higher-quality general-text model; slower |
-| Pipeline embedding (`memorykg pipeline embed`) | `nomic-ai/nomic-embed-text-v1` | 768 | Asymmetric retrieval with task prefix; matches diary_kg |
+| Pipeline embedding (`memorykg pipeline embed`) | `BAAI/bge-small-en-v1.5` | 384 | Default (`DOCKG_MODEL` env override); aligned with core build. Pass `--model nomic-ai/nomic-embed-text-v1` for asymmetric retrieval (matches diary_kg) |
 
-The core build and pipeline use different models by design:
+The core build and pipeline share the same default model (`DOCKG_MODEL`), so they're
+consistent unless overridden:
 - **Core build** embeds short node descriptions (title + name + text[:1024]) for SIMILAR_TO discovery
-- **Pipeline embed** embeds full document chunks for manifold analysis and MRL evaluation
-- Both produce 768-d vectors but serve different retrieval contexts
+- **Pipeline embed** embeds full document chunks for manifold analysis and MRL evaluation, and supports `--device {cpu,mps,cuda}` to control single-process vs. parallel-CPU embedding

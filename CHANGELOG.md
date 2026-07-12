@@ -9,7 +9,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`memorykg pipeline embed --device {cpu,mps,cuda}`.** Threads through to `CorpusEmbedder(device=...)`; prints an honest banner showing the resolved device and whether the run is parallel-CPU or single-process GPU streaming.
+
 ### Changed
+
+- **`src/memory_kg/embedder_worker.py`: `CorpusEmbedder`/`EmbeddingCache` moved to `kg_utils.corpus_embedder`.**
+  This file was a stale pre-0.15.9 fork of doc_kg's `embedder_worker.py` — it never received
+  the device-pinning/GPU-guard/shard-recycling fixes that a real production incident forced
+  onto doc_kg (see `gutenberg_kg/SUMMARY.md`, 2026-06-16/17: a 683k-node consolidated build
+  degraded/OOM'd on Apple Silicon). Concretely, memory_kg's parallel `CorpusEmbedder` had **no
+  device pinning at all**: `_embed_shard` loaded a bare `SentenceTransformer` with no
+  `.to(device)` call, and `_embed_parallel` fanned out to `n_workers` processes unconditionally
+  whenever the corpus had 50+ texts — the exact pattern that let N spawned workers each
+  auto-select MPS and stack N GPU allocations into an OOM. `memorykg pipeline embed`/
+  `pipeline run` default `--workers` to `cpu_count/2`, so this was reachable by default.
+  Rather than re-fork the fixed implementation locally (a second copy that could drift again —
+  this was the *third* independent fork across doc_kg/memory_kg/diary_kg), the implementation
+  now lives in `kgmodule-utils>=0.4.7` (`kg_utils.corpus_embedder`), carrying the GPU→
+  single-process guard, shard recycling (`_RECYCLE_SHARD=25_000` + `maxtasksperchild=1`), gzip
+  cache support, and per-batch progress reporting. `memory_kg.embedder_worker` re-exports
+  `CorpusEmbedder`/`EmbeddingCache`/`PIPELINE_MODEL` (the `DOCKG_MODEL` env-var default is
+  still memory_kg-specific) for backward compatibility, so no caller-facing change.
+  `tests/test_embedder_worker.py` now only tests memory_kg's own surface (`PIPELINE_MODEL`'s
+  env override, re-export identity, the GPU fan-out guard through memory_kg's import path);
+  the low-level `_embed_shard`/cache-internals unit coverage moved to `kg_utils`'s own suite.
 
 ### Removed
 
