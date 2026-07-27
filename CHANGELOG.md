@@ -13,6 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **`kgmodule-utils` floor lifted to `>=0.8.0`**; lock regenerated. 0.8.0
+  defaults `vector_backend` to `"auto"`: sqlite-vec for fresh or
+  already-migrated stores, LanceDB only when an un-migrated store already
+  exists on disk, so existing corpora keep working untouched.
+
 - **`src/memory_kg/embedder_worker.py`: `CorpusEmbedder`/`EmbeddingCache` moved to `kg_utils.corpus_embedder`.**
   This file was a stale pre-0.15.9 fork of doc_kg's `embedder_worker.py` — it never received
   the device-pinning/GPU-guard/shard-recycling fixes that a real production incident forced
