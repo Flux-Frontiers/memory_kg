@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **`kgmodule-utils` floor lifted to `>=0.9.0`**; lock regenerated. The floor
+  had drifted a release behind the published version. This was the only change
+  still outstanding from the closed `chore/transformers-cve-unpin` PR — the
+  transformers CVE fix it was named for had already reached `main` by another
+  route, with the lock resolving to 5.14.1.
+
 ### Removed
 
 ### Fixed
