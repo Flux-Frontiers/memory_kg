@@ -3,7 +3,7 @@ snapshots.py — Temporal Snapshots of MemoryKG Metrics
 
 Author: Eric G. Suchanek, PhD
 License: Elastic-2.0
-Last Revision: 2026-06-18
+Last Revision: 2026-07-29
 
 Thin compatibility layer over the shared ``kg_utils.snapshots`` module.
 

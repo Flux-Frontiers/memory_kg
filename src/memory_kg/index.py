@@ -19,7 +19,7 @@ Mirrors DocKG's index.py with the following additions:
    section context, and chunk text instead of kind/qualname/docstring.
 
 Author: Eric G. Suchanek, PhD
-Last Revision: 2026-07-09 15:15:36
+Last Revision: 2026-07-29 00:00:00
 """
 
 # pylint: disable=C0415
