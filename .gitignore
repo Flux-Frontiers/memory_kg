@@ -205,7 +205,6 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
-
 # LaTeX intermediate files
 *.aux
 *.out
@@ -217,40 +216,6 @@ __marimo__/
 *.fdb_latexmk
 *.synctex.gz
 
-# PyCodeKG generated artifacts — databases are transient/reproducible, snapshots are tracked
-.pycodekg/lancedb/
-.pycodekg/lancedb-*
-.pycodekg/*.sqlite
-.pycodekg/*.sqlite-shm
-.pycodekg/*.sqlite-wal
-.pycodekg/models
-# Also ignore .pycodekg/ nested under subdirectories
-**/.pycodekg/
-# DocKG generated artifacts
-.dockg/lancedb/
-.dockg/lancedb-*
-.dockg/*.sqlite
-.dockg/*.sqlite-shm
-.dockg/*.sqlite-wal
-.dockg/models
-# Also ignore .dockg/ nested under subdirectories
-#**/.dockg
-
-# MemoryKG generated artifacts — same pattern as CodeKG; snapshots will be tracked once added
-.memorykg/lancedb*
-.memorykg/*.sqlite
-.memorykg/*.sqlite-shm
-.memorykg/*.sqlite-wal
-.memorykg/models
-.memorykg/cache/
-.memorykg/pipeline/
-# Also ignore .memorykg/ nested under subdirectories (e.g. docs/.memorykg/)
-**/.memorykg/
-
-.agentkg/
-
-# Local MCP configuration (contains absolute paths — use .mcp.json.example as a starting point)
-.mcp.json
 .vscode/mcp.json
 .claude/claude_code_config.json
 
@@ -270,3 +235,47 @@ assets/*-xl-*.png
 assets/code_kg_arch_*.png
 commit.txt
 benchmarks/iStatistica Pro - 2026-04-09 03-26-10 +0000.csv
+
+# === KG generated artifacts (normalized across the fleet) ===
+# Databases, vector indexes and model caches are transient and
+# reproducible. snapshots/ is TRACKED and must never be ignored --
+# never use a bare `**/.<ns>/` pattern here, it swallows snapshots too.
+
+**/.pycodekg/lancedb/
+**/.pycodekg/lancedb-*
+**/.pycodekg/*.sqlite
+**/.pycodekg/*.sqlite-shm
+**/.pycodekg/*.sqlite-wal
+**/.pycodekg/*.db
+**/.pycodekg/models
+
+**/.dockg/lancedb/
+**/.dockg/lancedb-*
+**/.dockg/*.sqlite
+**/.dockg/*.sqlite-shm
+**/.dockg/*.sqlite-wal
+**/.dockg/*.db
+**/.dockg/models
+**/.dockg/embeddings.json
+
+# AgentKG local store -- nothing under it is ever tracked
+**/.agentkg/
+
+**/.memorykg/lancedb/
+**/.memorykg/lancedb-*
+**/.memorykg/*.sqlite
+**/.memorykg/*.sqlite-shm
+**/.memorykg/*.sqlite-wal
+**/.memorykg/*.db
+**/.memorykg/models
+**/.memorykg/cache
+**/.memorykg/pipeline
+
+# Agent scratch dirs (Claude Code / Codex)
+.agents/
+.codex/
+
+# MCP server config -- machine-specific, contains absolute paths
+.mcp.json
+.mcp.json.sav
+# === end KG generated artifacts ===
