@@ -1,22 +1,52 @@
-# Release Notes — v0.6.0
+# Release Notes — v0.6.1
 
-> Released: 2026-07-09
+> Released: 2026-07-29
 
-This release makes Phase 2 embedding **memory-bounded**. A large-corpus build that previously peaked at **25–32 GB and stalled on MPS around 230k rows** now completes with a **flat ~4 GB** footprint — same wall-clock, identical retrieval recall. If you have ever watched a big ingest balloon memory or hang mid-embed, this is the fix.
+A dependency-correctness release. The headline is a hard upper bound on `mcp`: a clean
+`pip install memory-kg` could resolve mcp 2.x, which crashed `memorykg-mcp` on import
+before it registered a single tool. If your MCP server failed to start with a
+`ModuleNotFoundError` on `mcp.server.fastmcp`, upgrading fixes it. Parallel embedding also
+moves onto the shared, production-hardened implementation, closing a real OOM path on
+Apple Silicon.
 
 ## What changed
 
-**The memory fix.** Transformer attention memory scales with `batch × seq²`, and the encode batch defaulted to 1024 — so a single `model.encode` call on long chunks allocated 7–9 GB. Right-sizing the encode batch to **128** (throughput is flat above ~128 on both CPU and MPS, so this costs nothing) cuts peak RAM ~7×. Nodes are now **streamed** from SQLite rather than materialised in RAM, and SIMILAR_TO discovery uses a pre-allocated contiguous matrix instead of a Python list-of-lists.
+**`mcp` pinned below 2.0.** mcp 2.0 split FastMCP out into a standalone `fastmcp` package
+and removed the bundled `mcp.server.fastmcp` module. Because the MCP server imports
+`FastMCP` at module scope, the previous unbounded `mcp>=1.0.0` let a fresh install pick up
+2.x and fail immediately. Developers never saw it — a pinned lock file kept every local
+checkout working, which is exactly how this reached the index in three sibling packages
+before anyone noticed. The pin is now `mcp<2`, and it stays until the server is ported to
+the standalone `fastmcp` package.
 
-**Leaner, faster build loop.** The embed path is now a straight stream — page → encode → buffer → write. A batch of GPU-oriented "drift" mitigations (adaptive/fixed embedder refresh, batch-shrink, per-window cache clearing) has been removed; they were compensating for the oversized batch and, on MPS, actively dragged throughput down by reloading the model every window.
+**Import-level tests so this can't recur silently.** A new `tests/test_mcp_server.py`
+builds the real `FastMCP` instance and registers all four tools, so an incompatible `mcp`
+release breaks CI at import time rather than in a user's terminal. One test asserts
+`mcp.server.fastmcp` exists directly, so a future break names the incompatibility instead
+of surfacing as an opaque `ImportError`.
 
-**Shared embedder + one device knob.** The embedder is consolidated onto `kg_utils.embedder` (single source of truth for model loading and device handling), and device selection is unified on `KG_EMBED_DEVICE` (`DOCKG_DEVICE` is retired). Requires `kgmodule-utils>=0.4.6`, which carries the same 128 default so the dependency can't regress the fix.
+**Parallel embedding consolidated onto `kg_utils.corpus_embedder`.** The local
+`embedder_worker.py` was a stale pre-0.15.9 fork that never received the device-pinning and
+GPU-guard fixes a production incident forced onto its sibling. Concretely it had no device
+pinning at all and fanned out to `n_workers` processes for any corpus of 50+ texts — the
+pattern that lets N workers each grab MPS and stack N GPU allocations into an OOM, reachable
+by default since `--workers` defaults to `cpu_count/2`. The implementation now lives in
+`kgmodule-utils>=0.8.0` with the GPU→single-process guard and shard recycling;
+`memory_kg.embedder_worker` re-exports the public names, so no caller changes.
 
-**Search recall preserved.** `search()` remains an exact flat cosine scan — recall stays exact, which the benchmark suites depend on. Verified on LongMemEval: recall@30 1.000 / @10 0.992, unchanged.
+**A device flag for embedding, and a single version.** `memorykg pipeline embed` accepts
+`--device {cpu,mps,cuda}` and prints an honest banner showing the resolved device and
+whether the run is parallel-CPU or single-process GPU streaming. Separately, a vestigial
+`src/__init__.py` carrying a *second*, stale `__version__` was removed — the 0.6.0 bump had
+left it reading `0.5.3` — so the package version now has one source of truth.
 
 ## Upgrading
 
-No action required for existing graphs — the index is derived and can be rebuilt at any time. Rebuilds will simply use less memory. On Apple Silicon, embedding auto-selects MPS (~9× faster than CPU); pin the device with `KG_EMBED_DEVICE=cpu|mps|cuda` if you need to. If you were setting `DOCKG_DEVICE`, switch to `KG_EMBED_DEVICE`.
+Upgrade in place; nothing to rebuild and no graph migration. If a previous install pulled
+mcp 2.x and left `memorykg-mcp` broken, this release repairs it on install. Anyone importing
+`CorpusEmbedder` or `EmbeddingCache` from `memory_kg.embedder_worker` can keep doing so —
+the names re-export unchanged — and the new `kgmodule-utils>=0.8.0` floor defaults
+`vector_backend` to `"auto"`, which keeps existing corpora on the backend they already use.
 
 ---
 

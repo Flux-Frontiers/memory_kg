@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+### Changed
+
+### Removed
+
+### Fixed
+
+## [0.6.1] - 2026-07-29
+
+### Added
+
 - **`tests/test_mcp_server.py`** — import-level regression tests for the MCP
   server. It builds its `FastMCP` instance and registers all four tools with
   module-level decorators, so an incompatible `mcp` release breaks it at
