@@ -28,19 +28,43 @@ from memory_kg.cli.group import cli
 
 _PRE_COMMIT_HOOK = """\
 #!/usr/bin/env bash
-# MemoryKG pre-commit hook — keeps local index in sync and captures metrics
-# snapshots BEFORE quality checks run.
+# MemoryKG pre-commit hook — runs quality checks first, then rebuilds the local
+# index and captures a metrics snapshot.
 # Installed by: memorykg install-hooks
-# Skip with: DOCKG_SKIP_SNAPSHOT=1 git commit ...
+# Skip with: MEMORYKG_SKIP_SNAPSHOT=1 git commit ...
+#
+# Order matters, and it is deliberately checks-then-index:
+#
+#   * `pre-commit run` stashes unstaged changes and restores them afterwards.
+#     Rebuilding the index before that ran meant the build's freshly-rewritten
+#     snapshots/manifest.json landed inside the stash window, where the restore
+#     could fail with "patch does not apply" and abort the commit outright — or,
+#     worse, let a staged deletion of a tracked snapshot slip into the commit.
+#     Building afterwards keeps KG artifacts entirely outside that window.
+#   * A full index rebuild is slow. There is no reason to pay it for a commit
+#     that ruff/ty/pytest is about to reject.
 set -euo pipefail
 
-[ "${DOCKG_SKIP_SNAPSHOT:-0}" = "1" ] && exit 0
+[ "${MEMORYKG_SKIP_SNAPSHOT:-0}" = "1" ] && exit 0
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 
 cd "$REPO_ROOT"
 
-# Capture the tree hash of the staged index NOW — before any tool modifies files.
+# Quality checks first (ruff, ty, pytest, detect-secrets, ...). Delegates to
+# .pre-commit-config.yaml so quality checks stay in one place. A hook that
+# rewrites files also exits non-zero here, so we never index a tree that is
+# about to be reformatted.
+PRECOMMIT="$REPO_ROOT/.venv/bin/pre-commit"
+if [ -x "$PRECOMMIT" ]; then
+    "$PRECOMMIT" run || exit 1
+elif command -v pre-commit &>/dev/null; then
+    pre-commit run || exit 1
+fi
+
+# Capture the tree hash now that the checks have passed and nothing further
+# will modify the working tree — this keys the snapshot to the content that is
+# actually about to be committed.
 TREE_HASH=$(git write-tree)
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
@@ -54,18 +78,10 @@ BRANCH=$(git rev-parse --abbrev-ref HEAD)
     --branch "$BRANCH" \\
   || { echo "[memorykg] snapshot skipped (run 'memorykg build' to initialize)" >&2; }
 
-# Stage snapshot directory so it is included in the commit.
+# Stage snapshot directory so it is included in the commit. These files are
+# added after `pre-commit run`, so they are not scanned by it — detect-secrets
+# already excludes snapshots/ by config, which is why that is safe.
 git add .memorykg/snapshots/ 2>/dev/null || true
-
-# Run pre-commit framework checks (ruff, mypy, detect-secrets, etc.) AFTER
-# snapshots are captured and staged. Delegates to .pre-commit-config.yaml so
-# quality checks stay in one place.
-PRECOMMIT="$REPO_ROOT/.venv/bin/pre-commit"
-if [ -x "$PRECOMMIT" ]; then
-    "$PRECOMMIT" run || exit 1
-elif command -v pre-commit &>/dev/null; then
-    pre-commit run || exit 1
-fi
 
 exit 0
 """
@@ -339,7 +355,7 @@ def install_hooks(repo: str, force: bool, claude_hooks: bool, global_hooks: bool
         mode = hook_path.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
         hook_path.chmod(mode)
         click.echo(f"OK Installed pre-commit hook: {hook_path}")
-        click.echo("   Skip with: DOCKG_SKIP_SNAPSHOT=1 git commit ...")
+        click.echo("   Skip with: MEMORYKG_SKIP_SNAPSHOT=1 git commit ...")
 
     # ── Claude Code hooks ─────────────────────────────────────────────────────
     targets: list[Path] = []
