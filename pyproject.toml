@@ -73,7 +73,13 @@ dependencies = [
     "einops>=0.8.2",
     "lancedb>=0.29.0",
     "markdown-it-py>=3.0.0",
-    "mcp>=1.0.0",
+    # Upper-bounded: mcp 2.0 removed the bundled `mcp.server.fastmcp` module
+    # (FastMCP was split out into the standalone `fastmcp` package) and rebuilt
+    # mcp.server around new submodules. src/memory_kg/mcp_server.py imports
+    # FastMCP at module scope, so an unbounded floor lets a clean install pull
+    # 2.x and break `memorykg-mcp` at import time. Lift this only alongside a
+    # port to the standalone fastmcp package.
+    "mcp>=1.0.0,<2",
     "numpy>=1.24.0",
     "pandas>=2.0.0",
     "pyyaml>=6.0.0",
@@ -81,7 +87,7 @@ dependencies = [
     "safetensors>=0.5.0",
     "sentence-transformers>=5.4.1",
     "torch>=2.5.1",
-    "transformers>=4.40.0,<4.57",
+    "transformers>=5.5.0,<6",
     "kgmodule-utils>=0.8.0",
 ]
 
