@@ -9,9 +9,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`tests/test_mcp_server.py`** — import-level regression tests for the MCP
+  server. It builds its `FastMCP` instance and registers all four tools with
+  module-level decorators, so an incompatible `mcp` release breaks it at
+  *import* time and only for people installing from PyPI — a pinned lock file
+  keeps every developer working, which is how this class of break reached the
+  index in three sibling packages before being caught. One test asserts
+  `mcp.server.fastmcp` exists directly, so a future break names the
+  incompatibility instead of surfacing as an opaque `ImportError`.
+
 - **`memorykg pipeline embed --device {cpu,mps,cuda}`.** Threads through to `CorpusEmbedder(device=...)`; prints an honest banner showing the resolved device and whether the run is parallel-CPU or single-process GPU streaming.
 
 ### Changed
+
+- **`mcp` is now upper-bounded at `<2`.** mcp 2.0 removed the bundled
+  `mcp.server.fastmcp` module — FastMCP was split out into the standalone
+  `fastmcp` package — and rebuilt `mcp.server` around new submodules.
+  `src/memory_kg/mcp_server.py` imports `FastMCP` at module scope, so the
+  previous unbounded `mcp>=1.0.0` let a clean `pip install memory-kg` resolve
+  2.x and crash `memorykg-mcp` before it could register a tool. Verified against
+  a real mcp 2.0 install: `mcp.server.fastmcp` raises `ModuleNotFoundError`.
+  Lift this pin only alongside a port to the standalone `fastmcp` package.
+
+  The failure mode differs across the fleet, so the pin is not interchangeable:
+  KGRAG uses the low-level `Server` API, whose class still imports under 2.0 but
+  whose decorators were removed, so it fails at *call* time instead.
 
 - **`kgmodule-utils` floor lifted to `>=0.8.0`**; lock regenerated. 0.8.0
   defaults `vector_backend` to `"auto"`: sqlite-vec for fresh or
