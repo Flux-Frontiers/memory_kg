@@ -102,8 +102,8 @@ def _kg_db(tag: str) -> Path:
     return _DATA_DIR / f".memorykg_{tag}" / "graph.sqlite"
 
 
-def _kg_lancedb(tag: str) -> Path:
-    return _DATA_DIR / f".memorykg_{tag}" / "lancedb"
+def _kg_vectors(tag: str) -> Path:
+    return _DATA_DIR / f".memorykg_{tag}" / "vectors.sqlite"
 
 
 def _cache_dir() -> Path:
@@ -292,7 +292,7 @@ def write_corpus(
 def build_kg(
     corpus_dir: Path,
     db_path: Path,
-    lancedb_dir: Path,
+    vectors_path: Path,
     *,
     wipe: bool = True,
     model: str | None = None,
@@ -304,18 +304,18 @@ def build_kg(
     print(f"  Building MemoryKG ({'wipe' if wipe else 'incremental'})...")
     print(f"    corpus:  {corpus_dir}")
     print(f"    sqlite:  {db_path}")
-    print(f"    lancedb: {lancedb_dir}")
+    print(f"    vectors: {vectors_path}")
     print(f"    model:   {model or DEFAULT_MODEL}")
     print(f"    workers: {n_workers}")
 
     db_path.parent.mkdir(parents=True, exist_ok=True)
-    lancedb_dir.mkdir(parents=True, exist_ok=True)
+    vectors_path.parent.mkdir(parents=True, exist_ok=True)
 
     t0 = time.time()
     kg = MemoryKG(
         corpus_root=corpus_dir,
         db_path=db_path,
-        lancedb_dir=lancedb_dir,
+        vectors_path=vectors_path,
         chunk_strategy="heading",
         enable_topics=False,
         enable_entities=False,
@@ -411,7 +411,7 @@ def score_item(
     """
     Query MemoryKG for one item and compute recall.
 
-    :param use_haystack: If True, restrict LanceDB seeding to the item's own file.
+    :param use_haystack: If True, restrict sqlite-vec seeding to the item's own file.
     :return: (recall, details_dict)
     """
     question = item["question"]
@@ -530,7 +530,7 @@ def cmd_prepare(args: argparse.Namespace) -> None:
     tag = _corpus_tag(args.topic, categories)
     corpus_dir = _corpus_dir(tag)
     db_path = _kg_db(tag)
-    lancedb_dir = _kg_lancedb(tag)
+    vectors_path = _kg_vectors(tag)
 
     print("=" * 60)
     print("  MemoryKG × MemBench — PREPARE")
@@ -553,7 +553,7 @@ def cmd_prepare(args: argparse.Namespace) -> None:
     build_kg(
         corpus_dir,
         db_path,
-        lancedb_dir,
+        vectors_path,
         wipe=args.wipe,
         model=args.model,
         batch_size=args.batch,
@@ -574,9 +574,9 @@ def cmd_run(args: argparse.Namespace) -> None:
     tag = _corpus_tag(args.topic, categories)
     corpus_dir = _corpus_dir(tag)
     db_path = _kg_db(tag)
-    lancedb_dir = _kg_lancedb(tag)
+    vectors_path = _kg_vectors(tag)
 
-    if not db_path.exists() or not lancedb_dir.exists():
+    if not db_path.exists() or not vectors_path.exists():
         sys.exit(
             f"ERROR: MemoryKG index not found for tag '{tag}'.\n"
             f"  Run prepare first:\n"
@@ -627,7 +627,7 @@ def cmd_run(args: argparse.Namespace) -> None:
     kg = MemoryKG(
         corpus_root=corpus_dir,
         db_path=db_path,
-        lancedb_dir=lancedb_dir,
+        vectors_path=vectors_path,
         model=args.model or DEFAULT_MODEL,
         embedder=embedder,
     )

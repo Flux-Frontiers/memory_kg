@@ -9,7 +9,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`tests/test_benchmarks_api.py`** — static guards pinning `benchmarks/` to
+  the live `MemoryKG` / `SemanticIndex` API. The runners are not imported by
+  the package and not covered by any other test, so drift only surfaced on a
+  multi-hour eval against a downloaded corpus. Both benchmark breakages below
+  are now caught in milliseconds, at the call site, with no corpus, model or
+  network.
+
+### Fixed
+
+- **The eval suite was broken by the 0.7.0 rename.** Every runner constructed
+  `MemoryKG(lancedb_dir=...)`, which became a `TypeError`; `build_dockg.py`
+  also passed the removed `SemanticIndex(table=...)`. All five runners now use
+  `vectors_path`, `--vectors` and `DOCKG_VECTORS`.
+
+- **Runners created the vector store as a directory.**
+  `vectors_path.mkdir(parents=True)` was correct for a LanceDB directory and
+  fatal for a sqlite-vec file — `sqlite3.connect` then failed with `unable to
+  open database file`, but only after the graph phase had already completed.
+  Now `vectors_path.parent.mkdir(...)` in all four affected runners.
+
+- **`benchmarks/test_similar.py`** called `SemanticIndex._open_table`/`_tbl`,
+  removed by DocKG 0.20.0. Ported to the backend API. Note that it drives
+  *DocKG's* `SemanticIndex`, where `lancedb_dir` remains the real parameter
+  name and still takes a directory — it is not covered by the new guards.
+
+- **`build_dockg.py` usage example** showed `--vectors /tmp/.memorykg/vectors`,
+  a directory path left over from LanceDB.
+
 ### Changed
+
+- **LoCoMo parity run recorded** (`benchmarks/locomobench/results/`). The
+  sqlite-vec port reproduces the LanceDB-era baseline exactly on all 1,986
+  questions: avg recall 0.981, identical per-category recall and identical
+  perfect/partial/zero distribution. Per-question `retrieved_ids` differ on 20
+  questions (1.0%) — tail composition at the k=50 seed boundary, consistent
+  with the squared-L2 → cosine metric change — and recall is unchanged on every
+  one of them. Elapsed time in that report is from a CPU-only sandbox and is
+  not comparable to the baseline's hardware.
 
 ### Removed
 
