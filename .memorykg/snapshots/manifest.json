@@ -1,0 +1,87 @@
+{
+  "format": "1.0",
+  "last_update": "2026-08-02T19:18:29.699201+00:00",
+  "snapshots": [
+    {
+      "key": "92f29d06e99afffef54d0710b101554a74a2eace",
+      "branch": "main",
+      "timestamp": "2026-08-02T17:57:48.880242+00:00",
+      "version": "0.7.0",
+      "file": "92f29d06e99afffef54d0710b101554a74a2eace.json",
+      "metrics": {
+        "db_path": "/Users/egs/repos/memory_kg/.memorykg/graph.sqlite",
+        "total_nodes": 3710,
+        "total_edges": 21820,
+        "node_counts": {
+          "chunk": 946,
+          "document": 20,
+          "entity": 720,
+          "keyword": 1007,
+          "section": 396,
+          "topic": 621
+        },
+        "edge_counts": {
+          "CONTAINS": 1342,
+          "CO_OCCURS_WITH": 11098,
+          "HAS_KEYWORD": 3203,
+          "HAS_TOPIC": 879,
+          "MENTIONS_ENTITY": 2283,
+          "NEXT": 489,
+          "REFERENCES": 23,
+          "SIMILAR_TO": 2503
+        },
+        "meaningful_nodes": 3690,
+        "coverage_score": 0.8414376321353064,
+        "issues_count": 0,
+        "complexity_median": 20.0
+      },
+      "deltas": {
+        "vs_previous": null,
+        "vs_baseline": null
+      }
+    },
+    {
+      "key": "e0cd1fe5884dca1668674a92ed5ad89f9dff146d",
+      "branch": "claude/benchmark-parity-convomem-membench",
+      "timestamp": "2026-08-02T19:18:29.698488+00:00",
+      "version": "0.7.0",
+      "file": "e0cd1fe5884dca1668674a92ed5ad89f9dff146d.json",
+      "metrics": {
+        "db_path": "/Users/egs/repos/memory_kg/.memorykg/graph.sqlite",
+        "total_nodes": 3699,
+        "total_edges": 20780,
+        "node_counts": {
+          "chunk": 936,
+          "document": 20,
+          "entity": 697,
+          "keyword": 1038,
+          "section": 375,
+          "topic": 633
+        },
+        "edge_counts": {
+          "CONTAINS": 1311,
+          "CO_OCCURS_WITH": 10296,
+          "HAS_KEYWORD": 3266,
+          "HAS_TOPIC": 879,
+          "MENTIONS_ENTITY": 2195,
+          "NEXT": 493,
+          "REFERENCES": 19,
+          "SIMILAR_TO": 2321
+        },
+        "meaningful_nodes": 3679,
+        "coverage_score": 0.8547008547008547,
+        "issues_count": 0,
+        "complexity_median": 20.0
+      },
+      "deltas": {
+        "vs_previous": null,
+        "vs_baseline": {
+          "nodes": -11,
+          "edges": -1040,
+          "coverage_delta": 0.013263222565548238,
+          "issues_delta": 0
+        }
+      }
+    }
+  ]
+}

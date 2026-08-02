@@ -77,6 +77,44 @@ semantic seeding alone.
 
 ---
 
+## sqlite-vec Parity (August 2026)
+
+The 0.7.0 port from LanceDB to sqlite-vec reproduces this benchmark. Every tier was re-run
+at k=20, hop=1 and diffed per item against the checked-in LanceDB results:
+
+| Tier | Items | LanceDB baseline | sqlite-vec | Rows differing |
+|---|--:|--:|--:|--:|
+| 1 | 500 | 0.9627 | 0.9627 | **0** |
+| 2 | 597 | 0.8861 | 0.8861 | **0** |
+| 3 | 500 | 0.8373 | 0.8387 | 4 |
+| 4 | 300 | 0.8425 | 0.8417 | 3 |
+| **All** | **1,897** | **0.8865** | **0.8868** | 7 |
+
+Tiers 1 and 2 are identical row for row — same recall, same `found`, same `retrieved_nodes`
+on every question. Tier-1 per-category recall reproduces exactly (0.990 / 0.990 / 0.950 /
+0.923 / 0.960, 479/500 perfect), so the 96.3% result and the +3.4 pp margin over MemPal hold.
+
+The seven differing rows in tiers 3–4 are **not attributable to the backend** — the runner
+does not reproduce itself. Re-running tier 3 twice on sqlite-vec, unchanged:
+
+| Comparison (tier 3) | Rows differing |
+|---|--:|
+| LanceDB baseline vs sqlite-vec run 1 | 4 of 500 |
+| LanceDB baseline vs sqlite-vec run 2 | 6 of 500 |
+| **sqlite-vec run 1 vs run 2** | **4 of 500** |
+| **`PYTHONHASHSEED=0`, run A vs run B** | **0 of 500** |
+
+The cause is cross-process nondeterminism in graph expansion, not the vector store: the
+query vector and seed distances are bit-identical across processes, but `GraphStore.expand()`
+iterates a `set`, so which seed claims a node — and therefore its `base_dist` rank key — varies
+per process, changing which node falls off the `max_nodes` cut. Every differing item sits at
+the 25-node cap and has multiple evidence messages; tiers 1–2, whose items carry one or two
+evidence messages, never move. Full write-up in `benchmarks/membench/BENCHMARKS_MEMBENCH.md`.
+
+Results: `results_convomem_tier{1,2,3,4}_top20_hop1_sqlitevec.json`.
+
+---
+
 ## Seed-Count Ablation (tier 1)
 
 | Category | k=10 | k=20 | Δ |
@@ -134,4 +172,5 @@ python benchmarks/convomem/convomem_bench.py --tier 4 --k 20
 ---
 
 *Results verified April 2026. Scoring bug (empty-node false match) fixed 2026-04-26.*
+*Reproduced on sqlite-vec 2026-08-02 (memory_kg @ `2c8cc56`, Apple Silicon, MPS).*
 *Previous claimed result of 100% recall across 17,463 items was incorrect due to this bug.*

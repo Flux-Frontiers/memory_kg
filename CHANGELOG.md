@@ -48,6 +48,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   one of them. Elapsed time in that report is from a CPU-only sandbox and is
   not comparable to the baseline's hardware.
 
+- **ConvoMem and MemBench parity runs recorded**
+  (`benchmarks/convomem/results_convomem_tier{1,2,3,4}_top20_hop1_sqlitevec.json`,
+  `benchmarks/membench/results/membench_memkg_all_all_k{10,20}_hop1_sqlitevec.*`).
+  Both headline results hold: ConvoMem 0.9627 tier-1 at k=20 across 1,897 items
+  in four tiers, MemBench 87.7% at k=20 across 1,100 items, with all 11
+  per-category figures reproduced. The MemBench KG rebuilt on sqlite-vec matches
+  the LanceDB-era build exactly — 259,464 nodes, 258,364 edges, 259,464 indexed
+  rows. ConvoMem tiers 1–2 (1,097 items) and MemBench at k=10 (1,100 items) are
+  identical row for row, including per-item `found` and `retrieved_nodes`.
+
+  Eleven rows differ across the two suites (7 in ConvoMem tiers 3–4, 4 in
+  MemBench k=20). None are attributable to the port: two consecutive runs of the
+  *same* code against the *same* index differ by the same margin — see below.
+
+- **Documented that retrieval is not reproducible across processes**
+  (`benchmarks/membench/BENCHMARKS_MEMBENCH.md`). `GraphStore.expand()` iterates
+  `frontier`, a `set[str]`, and the first seed to reach a node claims it as
+  `via_seed`; Python randomizes string hashing per process, so the winner varies
+  between runs. `via_seed` supplies `base_dist`, the first element of
+  `_rank_key`, so the tail reorders and a different node falls off the
+  `max_nodes` cut. Only items *at* the cap can differ, and only those are
+  observed to. `PYTHONHASHSEED=0` makes whole runs bit-identical (0 of 1,100 and
+  0 of 500). Pre-existing, dating to 2026-04-08 and unrelated to the vector
+  store; the fix is tracked separately.
+
 ### Removed
 
 ## [0.7.0] - 2026-08-02
