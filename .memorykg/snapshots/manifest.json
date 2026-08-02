@@ -1,6 +1,6 @@
 {
   "format": "1.0",
-  "last_update": "2026-08-02T19:18:29.699201+00:00",
+  "last_update": "2026-08-02T19:28:50.048590+00:00",
   "snapshots": [
     {
       "key": "92f29d06e99afffef54d0710b101554a74a2eace",
@@ -81,6 +81,44 @@
           "coverage_delta": 0.013263222565548238,
           "issues_delta": 0
         }
+      }
+    },
+    {
+      "key": "1b9b02735e66230ca75a7fa5d94c32fd514f41c9",
+      "branch": "claude/deterministic-graph-expansion",
+      "timestamp": "2026-08-02T19:28:50.048400+00:00",
+      "version": "0.7.0",
+      "file": "1b9b02735e66230ca75a7fa5d94c32fd514f41c9.json",
+      "metrics": {
+        "db_path": "/Users/egs/repos/memory_kg/.memorykg/graph.sqlite",
+        "total_nodes": 3700,
+        "total_edges": 20736,
+        "node_counts": {
+          "chunk": 936,
+          "document": 20,
+          "entity": 697,
+          "keyword": 1038,
+          "section": 375,
+          "topic": 634
+        },
+        "edge_counts": {
+          "CONTAINS": 1311,
+          "CO_OCCURS_WITH": 10264,
+          "HAS_KEYWORD": 3266,
+          "HAS_TOPIC": 879,
+          "MENTIONS_ENTITY": 2187,
+          "NEXT": 493,
+          "REFERENCES": 19,
+          "SIMILAR_TO": 2317
+        },
+        "meaningful_nodes": 3680,
+        "coverage_score": 0.8547008547008547,
+        "issues_count": 0,
+        "complexity_median": 20.0
+      },
+      "deltas": {
+        "vs_previous": null,
+        "vs_baseline": null
       }
     }
   ]

@@ -18,6 +18,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Retrieval was not reproducible across processes.** `GraphStore.expand()`
+  iterated `frontier`, a `set[str]`, and the first node to reach a neighbour
+  claimed it as `via_seed`. Python randomises string hashing per process, so
+  when several seeds reached the same node the winner varied run to run.
+  `via_seed` supplies `base_dist`, the first element of `_rank_key`, so the
+  result tail reordered and a different node fell off the `max_nodes` cut.
+  The frontier is now traversed in sorted ID order, making the lowest seed ID
+  the tie-break winner.
+
+  Aggregate metrics hid this: two MemBench k=20 runs against the same index and
+  the same code differed on 4 of 1,100 items while avg recall moved by 0.001.
+  Only items *at* the `max_nodes` cap can be affected — everything below the cap
+  returns its full expansion — which is why it survived since 2026-04-08.
+
+  Two guards in `tests/test_store.py`, both mutation-tested by reverting the
+  sort: one pins the tie-break rule, one runs `expand` in subprocesses across
+  five `PYTHONHASHSEED` values and asserts one winner. Unfixed, that second
+  guard reported five different winners for five seeds.
+
 - **The eval suite was broken by the 0.7.0 rename.** Every runner constructed
   `MemoryKG(lancedb_dir=...)`, which became a `TypeError`; `build_dockg.py`
   also passed the removed `SemanticIndex(table=...)`. All five runners now use
