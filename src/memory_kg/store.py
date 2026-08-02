@@ -433,6 +433,14 @@ class GraphStore:
         Returns a mapping from every reachable node ID to its
         :class:`ProvMeta` (minimum hop distance and originating seed).
 
+        When several nodes at the same hop reach the same neighbour, the first
+        one to claim it supplies its ``via_seed``. The frontier is therefore
+        traversed in sorted ID order: iterating the set directly would let
+        Python's per-process string hash randomisation pick the winner, and
+        ``via_seed`` supplies the ``base_dist`` that orders results in
+        :meth:`MemoryKG.query` — so an arbitrary winner reorders the tail and
+        changes which node survives ``max_nodes`` truncation.
+
         :param seed_ids: Starting node IDs (hop 0).
         :param hop: Maximum number of hops to traverse.
         :param rels: Edge relation types to follow.
@@ -444,7 +452,7 @@ class GraphStore:
 
         for h in range(1, hop + 1):
             nxt: set[str] = set()
-            for nid in frontier:
+            for nid in sorted(frontier):
                 rows = self.con.execute(
                     f"""
                     SELECT src, dst FROM edges

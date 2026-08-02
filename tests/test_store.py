@@ -1,7 +1,51 @@
 """Tests for GraphStore."""
 
+import os
+import subprocess
+import sys
+import textwrap
+
 from memory_kg.memorykg import DocEdge, DocNode
 from memory_kg.store import GraphStore
+
+# A hub node reachable in one hop from every seed. Which seed claims it as
+# `via_seed` is decided by frontier iteration order, so this shape is what makes
+# non-deterministic traversal observable.
+_FAN_IN_SEEDS = 16
+
+
+def _fan_in_graph():
+    """Return (nodes, edges, seed_ids) where every seed reaches one shared hub."""
+    seed_ids = [f"chunk:fan.md:{i:04d}" for i in range(_FAN_IN_SEEDS)]
+    nodes = [
+        DocNode(
+            id="doc:fan.md",
+            kind="document",
+            name="fan",
+            title="Fan",
+            file_path="fan.md",
+            char_start=0,
+            char_end=1000,
+            heading_level=None,
+            text="Hub document.",
+        )
+    ]
+    nodes += [
+        DocNode(
+            id=sid,
+            kind="chunk",
+            name=f"chunk:{i:04d}",
+            title="Chunk",
+            file_path="fan.md",
+            char_start=i * 10,
+            char_end=(i + 1) * 10,
+            heading_level=None,
+            text=f"Chunk {i} text.",
+        )
+        for i, sid in enumerate(seed_ids)
+    ]
+    edges = [DocEdge(src="doc:fan.md", rel="CONTAINS", dst=sid) for sid in seed_ids]
+    return nodes, edges, seed_ids
 
 
 def _make_nodes():
@@ -95,6 +139,63 @@ def test_store_expand(tmp_path):
     assert "chunk:notes.md:0000" in meta
     assert "chunk:notes.md:0001" in meta
     store.close()
+
+
+def test_store_expand_tie_break_is_lowest_seed_id(tmp_path):
+    """When several seeds reach a node at the same hop, the lowest ID claims it.
+
+    `via_seed` selects the `base_dist` that orders the node in `kg.query`, so an
+    arbitrary winner reorders the result tail. Pin the rule rather than leaving
+    it to set iteration order.
+    """
+    db = tmp_path / "fan.sqlite"
+    store = GraphStore(db)
+    nodes, edges, seed_ids = _fan_in_graph()
+    store.write(nodes, edges, wipe=True)
+
+    meta = store.expand(set(seed_ids), hop=1, rels=("CONTAINS",))
+
+    assert meta["doc:fan.md"].via_seed == min(seed_ids)
+    store.close()
+
+
+def test_store_expand_is_stable_across_hash_seeds(tmp_path):
+    """`expand` must return the same provenance in every process.
+
+    Python randomises string hashing per process, so iterating a `set[str]`
+    frontier makes retrieval irreproducible run to run — invisible in aggregate
+    metrics but enough to change which node survives `max_nodes` truncation.
+    """
+    db = tmp_path / "fan.sqlite"
+    store = GraphStore(db)
+    nodes, edges, seed_ids = _fan_in_graph()
+    store.write(nodes, edges, wipe=True)
+    store.close()
+
+    script = textwrap.dedent(
+        f"""
+        from memory_kg.store import GraphStore
+
+        store = GraphStore({str(db)!r})
+        meta = store.expand({set(seed_ids)!r}, hop=1, rels=("CONTAINS",))
+        print(meta["doc:fan.md"].via_seed)
+        store.close()
+        """
+    )
+
+    seen = set()
+    for hash_seed in ("0", "1", "2", "3", "4"):
+        env = {**os.environ, "PYTHONHASHSEED": hash_seed}
+        out = subprocess.run(
+            [sys.executable, "-c", script],
+            capture_output=True,
+            text=True,
+            check=True,
+            env=env,
+        )
+        seen.add(out.stdout.strip())
+
+    assert seen == {min(seed_ids)}, f"via_seed varies by process: {sorted(seen)}"
 
 
 def test_store_edges_within(tmp_path):
