@@ -1,0 +1,123 @@
+{
+  "key": "522ecd1a7b905955a537b8fbf5ae00d190200881",
+  "branch": "main",
+  "timestamp": "2026-08-02T20:14:25.693981+00:00",
+  "version": "0.7.0",
+  "metrics": {
+    "db_path": "/Users/egs/repos/memory_kg/.memorykg/graph.sqlite",
+    "total_nodes": 3720,
+    "total_edges": 20867,
+    "node_counts": {
+      "chunk": 942,
+      "document": 20,
+      "entity": 699,
+      "keyword": 1045,
+      "section": 375,
+      "topic": 639
+    },
+    "edge_counts": {
+      "CONTAINS": 1317,
+      "CO_OCCURS_WITH": 10330,
+      "HAS_KEYWORD": 3290,
+      "HAS_TOPIC": 885,
+      "MENTIONS_ENTITY": 2205,
+      "NEXT": 499,
+      "REFERENCES": 19,
+      "SIMILAR_TO": 2322
+    },
+    "meaningful_nodes": 3700,
+    "coverage_score": 0.8556263269639066,
+    "issues_count": 0,
+    "complexity_median": 20.0
+  },
+  "hotspots": [
+    {
+      "id": "chunk:docs/ingestion.md:0002",
+      "file_path": "docs/ingestion.md",
+      "label": "Pipeline Overview",
+      "references": 0,
+      "semantic_links": 24,
+      "total_links": 25
+    },
+    {
+      "id": "chunk:docs/ingestion.md:0025",
+      "file_path": "docs/ingestion.md",
+      "label": "Embedding Model",
+      "references": 0,
+      "semantic_links": 22,
+      "total_links": 23
+    },
+    {
+      "id": "chunk:CHANGELOG.md:0092",
+      "file_path": "CHANGELOG.md",
+      "label": "Changed",
+      "references": 0,
+      "semantic_links": 22,
+      "total_links": 22
+    },
+    {
+      "id": "chunk:CHANGELOG.md:0083",
+      "file_path": "CHANGELOG.md",
+      "label": "Changed",
+      "references": 0,
+      "semantic_links": 21,
+      "total_links": 22
+    },
+    {
+      "id": "chunk:README.md:0065",
+      "file_path": "README.md",
+      "label": "Documentation",
+      "references": 7,
+      "semantic_links": 20,
+      "total_links": 28
+    },
+    {
+      "id": "chunk:analysis/memory_kg_analysis_20260425.md:0009",
+      "file_path": "analysis/memory_kg_analysis_20260425.md",
+      "label": "Fan-In Ranking",
+      "references": 0,
+      "semantic_links": 20,
+      "total_links": 21
+    },
+    {
+      "id": "chunk:docs/CHEATSHEET.md:0002",
+      "file_path": "docs/CHEATSHEET.md",
+      "label": "The Four Tools at a Glance",
+      "references": 0,
+      "semantic_links": 20,
+      "total_links": 21
+    },
+    {
+      "id": "chunk:CHANGELOG.md:0101",
+      "file_path": "CHANGELOG.md",
+      "label": "Added",
+      "references": 0,
+      "semantic_links": 20,
+      "total_links": 20
+    },
+    {
+      "id": "chunk:analysis/memory_kg_analysis_20260425.md:0049",
+      "file_path": "analysis/memory_kg_analysis_20260425.md",
+      "label": "Query Search Retrieval Semantic",
+      "references": 0,
+      "semantic_links": 20,
+      "total_links": 20
+    },
+    {
+      "id": "chunk:analysis/memory_kg_analysis_20260425.md:0039",
+      "file_path": "analysis/memory_kg_analysis_20260425.md",
+      "label": "Snapshot History",
+      "references": 0,
+      "semantic_links": 19,
+      "total_links": 20
+    }
+  ],
+  "issues": [],
+  "vs_previous": null,
+  "vs_baseline": {
+    "nodes": 10,
+    "edges": -953,
+    "coverage_delta": 0.01418869482860019,
+    "issues_delta": 0
+  }
+}

@@ -14,7 +14,7 @@ types and adds:
   - ``SnapshotMetrics`` — domain-specific dataclass (used by CLI and tests)
   - ``SnapshotDelta``   — domain-specific dataclass (used by CLI and tests)
   - ``SnapshotManager`` subclass that:
-      * sets ``package_name="doc-kg"`` by default
+      * sets ``package_name="memory-kg"`` by default
       * overrides ``capture()`` to accept the legacy per-field kwargs
         (``coverage_score``, ``issues_count``, ``complexity_median``) and
         build the structured ``metrics`` dict
@@ -245,7 +245,7 @@ class SnapshotManager(_BaseSnapshotManager):
 
     Subclasses the shared ``kg_utils.snapshots.SnapshotManager`` and adds:
 
-    * ``package_name="doc-kg"`` default for version detection.
+    * ``package_name="memory-kg"`` default for version detection.
     * Legacy ``capture()`` kwargs: ``coverage_score``, ``issues_count``,
       ``complexity_median`` — merged into the metrics dict.
     * ``_compute_delta_from_metrics`` extended with ``coverage_delta`` and
@@ -269,10 +269,10 @@ class SnapshotManager(_BaseSnapshotManager):
         self,
         snapshots_dir: Any,
         *,
-        package_name: str = "doc-kg",
+        package_name: str = "memory-kg",
         db_path: Any = None,
     ) -> None:
-        """Initialise with *snapshots_dir* and ``doc-kg`` package defaults."""
+        """Initialise with *snapshots_dir* and ``memory-kg`` package defaults."""
         super().__init__(snapshots_dir, package_name=package_name, db_path=db_path)
 
     # ------------------------------------------------------------------
