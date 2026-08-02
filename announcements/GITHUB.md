@@ -1,230 +1,95 @@
-# 🎉 CodeKG v0.5.2 — Public Release
+# MemoryKG: Deterministic Knowledge Graph for Conversational Logs and Document Corpora
 
-We're thrilled to announce **CodeKG** is now publicly available.
-
-CodeKG is a **deterministic knowledge graph for Python codebases** that brings structural precision and semantic intelligence together. It powers source-grounded code search, precise agent reasoning, and interactive codebase exploration.
+**Tagline:** A deterministic, auditable knowledge graph over conversational logs and Markdown/text corpora, with semantic indexing and source-grounded passage packing. Structure is ground truth; embeddings are an acceleration layer.
 
 ---
 
-## What is CodeKG?
+## The Problem
 
-CodeKG constructs an auditable knowledge graph from Python source code using **static analysis**:
+Retrieval over long conversational history is usually a flat vector index: chunk everything, embed it, hope cosine similarity surfaces the right passage. That works until it doesn't, and when it doesn't you have no way to ask *why* — there is no structure to inspect, no provenance to follow, and no answer to "what else is this connected to".
 
-1. **Parse** your codebase with three AST passes (structure, call graph, data-flow)
-2. **Store** the graph in SQLite (nodes + edges with provenance)
-3. **Index** semantically with LanceDB for fast NL search
-4. **Query** using a hybrid model: embeddings seed retrieval, graph traversal ranks and bounds results
-5. **Extract** source-grounded snippets with exact line numbers
-6. **Integrate** via MCP server (Claude Code, GitHub Copilot, Cursor, Continue) or CLI/web UI
+Meanwhile the structure is right there in the text. Sessions have topics. Topics recur across sessions. Entities are mentioned in more than one place. Throwing that away and re-deriving it statistically at query time is a strange trade.
 
-### Key Principles
+## What MemoryKG Does
 
-- **Structure is authoritative.** The AST-derived graph is source of truth.
-- **Semantics accelerate, never decide.** Embeddings are entry points, not arbiters.
-- **Everything is traceable.** Every node and edge maps to a file and line number.
-- **Determinism over heuristics.** Identical input yields identical output, always.
-- **Composable artifacts.** SQLite for structure, LanceDB for vectors, Markdown/JSON for consumption.
+MemoryKG semantically chunks conversational logs and document corpora, extracts topics, entities and keywords, links them through typed edges with provenance, and stores the whole thing in SQLite. A sqlite-vec vector index sits alongside as an *acceleration layer* — it seeds retrieval, it does not decide it.
 
----
+1. **Chunk** with a strategy that fits the corpus — `semantic` (embedding-boundary detection), `heading`, `sentence_group`, or `fixed`
+2. **Extract** topics, named entities and keywords; build co-occurrence and similarity edges automatically
+3. **Store** everything in SQLite as the canonical, inspectable record
+4. **Index** semantically with sqlite-vec for fast natural-language search
+5. **Query** by seeding from vectors, then expanding through the graph and ranking score-first
 
-## Core Features
+## Why It's Different
 
-✅ **AST-based knowledge graph** — Three-pass static analysis (structure, calls, data-flow)
-✅ **Deterministic output** — No randomness, no heuristics
-✅ **Symbol resolution** — Cross-module call sites resolved via import aliases
-✅ **Hybrid query engine** — Semantic seeding + structural graph expansion
-✅ **Source-grounded snippets** — Definition and call-site code with line numbers
-✅ **Precise fan-in lookup** — Find all callers of a function across modules
-✅ **MCP server** — Five tools for AI agent integration
-✅ **Interactive visualizers** — Streamlit web app + 3D PyVista graph
-✅ **One-line installer** — Automated setup for Claude Code, GitHub Copilot, Cline, Continue
-✅ **Elastic License 2.0** — Free to use, modify, distribute; no hosted service reselling
+- **Deterministic and auditable.** The graph is a SQLite file you can open with `sqlite3`. Every edge carries provenance. Nothing about the structure depends on a model's mood.
+- **Structure as ground truth.** Semantic search finds entry points; typed-edge traversal decides what comes back. Embeddings are never a decision layer.
+- **Rebuildable by construction.** The vector index is derived from SQLite and disposable — delete it and rebuild at any time with no data loss.
+- **Haystack-scoped retrieval.** Vector seeding can be restricted to a per-question candidate pool, which is what makes benchmark-grade precision possible without a separate database per conversation.
+- **Composable artifacts.** SQLite for structure, `vectors.sqlite` for vectors, Markdown/JSON for consumption. No server, no daemon, no external service.
 
----
+## Benchmarks
+
+On **LongMemEval-S** (500 questions, session-granularity retrieval), MemoryKG with haystack-filtered seeding and BGE-small-en-v1.5 reaches **97.6% R@5 and 99.2% R@10 with zero inference calls** — no LLM reranker anywhere in the pipeline.
+
+Full tables, the per-question-type breakdown, and the ablation that got there are in [`benchmarks/RESULTS_SUMMARY.md`](../benchmarks/RESULTS_SUMMARY.md).
+
+The single largest win was not the embedding model. It was **haystack-scoped seeding** — restricting vector seeds to the per-question candidate sessions rather than the full 23,867-session corpus (+11.0 pp R@5 on its own).
 
 ## Quick Start
 
-### Fastest Way (One-Liner)
+```bash
+pip install 'memory-kg @ git+https://github.com/Flux-Frontiers/memory_kg.git'
 
-Run this from inside your Python repository:
+# Index a corpus — SQLite graph + vector index in one step
+memorykg build --repo docs/
+
+# Natural-language query, ranked chunks
+memorykg query "authentication flow"
+
+# Source-grounded passage pack, straight into an LLM prompt
+memorykg pack "configuration reference" --fmt md --out context.md
+```
+
+`memorykg build` wipes and rebuilds by default. `memorykg build-graph` and
+`memorykg build-index` run the two phases separately when you want to re-embed
+without re-parsing.
+
+## Artifacts
+
+```
+.memorykg/
+├── graph.sqlite        # canonical graph — nodes, typed edges, provenance
+├── vectors.sqlite      # derived semantic index (disposable)
+└── snapshots/          # temporal metric snapshots (tracked in git)
+```
+
+## AI Agent Integration
+
+MemoryKG ships an MCP server exposing four tools — `query_docs`, `pack_docs`, `get_node`, and `graph_stats`:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Flux-Frontiers/code_kg/main/scripts/install-skill.sh | bash
+memorykg mcp --repo /path/to/corpus
 ```
 
-The installer:
-1. Installs the `code-kg` package
-2. Builds the SQLite knowledge graph (`.codekg/graph.sqlite`)
-3. Builds the LanceDB semantic index
-4. Configures MCP for your IDE (Claude Code, GitHub Copilot, Cline, Continue)
-5. Sets up CLI commands and skill files
+Point Claude Code, Claude Desktop, or any MCP client at it and the corpus becomes queryable structure rather than a wall of text.
 
-After setup, reload VS Code (`Cmd+Shift+P` → `Developer: Reload Window`) to activate.
+## Also Available
 
-### Manual Installation
+MemoryKG shares its architecture with two siblings:
 
-```bash
-pip install 'code-kg @ git+https://github.com/Flux-Frontiers/code_kg.git'
-# or in Poetry:
-poetry add 'code-kg @ git+https://github.com/Flux-Frontiers/code_kg.git'
-```
+- **[PyCodeKG](https://github.com/Flux-Frontiers/pycode_kg)** — the same approach applied to Python codebases
+- **[DocKG](https://github.com/Flux-Frontiers/doc_kg)** — general document corpora
 
-Build the graph:
+All three register with **KGRAG** for federated cross-corpus queries.
 
-```bash
-# Full pipeline in one step
-codekg build --repo /path/to/repo
+## Built With
 
-# Or step by step
-codekg-build-sqlite --repo /path/to/repo
-codekg-build-lancedb --repo /path/to/repo
-```
+- **SQLite** — canonical graph store
+- **sqlite-vec** — vector index (exact search, single file, no server)
+- **sentence-transformers** — embeddings, `BAAI/bge-small-en-v1.5` by default
+- **Click**, **Rich**, **Streamlit**, **MCP**
 
----
+## License
 
-## Usage Examples
-
-### Query the Graph
-
-```bash
-codekg query "database connection setup"
-# with options:
-codekg query "database connection setup" --k 8 --hop 1
-```
-
-### Generate Code Context for LLMs
-
-```bash
-codekg pack "configuration loading" --out context_pack.md
-```
-
-### Explore Interactively
-
-```bash
-# Streamlit web app
-codekg viz
-
-# 3D graph visualizer
-codekg viz3d --layout allium
-```
-
-### Analyze Codebase Architecture
-
-```bash
-codekg analyze .
-```
-
-### Start MCP Server
-
-```bash
-codekg mcp --repo .
-```
-
-Connect your IDE and use these tools:
-- `query_codebase(q, ...)` — Hybrid search
-- `pack_snippets(q, ...)` — Source-grounded context
-- `get_node(node_id)` — Fetch by stable ID
-- `callers(node_id)` — Find all callers (cross-module)
-- `graph_stats()` — Node/edge counts
-
----
-
-## Architecture
-
-<img src="docs/code_kg_arch_square.png" alt="CodeKG Architecture" width="600"/>
-
-**Build pipeline:**
-
-```
-Repository
-  ↓
-AST Parsing (3 passes: structure, calls, data-flow)
-  ↓
-SQLite Knowledge Graph (nodes + edges)
-  ↓
-Symbol Resolution (RESOLVES_TO edges for cross-module calls)
-  ↓
-LanceDB Semantic Index (embeddings)
-  ↓
-Hybrid Query (semantic seeding + structural expansion)
-  ↓
-Ranking + Deduplication + Snippet Extraction
-  ↓
-JSON / Markdown / Interactive UI / MCP
-```
-
-**Node kinds:** `module`, `class`, `function`, `method`, `symbol`
-
-**Edge relations:** `CONTAINS`, `CALLS`, `IMPORTS`, `INHERITS`, `RESOLVES_TO`, `ATTR_ACCESS`, `READS`, `WRITES`
-
----
-
-## Use Cases
-
-**AI Agents:**
-- Precise code context for LLM reasoning (Claude Code, GitHub Copilot, Cursor, Continue)
-- Source-grounded retrieval with line numbers and full traceability
-
-**Developers:**
-- Interactive codebase exploration without grep
-- Understand code flow and dependencies visually
-- Search by intent, not syntax
-
-**Teams:**
-- Onboarding: Give engineers precise code context
-- Code review: Understand impact of changes
-- Documentation: Auto-generate from graph structure
-
-**Enterprises:**
-- Canonical store of code structure for compliance auditing
-- Foundation for custom analysis and tooling
-- Deterministic, auditable reasoning for sensitive codebases
-
----
-
-## Comparisons
-
-| Feature | CodeKG | GraphRAG | Amplify |
-|---------|--------|----------|---------|
-| **Foundation** | Deterministic AST | Probabilistic inference | Embeddings only |
-| **Structure** | Graph with provenance | Implicit, learned | None |
-| **Auditability** | Full (every answer traceable) | Limited (statistical) | Limited (vector distance) |
-| **Line numbers** | Yes, always | No | No |
-| **Cross-module calls** | Yes (symbol resolution) | Yes | Limited |
-| **Performance** | O(k + h) graph traversal | LLM-based | Vector search |
-
----
-
-## Documentation
-
-- **[README](README.md)** — Overview, quick start, feature summary
-- **[docs/Architecture.md](docs/Architecture.md)** — Deep dive into design, data model, pipeline
-- **[docs/MCP.md](docs/MCP.md)** — MCP tool reference, integration guide, troubleshooting
-- **[docs/CHEATSHEET.md](docs/CHEATSHEET.md)** — CLI quick reference
-- **[CHANGELOG.md](CHANGELOG.md)** — Version history
-
----
-
-## Repository
-
-- **GitHub:** [github.com/Flux-Frontiers/code_kg](https://github.com/Flux-Frontiers/code_kg)
-- **License:** [Elastic License 2.0](LICENSE) — Free to use, modify, distribute; no hosted service reselling
-- **Author:** Eric G. Suchanek, PhD (Flux-Frontiers, Liberty TWP, OH)
-
----
-
-## Contributing
-
-Contributions welcome! Open issues for bugs, feature requests, or questions. See `DEVELOPING` section in README.
-
----
-
-## Thanks
-
-CodeKG builds on excellent open-source projects:
-- **Python AST** — Standard library static analysis
-- **SQLite** — Reliable, portable structured storage
-- **LanceDB** — Fast vector indexing
-- **Streamlit** — Interactive web UI
-- **PyVista** — 3D graph visualization
-- **MCP** — Model Context Protocol for agent integration
+Elastic License 2.0.

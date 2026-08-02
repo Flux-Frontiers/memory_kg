@@ -1,142 +1,72 @@
-# CodeKG: Deterministic Knowledge Graph for Python Codebases
+# Show HN: MemoryKG — a deterministic knowledge graph for conversational memory
 
-**Tagline:** A deterministic, auditable knowledge graph for Python codebases with semantic indexing and source-grounded snippet packing. Built with static analysis; used by Claude Code for precise code navigation and reasoning.
-
----
-
-## The Problem
-
-Most code search tools rely solely on embeddings or probabilistic inference. This creates three problems:
-
-1. **No ground truth.** Embeddings rank relevance but can't verify what they're ranking — they can hallucinate structure.
-2. **No auditability.** When an LLM gets the wrong code snippet, you can't trace why. The vector distance was close? That tells you nothing.
-3. **Expensive and imprecise.** Dense embedding indexes are memory-heavy and struggle with exact structural queries (e.g., "find all callers of this function across modules").
+**Tagline:** Structure-first retrieval over conversational logs and document corpora. SQLite is the source of truth; embeddings are an acceleration layer. 97.6% R@5 on LongMemEval-S with zero inference calls.
 
 ---
 
-## The Solution
+## The pitch
 
-CodeKG inverts the priority: **structure is authoritative; semantics accelerate retrieval.**
+Most long-term memory for agents is a flat vector index. Chunk everything, embed it, retrieve by cosine similarity. It works surprisingly well and fails opaquely — when the right passage doesn't come back there is nothing to inspect, because there is no structure, only a distance.
 
-### What We Built
+MemoryKG takes the other approach. It semantically chunks a corpus, extracts topics, entities and keywords, links them with typed provenance-carrying edges, and stores all of it in SQLite. A `vectors.sqlite` index sits alongside for fast natural-language seeding. Retrieval seeds from vectors, then expands through the graph and ranks score-first.
 
-- **Deterministic knowledge graph** from Python AST — modules, classes, functions, methods, call graphs, imports, inheritance, data-flow. No heuristics. Identical input → identical output.
-- **Symbol resolution** — Post-build pass bridges cross-module call sites via import aliases (e.g., `from utils import helper; helper()` resolves through `sym:` stubs).
-- **Hybrid query model** — Semantic search seeds retrieval (LanceDB embeddings), structural graph expansion bounds and ranks results. Embeddings are an acceleration layer, never a decision layer.
-- **Source-grounded snippet packing** — Extract definition and call-site code with exact line numbers. No synthetic context; every snippet maps to a file and line range.
-- **MCP server** — Five tools (`query_codebase`, `pack_snippets`, `callers`, `get_node`, `graph_stats`) integrate CodeKG into Claude Code, GitHub Copilot, Cursor, Continue, and custom agents.
+The graph is the product. The embeddings are a convenience.
 
-### The Payoff
+## Why you might care
 
-**For AI agents:** Precise, auditable code context. No hallucination. Every snippet is traceable.
+- **You can audit it.** The graph is a SQLite file. Open it with `sqlite3` and ask why something ranked where it did. Every edge carries provenance.
+- **It's rebuildable.** The vector index is derived and disposable. Delete it, rebuild it, lose nothing.
+- **No server.** SQLite plus a single-file vector index. No daemon, no external service, no network calls at query time.
+- **Embeddings never decide.** They find entry points. Typed-edge traversal decides what comes back and in what order.
 
-**For developers:** Interactive exploration. Streamlit web app for browsing. 3D graph visualizer. CLI for scripting.
+## Results
 
-**For enterprises:** A canonical, SQLite-backed store of code structure that supports deterministic reasoning, compliance auditing, and downstream tool integration.
+LongMemEval-S, 500 questions, session-granularity retrieval, BGE-small-en-v1.5:
 
----
+**97.6% R@5 · 99.2% R@10 · zero inference calls.**
 
-## Tech Details
+No LLM reranker anywhere in the pipeline. Full tables and the per-question-type breakdown are in `benchmarks/RESULTS_SUMMARY.md`.
 
-**Three-pass AST pipeline:**
-1. Structural extraction (modules, classes, functions, imports, inheritance)
-2. Call graph (call expressions resolved to targets)
-3. Data-flow (variable reads/writes, attribute access)
+The interesting part is the ablation. Going from MiniLM to BGE-small bought 3.6 pp of R@5 (holding haystack scoping constant). **Haystack-scoped seeding bought 11.0 pp** — restricting vector seeds to the per-question candidate sessions rather than searching all 23,867 sessions. Second-largest was score-first ranking (ordering by base distance rather than hop distance), worth 8.8 pp.
 
-**Output:** SQLite (canonical) + LanceDB (derived semantic index).
+That ordering is the whole thesis in miniature: the retrieval structure mattered several times more than the embedding model.
 
-**Query execution:**
-1. Semantic seeding (natural-language query → vector search → entry points)
-2. Structural expansion (graph traversal from seeds using selected edge types: `CONTAINS`, `CALLS`, `IMPORTS`, `INHERITS`)
-3. Ranking (hop distance, embedding distance, node kind priority)
-4. Snippet extraction (definition spans + call-site spans with context)
+## How it works
 
-**Caller lookup:** Two-phase reverse traversal resolving `sym:` stubs via `RESOLVES_TO` edges. Finds every caller of a function, even across module boundaries.
-
----
-
-## Quick Start
-
-**One-line installer** (runs inside your repo):
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/Flux-Frontiers/code_kg/main/scripts/install-skill.sh | bash
+```
+corpus (Markdown / text / conversational logs)
+   │
+   ├─ semantic chunking (semantic | heading | sentence_group | fixed)
+   ├─ topic / entity / keyword extraction
+   ├─ typed edges + co-occurrence + similarity
+   │
+   ├──► graph.sqlite     canonical, auditable
+   └──► vectors.sqlite   derived, disposable
 ```
 
-This sets up:
-- SQLite knowledge graph (`.codekg/graph.sqlite`)
-- LanceDB semantic index
-- MCP config for Claude Code, GitHub Copilot, Cline, or Claude Desktop
-- Skill files for integration
+Query: vector seed → graph expansion along typed edges → score-first ranking → source-grounded passage pack.
 
-**Build manually:**
+## Try it
 
 ```bash
-pip install 'code-kg @ git+https://github.com/Flux-Frontiers/code_kg.git'
+pip install 'memory-kg @ git+https://github.com/Flux-Frontiers/memory_kg.git'
 
-# Full pipeline in one step
-codekg build --repo /path/to/repo
-
-# Or step by step
-codekg build-sqlite --repo /path/to/repo
-codekg build-lancedb --repo /path/to/repo
+memorykg build --repo ./corpus
+memorykg query "what did we decide about retries"
+memorykg pack "deployment runbook" --fmt md --out context.md
 ```
 
-**Query:**
+There's an MCP server too (`memorykg mcp`), exposing `query_docs`, `pack_docs`, `get_node` and `graph_stats` — so Claude Code or any MCP client can query the corpus as structure instead of as a wall of text.
 
-```bash
-codekg query "database connection setup"
-```
+## Related
 
-**Pack source-grounded snippets for LLMs:**
+Two siblings share the architecture: **PyCodeKG** for Python codebases and **DocKG** for general document corpora. All three register with **KGRAG** for federated cross-corpus queries.
 
-```bash
-codekg pack "authentication flow" --out context.md
-```
+## Caveats, honestly
 
-**Analyze codebase architecture:**
+- Retrieval quality above is **session-granularity on LongMemEval-S**. Your corpus is not that corpus.
+- Haystack scoping needs a per-question candidate pool. Without one you are running unscoped search and should expect the unscoped numbers (86.6% R@5), not the headline.
+- Extraction is deterministic, not clever. Topics and entities come from statistical extractors, not an LLM. That is the point, but it does mean the graph is only as good as the extractors.
+- Elastic License 2.0, not OSI-approved. Check it before building a product on it.
 
-```bash
-codekg analyze .
-```
-
-**Visualize:**
-
-```bash
-codekg viz          # Streamlit web app
-codekg viz3d        # 3D graph (PyVista)
-```
-
-**Integrate with agents:**
-
-```bash
-codekg mcp          # MCP server (Claude Code, Copilot, Cline, Continue)
-```
-
----
-
-## Philosophy
-
-1. **Structure is authoritative** — AST-derived graph is source of truth.
-2. **Semantics accelerate, never decide** — Embeddings are entry points, not arbiters.
-3. **Everything is traceable** — Every node and edge maps to file + line number.
-4. **Determinism over heuristics** — Same input, same output, always.
-5. **Composable artifacts** — SQLite for structure, LanceDB for vectors, Markdown/JSON for consumption.
-
----
-
-## Repository
-
-[github.com/Flux-Frontiers/code_kg](https://github.com/Flux-Frontiers/code_kg)
-
-**License:** Elastic License 2.0 (free to use, modify, and distribute; no hosted service reselling).
-
-**Author:** Eric G. Suchanek, PhD (Flux-Frontiers, Liberty TWP, OH)
-
----
-
-## Related Work
-
-- **Microsoft GraphRAG** — Probabilistic inference; CodeKG prioritizes determinism and auditability.
-- **Amplify** — Embedding-only search; CodeKG augments with structural graph traversal.
-- **LanceDB** — Vector database used for semantic indexing in CodeKG.
+Repo: https://github.com/Flux-Frontiers/memory_kg

@@ -65,7 +65,7 @@ MemoryKG exceeds MemPalace on 3 of 6 types without any inference.
 3. **BGE-small-en-v1.5** replacing MiniLM-L6-v2 — +2.0 pp R@5 (without filter)
    File: `src/memory_kg/memorykg.py:58`
 
-4. **Haystack-filtered seeding** — restrict LanceDB seeds to the 50 per-question haystack sessions rather than the full 23,867-session corpus. Eliminates cross-corpus noise.
+4. **Haystack-filtered seeding** — restrict sqlite-vec seeds to the 50 per-question haystack sessions rather than the full 23,867-session corpus. Eliminates cross-corpus noise.
    The decisive fix: +9.4 pp R@5 (MiniLM) / +11.0 pp R@5 (BGE-small)
    Files: `src/memory_kg/index.py`, `src/memory_kg/kg.py`, `benchmarks/longmemeval/longmemeval_memkg.py`
 
@@ -79,7 +79,7 @@ MemoryKG exceeds MemPalace on 3 of 6 types without any inference.
 ```
 Query
   │
-  ├─ LanceDB vector search (k=50)
+  ├─ sqlite-vec vector search (k=50)
   │    └─ filtered to haystack session files only (50 sessions per question)
   │         └─ BGE-small-en-v1.5 embeddings (384d)
   │

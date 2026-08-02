@@ -65,6 +65,13 @@ memorykg build-index --repo <corpus>
   `ruff format --check .` would start failing on prose. The sibling KG repos
   carry the same exclusion.
 
+- **The three unposted announcements were CodeKG documents**, not MemoryKG ones —
+  62 references to CodeKG and zero to MemoryKG across 506 lines, instructing
+  readers to run `codekg-build-lancedb`. Rewritten for MemoryKG against
+  verifiable repo facts: the real CLI, the four MCP tools, the LongMemEval-S
+  results, and the ablation deltas recomputed from the progression table rather
+  than quoted from prose.
+
 - Docs swept for the flag, path and env-var renames — `README`,
   `architecture.md`, `docs/{cli-reference,CHEATSHEET,installation,ingestion,
   ingestion_infographic,memorykg_workflow,SNAPSHOTS,MCP,deployment}.md`,
@@ -89,6 +96,14 @@ memorykg build-index --repo <corpus>
   applied. Now reads `MEMORYKG_VECTORS`.
 
 ### Added
+
+- **`tests/test_cli_vectors.py`** — 49 cases over the renamed CLI and constructor
+  surface, which coverage showed at 30–61% after the port: the commands declare
+  `--vectors` but nothing invoked them, and `MemoryKG.index` — the one real
+  `SemanticIndex` construction site — was never reached. Click passes options by
+  keyword, so a decorator renamed against a function still declaring the old
+  parameter raises `TypeError` at call time and `--help` never notices. These
+  invoke each command and assert the value reaches `MemoryKG(vectors_path=…)`.
 
 - **`tests/test_index_vectors.py`** — 29 cases over the ported index, model-free
   via a stub embedder. Covers the metadata round-trip, both prefilters
