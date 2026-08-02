@@ -117,9 +117,21 @@ memorykg build-index --repo <corpus>
 
 ### Removed
 
-- **`lancedb>=0.29.0`** as a direct dependency. It still arrives transitively
-  via `kgmodule-utils[semantic]` until KG_utils splits its extras, so the venv
-  will not shrink yet.
+- **`lancedb` is gone from the dependency tree entirely**, not just as a direct
+  dependency. It kept arriving transitively through
+  `kgmodule-utils[semantic]`, which is now narrowed to
+  `kgmodule-utils[sqlite-vec]`. No upstream change was needed — KG_utils
+  already ships `[sqlite-vec]` as its own extra, and the six other members of
+  `[semantic]` (numpy, rich, sentence-transformers, torch, transformers,
+  sqlite-vec) are all declared directly by this package already, so `lancedb`
+  was the only thing the wider extra uniquely contributed.
+
+  `poetry install --sync` now removes `lancedb`, `pyarrow`, `lance-namespace`
+  and `lance-namespace-urllib3-client`. Verified with the full CI check set
+  (`ruff format --check`, `ruff check`, `ty check src/`, `pytest` — 390
+  passing) against an environment where `lancedb` is not importable. Safe
+  because every `import lancedb` in `kg_utils.vector_backend` is function-local
+  and this package only ever constructs `SqliteVecBackend`.
 
 ### Fixed
 

@@ -87,7 +87,11 @@ dependencies = [
     "sentence-transformers>=5.4.1",
     "torch>=2.5.1",
     "transformers>=5.5.0,<6",
-    "kgmodule-utils[semantic,sqlite-vec]>=0.9.0",
+    # `[sqlite-vec]` only, deliberately not `[semantic]`. That extra bundles
+    # numpy, rich, sentence-transformers, torch, transformers and sqlite-vec —
+    # all of which are already declared directly above — plus `lancedb`, which
+    # was the last thing pulling the retired backend into a clean install.
+    "kgmodule-utils[sqlite-vec]>=0.9.0",
 ]
 
 [project.optional-dependencies]
