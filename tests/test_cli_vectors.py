@@ -355,6 +355,21 @@ class TestReleaseMetadata:
         cff = yaml.safe_load((root / "CITATION.cff").read_text())
         assert cff["version"] == self._project_version(root)
 
+    def test_package_dunder_version_matches_pyproject(self):
+        """`__version__` is declared but consumed by nobody inside the package.
+
+        The CLI reports installed metadata, so a stale value here is invisible
+        to every test and every command — it only misleads importers reading
+        the attribute. The 0.7.0 bump left it at 0.6.2 for exactly that reason.
+        """
+        import re
+
+        root = self._root()
+        src = (root / "src" / "memory_kg" / "__init__.py").read_text()
+        found = re.search(r'^__version__\s*=\s*["\']([^"\']+)["\']', src, re.M)
+        assert found, "no __version__ in src/memory_kg/__init__.py"
+        assert found.group(1) == self._project_version(root)
+
     def test_readme_citation_text_matches_pyproject(self):
         import re
 

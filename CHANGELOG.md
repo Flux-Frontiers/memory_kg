@@ -9,90 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **`tests/test_benchmarks_api.py`** — static guards pinning `benchmarks/` to
-  the live `MemoryKG` / `SemanticIndex` API. The runners are not imported by
-  the package and not covered by any other test, so drift only surfaced on a
-  multi-hour eval against a downloaded corpus. Both benchmark breakages below
-  are now caught in milliseconds, at the call site, with no corpus, model or
-  network.
-
-### Fixed
-
-- **Retrieval was not reproducible across processes.** `GraphStore.expand()`
-  iterated `frontier`, a `set[str]`, and the first node to reach a neighbour
-  claimed it as `via_seed`. Python randomises string hashing per process, so
-  when several seeds reached the same node the winner varied run to run.
-  `via_seed` supplies `base_dist`, the first element of `_rank_key`, so the
-  result tail reordered and a different node fell off the `max_nodes` cut.
-  The frontier is now traversed in sorted ID order, making the lowest seed ID
-  the tie-break winner.
-
-  Aggregate metrics hid this: two MemBench k=20 runs against the same index and
-  the same code differed on 4 of 1,100 items while avg recall moved by 0.001.
-  Only items *at* the `max_nodes` cap can be affected — everything below the cap
-  returns its full expansion — which is why it survived since 2026-04-08.
-
-  Two guards in `tests/test_store.py`, both mutation-tested by reverting the
-  sort: one pins the tie-break rule, one runs `expand` in subprocesses across
-  five `PYTHONHASHSEED` values and asserts one winner. Unfixed, that second
-  guard reported five different winners for five seeds.
-
-- **The eval suite was broken by the 0.7.0 rename.** Every runner constructed
-  `MemoryKG(lancedb_dir=...)`, which became a `TypeError`; `build_dockg.py`
-  also passed the removed `SemanticIndex(table=...)`. All five runners now use
-  `vectors_path`, `--vectors` and `DOCKG_VECTORS`.
-
-- **Runners created the vector store as a directory.**
-  `vectors_path.mkdir(parents=True)` was correct for a LanceDB directory and
-  fatal for a sqlite-vec file — `sqlite3.connect` then failed with `unable to
-  open database file`, but only after the graph phase had already completed.
-  Now `vectors_path.parent.mkdir(...)` in all four affected runners.
-
-- **`benchmarks/test_similar.py`** called `SemanticIndex._open_table`/`_tbl`,
-  removed by DocKG 0.20.0. Ported to the backend API. Note that it drives
-  *DocKG's* `SemanticIndex`, where `lancedb_dir` remains the real parameter
-  name and still takes a directory — it is not covered by the new guards.
-
-- **`build_dockg.py` usage example** showed `--vectors /tmp/.memorykg/vectors`,
-  a directory path left over from LanceDB.
-
 ### Changed
 
-- **LoCoMo parity run recorded** (`benchmarks/locomobench/results/`). The
-  sqlite-vec port reproduces the LanceDB-era baseline exactly on all 1,986
-  questions: avg recall 0.981, identical per-category recall and identical
-  perfect/partial/zero distribution. Per-question `retrieved_ids` differ on 20
-  questions (1.0%) — tail composition at the k=50 seed boundary, consistent
-  with the squared-L2 → cosine metric change — and recall is unchanged on every
-  one of them. Elapsed time in that report is from a CPU-only sandbox and is
-  not comparable to the baseline's hardware.
-
-- **ConvoMem and MemBench parity runs recorded**
-  (`benchmarks/convomem/results_convomem_tier{1,2,3,4}_top20_hop1_sqlitevec.json`,
-  `benchmarks/membench/results/membench_memkg_all_all_k{10,20}_hop1_sqlitevec.*`).
-  Both headline results hold: ConvoMem 0.9627 tier-1 at k=20 across 1,897 items
-  in four tiers, MemBench 87.7% at k=20 across 1,100 items, with all 11
-  per-category figures reproduced. The MemBench KG rebuilt on sqlite-vec matches
-  the LanceDB-era build exactly — 259,464 nodes, 258,364 edges, 259,464 indexed
-  rows. ConvoMem tiers 1–2 (1,097 items) and MemBench at k=10 (1,100 items) are
-  identical row for row, including per-item `found` and `retrieved_nodes`.
-
-  Eleven rows differ across the two suites (7 in ConvoMem tiers 3–4, 4 in
-  MemBench k=20). None are attributable to the port: two consecutive runs of the
-  *same* code against the *same* index differ by the same margin — see below.
-
-- **Documented that retrieval is not reproducible across processes**
-  (`benchmarks/membench/BENCHMARKS_MEMBENCH.md`). `GraphStore.expand()` iterates
-  `frontier`, a `set[str]`, and the first seed to reach a node claims it as
-  `via_seed`; Python randomizes string hashing per process, so the winner varies
-  between runs. `via_seed` supplies `base_dist`, the first element of
-  `_rank_key`, so the tail reorders and a different node falls off the
-  `max_nodes` cut. Only items *at* the cap can differ, and only those are
-  observed to. `PYTHONHASHSEED=0` makes whole runs bit-identical (0 of 1,100 and
-  0 of 500). Pre-existing, dating to 2026-04-08 and unrelated to the vector
-  store; the fix is tracked separately.
-
 ### Removed
+
+### Fixed
 
 ## [0.7.0] - 2026-08-02
 
@@ -159,6 +80,41 @@ memorykg build-index --repo <corpus>
   `scripts/install-skill.sh`, and the agent instructions. The published
   `announcements/` and benchmark articles are left as written.
 
+
+- **LoCoMo parity run recorded** (`benchmarks/locomobench/results/`). The
+  sqlite-vec port reproduces the LanceDB-era baseline exactly on all 1,986
+  questions: avg recall 0.981, identical per-category recall and identical
+  perfect/partial/zero distribution. Per-question `retrieved_ids` differ on 20
+  questions (1.0%) — tail composition at the k=50 seed boundary, consistent
+  with the squared-L2 → cosine metric change — and recall is unchanged on every
+  one of them. Elapsed time in that report is from a CPU-only sandbox and is
+  not comparable to the baseline's hardware.
+
+- **ConvoMem and MemBench parity runs recorded**
+  (`benchmarks/convomem/results_convomem_tier{1,2,3,4}_top20_hop1_sqlitevec.json`,
+  `benchmarks/membench/results/membench_memkg_all_all_k{10,20}_hop1_sqlitevec.*`).
+  Both headline results hold: ConvoMem 0.9627 tier-1 at k=20 across 1,897 items
+  in four tiers, MemBench 87.7% at k=20 across 1,100 items, with all 11
+  per-category figures reproduced. The MemBench KG rebuilt on sqlite-vec matches
+  the LanceDB-era build exactly — 259,464 nodes, 258,364 edges, 259,464 indexed
+  rows. ConvoMem tiers 1–2 (1,097 items) and MemBench at k=10 (1,100 items) are
+  identical row for row, including per-item `found` and `retrieved_nodes`.
+
+  Eleven rows differ across the two suites (7 in ConvoMem tiers 3–4, 4 in
+  MemBench k=20). None are attributable to the port: two consecutive runs of the
+  *same* code against the *same* index differ by the same margin — see below.
+
+- **Documented that retrieval is not reproducible across processes**
+  (`benchmarks/membench/BENCHMARKS_MEMBENCH.md`). `GraphStore.expand()` iterates
+  `frontier`, a `set[str]`, and the first seed to reach a node claims it as
+  `via_seed`; Python randomizes string hashing per process, so the winner varies
+  between runs. `via_seed` supplies `base_dist`, the first element of
+  `_rank_key`, so the tail reorders and a different node falls off the
+  `max_nodes` cut. Only items *at* the cap can differ, and only those are
+  observed to. `PYTHONHASHSEED=0` makes whole runs bit-identical (0 of 1,100 and
+  0 of 500). Pre-existing, dating to 2026-04-08 and unrelated to the vector
+  store; the fix is tracked separately.
+
 ### Removed
 
 - **`lancedb` is gone from the dependency tree entirely**, not just as a direct
@@ -197,6 +153,54 @@ memorykg build-index --repo <corpus>
   a copy-paste from doc_kg, so MemoryKG's own environment variable never
   applied. Now reads `MEMORYKG_VECTORS`.
 
+- **`SnapshotManager` defaulted to `package_name="doc-kg"`** — another artefact
+  of the doc_kg lineage, so snapshot version detection resolved the wrong
+  package's metadata. Now `"memory-kg"`.
+
+- **`memory_kg.__version__` was left at 0.6.2** by the 0.7.0 bump. Nothing
+  internal consumes it — the CLI reads installed metadata — so only importers
+  reading the attribute directly saw the stale value. The release-metadata
+  drift guards now cover it alongside the README badge, both citations and
+  `CITATION.cff`.
+
+- **Retrieval was not reproducible across processes.** `GraphStore.expand()`
+  iterated `frontier`, a `set[str]`, and the first node to reach a neighbour
+  claimed it as `via_seed`. Python randomises string hashing per process, so
+  when several seeds reached the same node the winner varied run to run.
+  `via_seed` supplies `base_dist`, the first element of `_rank_key`, so the
+  result tail reordered and a different node fell off the `max_nodes` cut.
+  The frontier is now traversed in sorted ID order, making the lowest seed ID
+  the tie-break winner.
+
+  Aggregate metrics hid this: two MemBench k=20 runs against the same index and
+  the same code differed on 4 of 1,100 items while avg recall moved by 0.001.
+  Only items *at* the `max_nodes` cap can be affected — everything below the cap
+  returns its full expansion — which is why it survived since 2026-04-08.
+
+  Two guards in `tests/test_store.py`, both mutation-tested by reverting the
+  sort: one pins the tie-break rule, one runs `expand` in subprocesses across
+  five `PYTHONHASHSEED` values and asserts one winner. Unfixed, that second
+  guard reported five different winners for five seeds.
+
+- **The eval suite was broken by the 0.7.0 rename.** Every runner constructed
+  `MemoryKG(lancedb_dir=...)`, which became a `TypeError`; `build_dockg.py`
+  also passed the removed `SemanticIndex(table=...)`. All five runners now use
+  `vectors_path`, `--vectors` and `DOCKG_VECTORS`.
+
+- **Runners created the vector store as a directory.**
+  `vectors_path.mkdir(parents=True)` was correct for a LanceDB directory and
+  fatal for a sqlite-vec file — `sqlite3.connect` then failed with `unable to
+  open database file`, but only after the graph phase had already completed.
+  Now `vectors_path.parent.mkdir(...)` in all four affected runners.
+
+- **`benchmarks/test_similar.py`** called `SemanticIndex._open_table`/`_tbl`,
+  removed by DocKG 0.20.0. Ported to the backend API. Note that it drives
+  *DocKG's* `SemanticIndex`, where `lancedb_dir` remains the real parameter
+  name and still takes a directory — it is not covered by the new guards.
+
+- **`build_dockg.py` usage example** showed `--vectors /tmp/.memorykg/vectors`,
+  a directory path left over from LanceDB.
+
 ### Added
 
 - **Release-metadata drift guards** (in `tests/test_cli_vectors.py`) — the
@@ -221,6 +225,14 @@ memorykg build-index --repo <corpus>
   prefilter draws `k` from the matching subset rather than post-filtering a
   global top-k, rebuild idempotence, cold reads, and that reporting on an
   unbuilt index does not create it. Every guard is mutation-tested.
+
+
+- **`tests/test_benchmarks_api.py`** — static guards pinning `benchmarks/` to
+  the live `MemoryKG` / `SemanticIndex` API. The runners are not imported by
+  the package and not covered by any other test, so drift only surfaced on a
+  multi-hour eval against a downloaded corpus. Both benchmark breakages below
+  are now caught in milliseconds, at the call site, with no corpus, model or
+  network.
 
 ### Fixed
 
