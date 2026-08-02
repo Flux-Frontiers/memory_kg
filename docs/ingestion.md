@@ -22,13 +22,13 @@ MemoryKG offers two ingestion paths: the **Core Build Pipeline** for fast, deter
      │     (memorykg build)      │              │     (memorykg pipeline run)       │
      │                        │              │                                │
      │  Fast, deterministic   │              │  Deep NLP, diary_kg-style      │
-     │  SQLite + LanceDB      │              │  5-phase transformation        │
+     │  SQLite + sqlite-vec      │              │  5-phase transformation        │
      └────────────┬───────────┘              └──────────────┬─────────────────┘
                   │                                         │
                   ▼                                         ▼
      ┌────────────────────────┐              ┌────────────────────────────────┐
      │  .memorykg/graph.sqlite   │              │  .memorykg/pipeline/*.psv         │
-     │  .memorykg/lancedb/       │              │  .memorykg/pipeline/embeddings.json│
+     │  .memorykg/vectors.sqlite       │              │  .memorykg/pipeline/embeddings.json│
      │                        │              │  .memorykg/cache/*.pkl            │
      │  → MCP server          │              │                                │
      │  → query / pack        │              │  → manifold analysis           │
@@ -40,7 +40,7 @@ MemoryKG offers two ingestion paths: the **Core Build Pipeline** for fast, deter
 
 ## 1. Core Build Pipeline (`memorykg build`)
 
-The standard ingestion path. Parses a corpus into a hybrid SQLite + LanceDB knowledge graph in a single command.
+The standard ingestion path. Parses a corpus into a hybrid SQLite + sqlite-vec knowledge graph in a single command.
 
 ### Architecture
 
@@ -75,13 +75,13 @@ The standard ingestion path. Parses a corpus into a hybrid SQLite + LanceDB know
 │  1. Read all nodes from SQLite                              │
 │  2. Batch-embed via SentenceTransformerEmbedder             │
 │     Model: BAAI/bge-small-en-v1.5 (384-dim, default)        │
-│  3. Write vectors to LanceDB                                │
+│  3. Write vectors to the vector store                                │
 │  4. SIMILAR_TO edge discovery:                              │
 │     - k-NN search per chunk                                 │
 │     - Emit edge when cosine similarity ≥ 0.85              │
 │     - Write SIMILAR_TO edges back to SQLite                 │
 │                                                             │
-│  Output: LanceDB index + SIMILAR_TO edges in SQLite         │
+│  Output: sqlite-vec index + SIMILAR_TO edges in SQLite         │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -94,7 +94,7 @@ The standard ingestion path. Parses a corpus into a hybrid SQLite + LanceDB know
 | `parse_corpus()` | `memorykg.py` | Deterministic extraction: files → nodes + edges |
 | `TextChunker` | `chunker.py` | Semantic text segmentation; strategies: `semantic`, `fixed`, `sentence_group`, `heading` |
 | `GraphStore` | `store.py` | SQLite persistence layer |
-| `SemanticIndex` | `index.py` | LanceDB vector index + SIMILAR_TO discovery |
+| `SemanticIndex` | `index.py` | sqlite-vec vector index + SIMILAR_TO discovery |
 | `TopicExtractor` | `topics.py` | Supervised keyword-based topic classification |
 | `extract_entities()` | `relations.py` | Deterministic entity extraction (titlecase/acronym) |
 
@@ -130,7 +130,7 @@ memorykg build --repo docs
 
 # Granular steps
 memorykg build-graph --repo docs     # Step 1: parse → SQLite only
-memorykg build-index                 # Step 2: SQLite → LanceDB + SIMILAR_TO
+memorykg build-index                 # Step 2: SQLite → vectors + SIMILAR_TO
 
 # Incremental update — keep existing data
 memorykg build --repo docs --update
@@ -445,7 +445,7 @@ The core build pipeline is always needed for MCP server, `query`, and `pack`. Th
 ```
 .memorykg/
 ├── graph.sqlite           # Core build: SQLite knowledge graph
-├── lancedb/               # Core build: LanceDB vector index
+├── vectors.sqlite         # Core build: sqlite-vec vector index
 ├── snapshots/             # Temporal snapshots (JSON)
 │   ├── manifest.json
 │   └── <version>.json
@@ -462,7 +462,7 @@ The core build pipeline is always needed for MCP server, `query`, and `pack`. Th
 
 Every artifact under `.memorykg/` is **derived from the source corpus** and
 fully reproducible by re-running `memorykg build`. They are also large
-binaries (SQLite databases, LanceDB Lance files, pickle caches, downloaded
+binaries (SQLite databases, sqlite-vec stores, pickle caches, downloaded
 embedding models — often hundreds of MB to several GB) that bloat the
 repository and produce noisy diffs. The corpus is the source of truth; the
 graph is its index.
@@ -482,7 +482,7 @@ If you want to keep snapshots committed (small JSON diffs of graph metrics
 over time) while excluding the heavy artifacts, use a more granular set:
 
 ```gitignore
-.memorykg/lancedb/
+.memorykg/vectors.sqlite
 .memorykg/cache/
 .memorykg/pipeline/
 .memorykg/models/

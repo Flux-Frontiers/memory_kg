@@ -18,12 +18,12 @@ sqlite_option = click.option(
     help="Path to SQLite database (default: <repo>/.memorykg/graph.sqlite).",
 )
 
-lancedb_option = click.option(
-    "--lancedb",
+vectors_option = click.option(
+    "--vectors",
     default=None,
     show_default=False,
     type=click.Path(),
-    help="Path to LanceDB directory (default: <repo>/.memorykg/lancedb).",
+    help="Path to the sqlite-vec store (default: <repo>/.memorykg/vectors.sqlite).",
 )
 
 model_option = click.option(

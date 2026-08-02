@@ -17,7 +17,7 @@ build
     │         │
     ▼         ▼
 SQLite +    .psv files +
-LanceDB     embeddings.json
+vectors.sqlite  embeddings.json
     │         │
     ▼         ▼
 MCP server  Manifold / MRL
@@ -46,10 +46,10 @@ Corpus files
         │  8. Keyword extract → HAS_KEYWORD edges
         │  9. Co-occurrence* → CO_OCCURS_WITH edges  (* off by default)
         │
-        └─► PASS 2: SemanticIndex.build  →  LanceDB + SIMILAR_TO
+        └─► PASS 2: SemanticIndex.build  →  sqlite-vec + SIMILAR_TO
               1. Read all nodes from SQLite
               2. Batch-embed via SentenceTransformerEmbedder
-              3. Write vectors to LanceDB
+              3. Write vectors to the vector store
               4. k-NN per chunk → SIMILAR_TO edges (cosine ≥ 0.85)
 ```
 
@@ -62,7 +62,7 @@ Corpus files
 | `parse_corpus()` | `memorykg.py` | Deterministic file → nodes + edges |
 | `TextChunker` | `chunker.py` | Semantic segmentation (4 strategies) |
 | `GraphStore` | `store.py` | SQLite persistence |
-| `SemanticIndex` | `index.py` | LanceDB vector index + SIMILAR_TO discovery |
+| `SemanticIndex` | `index.py` | sqlite-vec vector index + SIMILAR_TO discovery |
 | `TopicExtractor` | `topics.py` | Keyword-based topic classification |
 
 ### Node Kinds
@@ -102,7 +102,7 @@ Corpus files
 memorykg build --repo docs                         # Full build (default: wipe)
 memorykg build --repo docs --update                # Incremental
 memorykg build-graph --repo docs                   # Pass 1 only → SQLite
-memorykg build-index                               # Pass 2 only → LanceDB
+memorykg build-index                               # Pass 2 only → sqlite-vec
 ```
 
 ---
@@ -208,7 +208,7 @@ Output: Markdown + JSON at `~/.claude/memorykg_semantic_latest.json`
 ```
 .memorykg/
 ├── graph.sqlite        ← Core Build: authoritative graph
-├── lancedb/            ← Core Build: vector index
+├── vectors.sqlite      ← Core Build: vector index
 ├── snapshots/          ← Temporal snapshots (JSON, keep in git)
 ├── cache/              ← Multipass: per-file NLP feature caches
 ├── pipeline/           ← Multipass: .psv runs + embeddings.json

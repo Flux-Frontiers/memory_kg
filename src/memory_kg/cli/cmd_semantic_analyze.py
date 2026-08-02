@@ -24,10 +24,10 @@ from memory_kg.memorykg_semantic_analysis import main as run_semantic_analysis
     help="SQLite knowledge graph path (default: <corpus>/.memorykg/graph.sqlite).",
 )
 @click.option(
-    "--lancedb",
+    "--vectors",
     default=None,
     type=click.Path(),
-    help="LanceDB vector index directory (default: <corpus>/.memorykg/lancedb).",
+    help="sqlite-vec store (default: <corpus>/.memorykg/vectors.sqlite).",
 )
 @click.option(
     "--output",
@@ -53,7 +53,7 @@ from memory_kg.memorykg_semantic_analysis import main as run_semantic_analysis
 def semantic_analyze(
     repo: str,
     db: str | None,
-    lancedb: str | None,
+    vectors: str | None,
     output: str | None,
     json_path: str | None,
     quiet: bool,
@@ -62,7 +62,7 @@ def semantic_analyze(
     run_semantic_analysis(
         corpus_root=repo,
         db_path=db,
-        lancedb_path=lancedb,
+        vectors_path=vectors,
         report_path=output,
         json_path=json_path,
         quiet=quiet,

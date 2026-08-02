@@ -11,7 +11,7 @@ memorykg --help
 ## `memorykg build` — Full pipeline
 
 ```bash
-memorykg build [--repo PATH] [--db PATH] [--lancedb PATH] [--model NAME]
+memorykg build [--repo PATH] [--db PATH] [--vectors PATH] [--model NAME]
                [--update] [--no-similar] [--chunk-size N] [--chunk-overlap N]
                [--exclude-dir DIR]...
 ```
@@ -20,7 +20,7 @@ memorykg build [--repo PATH] [--db PATH] [--lancedb PATH] [--model NAME]
 |---|---|---|
 | `--repo` | `.` | Root directory of documents to index |
 | `--db` | `.memorykg/graph.sqlite` | SQLite database path |
-| `--lancedb` | `.memorykg/lancedb` | LanceDB index directory |
+| `--vectors` | `.memorykg/vectors.sqlite` | sqlite-vec store |
 | `--model` | `BAAI/bge-small-en-v1.5` | Sentence-transformer embedding model |
 | `--update` | off | Incremental update — keep existing data (default is wipe) |
 | `--no-similar` | off | Skip computing `SIMILAR_TO` edges |
@@ -46,25 +46,25 @@ memorykg build-graph [--repo PATH] [--db PATH] [--update] [--exclude-dir DIR]...
 ```
 
 Parses documents, extracts nodes and edges, writes the SQLite graph. No embedding model required.
-Options mirror `build` except LanceDB and embedding flags are absent.
+Options mirror `build` except vector-store and embedding flags are absent.
 
 ---
 
-## `memorykg build-index` — LanceDB only
+## `memorykg build-index` — vector index only
 
 ```bash
-memorykg build-index [--repo PATH] [--db PATH] [--lancedb PATH] [--model NAME]
+memorykg build-index [--repo PATH] [--db PATH] [--vectors PATH] [--model NAME]
                      [--update] [--no-similar] [--batch N] [--workers N]
 ```
 
-Reads an existing SQLite graph and builds (or rebuilds) the LanceDB vector index.
+Reads an existing SQLite graph and builds (or rebuilds) the sqlite-vec vector index.
 
 ---
 
 ## `memorykg query` — Hybrid search
 
 ```bash
-memorykg query QUERY [--db PATH] [--lancedb PATH] [--k N] [--hop N] [--rels TYPES]
+memorykg query QUERY [--db PATH] [--vectors PATH] [--k N] [--hop N] [--rels TYPES]
 ```
 
 | Option | Default | Description |
@@ -79,7 +79,7 @@ memorykg query QUERY [--db PATH] [--lancedb PATH] [--k N] [--hop N] [--rels TYPE
 ## `memorykg pack` — Passage extraction
 
 ```bash
-memorykg pack QUERY [--db PATH] [--lancedb PATH] [--k N] [--hop N]
+memorykg pack QUERY [--db PATH] [--vectors PATH] [--k N] [--hop N]
               [--format md|json] [--out PATH] [--max-chars N] [--max-nodes N]
 ```
 
@@ -97,7 +97,7 @@ memorykg pack QUERY [--db PATH] [--lancedb PATH] [--k N] [--hop N]
 ## `memorykg analyze` — Corpus health report
 
 ```bash
-memorykg analyze [--repo PATH] [--db PATH] [--lancedb PATH]
+memorykg analyze [--repo PATH] [--db PATH] [--vectors PATH]
                  [--output PATH] [--json] [--quiet]
 ```
 
@@ -164,7 +164,7 @@ Requires `[viz]` extra: `pip install 'memory-kg[viz]'`.
 ## `memorykg mcp` — MCP server
 
 ```bash
-memorykg mcp [--repo PATH] [--db PATH] [--lancedb PATH]
+memorykg mcp [--repo PATH] [--db PATH] [--vectors PATH]
              [--model NAME] [--transport stdio|sse]
 ```
 

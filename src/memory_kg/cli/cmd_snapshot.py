@@ -82,7 +82,7 @@ def save_snapshot(
     kg = MemoryKG(
         corpus_root=repo_root,
         db_path=db_path,
-        lancedb_dir=repo_root / ".memorykg" / "lancedb",
+        vectors_path=repo_root / ".memorykg" / "vectors.sqlite",
     )
     try:
         analyzer = MemoryKGAnalyzer(kg)

@@ -17,10 +17,10 @@ import click
 
 from memory_kg.cli.group import cli
 from memory_kg.cli.options import (
-    lancedb_option,
     model_option,
     repo_option,
     sqlite_option,
+    vectors_option,
 )
 from memory_kg.kg import MemoryKG
 from memory_kg.store import DEFAULT_RELS
@@ -32,13 +32,7 @@ _DEFAULT_RELS_STR = ",".join(DEFAULT_RELS)
 @click.argument("query_text", metavar="QUERY")
 @repo_option
 @sqlite_option
-@lancedb_option
-@click.option(
-    "--table",
-    default="memorykg_nodes",
-    show_default=True,
-    help="LanceDB table name.",
-)
+@vectors_option
 @model_option
 @click.option("--k", type=int, default=8, show_default=True, help="Top-k semantic hits.")
 @click.option("--hop", type=int, default=1, show_default=True, help="Graph expansion hops.")
@@ -59,8 +53,7 @@ def query(
     query_text: str,
     repo: str,
     sqlite: str,
-    lancedb: str,
-    table: str,
+    vectors: str,
     model: str,
     k: int,
     hop: int,
@@ -70,15 +63,14 @@ def query(
     """Run a hybrid semantic + graph query and print a ranked result summary."""
     repo_root = Path(repo).resolve()
     db_path = Path(sqlite) if sqlite else repo_root / ".memorykg" / "graph.sqlite"
-    lancedb_dir = Path(lancedb) if lancedb else repo_root / ".memorykg" / "lancedb"
+    vectors_path = Path(vectors) if vectors else repo_root / ".memorykg" / "vectors.sqlite"
     rels_tuple = tuple(r.strip() for r in rels.split(",") if r.strip())
 
     kg = MemoryKG(
         corpus_root=repo_root,
         db_path=db_path,
-        lancedb_dir=lancedb_dir,
+        vectors_path=vectors_path,
         model=model,
-        table=table,
     )
 
     result = kg.query(
@@ -96,13 +88,7 @@ def query(
 @click.argument("query_text", metavar="QUERY")
 @repo_option
 @sqlite_option
-@lancedb_option
-@click.option(
-    "--table",
-    default="memorykg_nodes",
-    show_default=True,
-    help="LanceDB table name.",
-)
+@vectors_option
 @model_option
 @click.option("--k", type=int, default=8, show_default=True, help="Top-k semantic hits.")
 @click.option("--hop", type=int, default=1, show_default=True, help="Graph expansion hops.")
@@ -142,8 +128,7 @@ def pack(
     query_text: str,
     repo: str,
     sqlite: str,
-    lancedb: str,
-    table: str,
+    vectors: str,
     model: str,
     k: int,
     hop: int,
@@ -156,15 +141,14 @@ def pack(
     """Run a hybrid query and emit text excerpt packs."""
     repo_root = Path(repo).resolve()
     db_path = Path(sqlite) if sqlite else repo_root / ".memorykg" / "graph.sqlite"
-    lancedb_dir = Path(lancedb) if lancedb else repo_root / ".memorykg" / "lancedb"
+    vectors_path = Path(vectors) if vectors else repo_root / ".memorykg" / "vectors.sqlite"
     rels_tuple = tuple(r.strip() for r in rels.split(",") if r.strip())
 
     kg = MemoryKG(
         corpus_root=repo_root,
         db_path=db_path,
-        lancedb_dir=lancedb_dir,
+        vectors_path=vectors_path,
         model=model,
-        table=table,
     )
 
     text_pack = kg.pack(

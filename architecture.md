@@ -91,7 +91,7 @@ Graph node.
 ### Path 1: Graph Query Pipeline
 Semantic search → graph expansion → snippet packing
 
-- Semantic search finds seed nodes via LanceDB
+- Semantic search finds seed nodes via sqlite-vec
 - Graph expansion traverses CALLS, CONTAINS, IMPORTS edges
 - Snippet pack materializes source code with context
 

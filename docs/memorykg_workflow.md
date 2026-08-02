@@ -10,7 +10,7 @@ memorykg build docs
 ```
 
 Build the authoritative SQLite knowledge graph from your documentation corpus (`.md` and `.txt` files).
-This runs corpus parsing, SQLite persistence, and LanceDB vector indexing in one step.
+This runs corpus parsing, SQLite persistence, and sqlite-vec vector indexing in one step.
 Existing data is wiped by default; pass `--update` to keep existing data instead.
 
 **Granular steps (for large corpora):**
@@ -19,7 +19,7 @@ Existing data is wiped by default; pass `--update` to keep existing data instead
 # Step 1 — parse corpus and write SQLite graph
 memorykg build-graph docs
 
-# Step 2 — build LanceDB vector index from existing SQLite
+# Step 2 — build sqlite-vec vector index from existing SQLite
 memorykg build-index
 ```
 

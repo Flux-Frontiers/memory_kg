@@ -2,7 +2,7 @@
 """
 index.py
 
-SemanticIndex — LanceDB vector index for MemoryKG.
+SemanticIndex — sqlite-vec vector index for MemoryKG.
 
 Mirrors DocKG's index.py with the following additions:
 
@@ -19,7 +19,7 @@ Mirrors DocKG's index.py with the following additions:
    section context, and chunk text instead of kind/qualname/docstring.
 
 Author: Eric G. Suchanek, PhD
-Last Revision: 2026-07-29 00:00:00
+Last Revision: 2026-08-02 00:00:00
 """
 
 # pylint: disable=C0415
@@ -36,7 +36,16 @@ from typing import TYPE_CHECKING, Any
 
 from kg_utils.embed import resolve_model_path
 from kg_utils.embedder import Embedder, SentenceTransformerEmbedder
+from kg_utils.vector_backend import SqliteVecBackend
 from rich.console import Console
+
+# Metadata persisted alongside each vector. ``id`` is implicit.
+# ``title`` and ``file_path`` are load-bearing: :meth:`SemanticIndex.search`
+# reads both off every hit, and they are also the columns the ``seed_kinds`` /
+# ``haystack_files`` prefilters run against. The backend's default column set
+# does not include them, so a default-configured port would silently return
+# blank titles and paths — and filter against columns that do not exist.
+_META_COLUMNS = ("kind", "name", "title", "file_path", "text")
 
 if TYPE_CHECKING:
     from memory_kg.store import GraphStore
@@ -96,7 +105,7 @@ def _resolve_device(explicit: str | None = None) -> str:
 
 def suppress_ingestion_logging() -> None:
     """Suppress verbose progress output during model loading and ingestion."""
-    for name in ("sentence_transformers", "transformers", "huggingface_hub", "lancedb"):
+    for name in ("sentence_transformers", "transformers", "huggingface_hub"):
         logging.getLogger(name).setLevel(logging.WARNING)
 
     try:
@@ -169,16 +178,20 @@ class SeedHit:
 # SemanticIndex
 # ---------------------------------------------------------------------------
 
-_DEFAULT_TABLE = "memorykg_nodes"
 _DEFAULT_KINDS = ("document", "section", "chunk", "topic", "entity", "keyword")
 
 
 class SemanticIndex:
-    """LanceDB-backed semantic vector index for MemoryKG.
+    """sqlite-vec-backed semantic vector index for MemoryKG.
 
     Reads nodes from a :class:`~memory_kg.store.GraphStore`, embeds them, and
-    stores the vectors in LanceDB.  The index is **derived and disposable** —
-    it can be rebuilt from SQLite at any time without data loss.
+    stores the vectors in a single ``vectors.sqlite`` file.  The index is
+    **derived and disposable** — it can be rebuilt from SQLite at any time
+    without data loss.
+
+    Changed in 0.7.0: the store was a LanceDB directory plus a named table.
+    The embedding text built by :func:`_build_index_text` and the SIMILAR_TO
+    discovery pass are unchanged — only where the vectors live changed.
 
     ``search`` uses an exact flat cosine scan (no ANN index): retrieval recall
     is exact, which the benchmark suites depend on.  Search cost grows linearly
@@ -190,33 +203,30 @@ class SemanticIndex:
     Example::
 
         embedder = SentenceTransformerEmbedder()
-        idx = SemanticIndex("./lancedb", embedder=embedder)
+        idx = SemanticIndex(".memorykg/vectors.sqlite", embedder=embedder)
         idx.build(store, wipe=True)
 
         hits = idx.search("climate change policy", k=8)
         for h in hits:
             print(h.id, h.distance)
 
-    :param lancedb_dir: Directory for the LanceDB database.
+    :param vectors_path: Path to the ``vectors.sqlite`` store.
     :param embedder: Embedding backend.
-    :param table: LanceDB table name.
     :param index_kinds: Node kinds to embed.
     """
 
     def __init__(
         self,
-        lancedb_dir: str | Path,
+        vectors_path: str | Path,
         *,
         embedder: Embedder | None = None,
-        table: str = _DEFAULT_TABLE,
         index_kinds: Sequence[str] = _DEFAULT_KINDS,
     ) -> None:
-        """Configure the LanceDB-backed semantic index; the table is opened lazily."""
-        self.lancedb_dir = Path(lancedb_dir)
+        """Configure the sqlite-vec semantic index; the store is opened lazily."""
+        self.vectors_path = Path(vectors_path)
         self.embedder: Embedder = embedder or SentenceTransformerEmbedder()
-        self.table_name = table
         self.index_kinds = tuple(index_kinds)
-        self._tbl = None
+        self._backend: SqliteVecBackend | None = None
 
     # ------------------------------------------------------------------
     # Build
@@ -239,7 +249,7 @@ class SemanticIndex:
         """Build (or rebuild) the vector index from *store*.
 
         Nodes are streamed from SQLite in pages (never the whole corpus in RAM),
-        embedded, and written to LanceDB in large fragments.  Chunk vectors are
+        embedded, and written to the store in large batches.  Chunk vectors are
         accumulated into a single pre-allocated ``(n_chunks × dim)`` float32
         matrix so the SIMILAR_TO pass sees a compact array rather than hundreds
         of thousands of loose Python lists.  After indexing, optionally discovers
@@ -247,7 +257,7 @@ class SemanticIndex:
 
         :param store: Authoritative :class:`~memory_kg.store.GraphStore`.
         :param wipe: If ``True``, delete all existing vectors first.
-        :param batch_size: LanceDB write batch size (rows buffered per ``add``).
+        :param batch_size: Rows buffered per write transaction.
         :param encode_batch_size: Texts fed to ``model.encode()`` per call
                                   (default 128).  Attention memory scales with
                                   ``batch x seq^2``; on both CPU and MPS throughput
@@ -277,13 +287,12 @@ class SemanticIndex:
 
         if not quiet:
             Console().print(f"  nodes    : {n_total:,} to embed")
-        tbl = self._open_table(wipe=wipe)
+        backend = self._open_for_build(wipe=wipe)
 
         indexed = 0
-        # Buffer LanceDB writes into large fragments regardless of the (smaller)
-        # encode batch: each add() commits a fragment and rewrites the manifest,
-        # so many small writes make fragment count — and thus per-commit cost —
-        # grow over the build.  Floor at 4096.
+        # Buffer writes into large batches regardless of the (smaller) encode
+        # batch: each upsert runs its own transaction, so many small writes cost
+        # one commit apiece.  Floor at 4096.
         write_batch_size = max(int(batch_size), int(encode_batch_size), 4096)
         pending_rows: list[dict[str, Any]] = []
         # Pre-allocate a contiguous (n_chunks x dim) matrix for chunk vectors so
@@ -338,15 +347,10 @@ class SemanticIndex:
                             chunk_pair_vecs[chunk_vec_idx] = vec
                             chunk_vec_idx += 1
 
-                ids = [n["id"] for n in enc_nodes]
-
-                # On wipe builds the table starts empty — skip delete to avoid
-                # scanning a growing fragment list (O(n²) slowdown). On incremental
-                # builds, delete stale rows before re-adding.
-                if not wipe:
-                    pred = " OR ".join([f"id = '{_escape(nid)}'" for nid in ids])
-                    tbl.delete(pred)
-
+                # `upsert` deletes any prior rows for these ids and re-inserts.
+                # The backend already skips that delete on a freshly wiped store,
+                # so the explicit wipe-guard this used to carry is gone — along
+                # with its OR-joined `id = '...'` predicate, one term per node.
                 rows = [
                     {
                         "id": n["id"],
@@ -362,25 +366,20 @@ class SemanticIndex:
                 pending_rows.extend(rows)
 
                 if len(pending_rows) >= write_batch_size:
-                    tbl.add(pending_rows)
-                    indexed += len(pending_rows)
+                    indexed += backend.upsert(pending_rows, batch_size=write_batch_size)
                     pending_rows = []
 
                 if prog is not None and task_id is not None:
                     prog.advance(task_id, len(enc_nodes))
 
         if pending_rows:
-            tbl.add(pending_rows)
-            indexed += len(pending_rows)
-
-        self._tbl = tbl
+            indexed += backend.upsert(pending_rows, batch_size=write_batch_size)
 
         # SIMILAR_TO edge discovery — blocked BLAS matmul over the compact matrix.
         similar_edges_added = 0
         if discover_similar and chunk_pair_ids and chunk_pair_vecs is not None:
             similar_edges_added = self._discover_similar_edges(
                 store,
-                tbl,
                 chunk_pair_ids,
                 chunk_pair_vecs[:chunk_vec_idx],
                 k=similar_k,
@@ -393,8 +392,7 @@ class SemanticIndex:
             "indexed_rows": indexed,
             "dim": self.embedder.dim,
             "model_name": getattr(self.embedder, "model_name", repr(self.embedder)),
-            "table": self.table_name,
-            "lancedb_dir": str(self.lancedb_dir),
+            "vectors_path": str(self.vectors_path),
             "kinds": list(self.index_kinds),
             "similar_edges_added": similar_edges_added,
         }
@@ -406,7 +404,6 @@ class SemanticIndex:
     def _discover_similar_edges(
         self,
         store: GraphStore,
-        tbl: Any,
         chunk_ids: list[str],
         chunk_vecs: Any,
         *,
@@ -419,11 +416,11 @@ class SemanticIndex:
     ) -> int:
         """Find semantically similar chunk pairs and write SIMILAR_TO edges.
 
-        Replaces the per-chunk LanceDB ANN loop with a blocked NumPy matmul.
+        Uses a blocked NumPy matmul rather than per-chunk vector-store queries.
         Since all chunk vectors are L2-normalised by the embedder
         (``normalize_embeddings=True``), cosine similarity equals the dot
         product, so one BLAS SGEMM call per block gives exact similarities with
-        no per-query Python↔LanceDB round-trip overhead.
+        no per-query round-trip into the vector store.
 
         The ``(block_size × n_chunks)`` sims matrix is clamped adaptively to stay
         under ~256 MB regardless of corpus size.  Pairs above *threshold* are
@@ -435,7 +432,6 @@ class SemanticIndex:
         hard per-node cap with a greedy high-similarity selection pass.
 
         :param store: GraphStore to write edges into.
-        :param tbl: Accepted for call-site compatibility; not used.
         :param chunk_ids: Chunk node IDs in the same order as *chunk_vecs*.
         :param chunk_vecs: Float32 ndarray of shape ``(n_chunks, dim)``, L2-normalised.
         :param k: Maximum SIMILAR_TO out-edges per source chunk (0 = unlimited).
@@ -611,7 +607,8 @@ class SemanticIndex:
         :param query: Natural-language query string.
         :param k: Number of results to return.
         :param seed_kinds: If set, restrict the vector search to nodes whose ``kind``
-            is in this tuple. Passed as a LanceDB ``WHERE`` filter. Example:
+            is in this tuple. Compiled into the backend's SQL prefilter, so the
+            k nearest are drawn from the matching subset. Example:
             ``seed_kinds=("document",)`` returns only document-level hits.
         :param haystack_files: If set, restrict seeding to nodes whose ``file_path``
             is in this set. Use to limit search to the per-question haystack (e.g.
@@ -620,19 +617,21 @@ class SemanticIndex:
             search approaches like MemPalace.
         :return: List of :class:`SeedHit` ordered by ascending distance.
         """
-        tbl = self._get_table()
+        if self._backend is None and not self.vectors_path.exists():
+            raise FileNotFoundError(
+                f"vector index not found at '{self.vectors_path}'.\n"
+                "Run 'memorykg build' to create it."
+            )
+        backend = self._get_backend()
         qvec = self.embedder.embed_query(query)
-        s = tbl.search(qvec).limit(k)
         filters: list[str] = []
         if seed_kinds:
-            kind_list = ", ".join(f"'{k}'" for k in seed_kinds)
+            kind_list = ", ".join(f"'{_escape(kind)}'" for kind in seed_kinds)
             filters.append(f"kind IN ({kind_list})")
         if haystack_files:
-            file_list = ", ".join(f"'{f}'" for f in haystack_files)
+            file_list = ", ".join(f"'{_escape(f)}'" for f in sorted(haystack_files))
             filters.append(f"file_path IN ({file_list})")
-        if filters:
-            s = s.where(" AND ".join(filters))
-        raw = s.to_list()
+        raw = backend.search(qvec, k, where=" AND ".join(filters) if filters else None)
 
         hits: list[SeedHit] = []
         for rank, row in enumerate(raw):
@@ -654,49 +653,52 @@ class SemanticIndex:
     # Internal helpers
     # ------------------------------------------------------------------
 
-    def _open_table(self, *, wipe: bool = False):
-        """Open (or create) the LanceDB table, optionally wiping first."""
-        import lancedb  # pylint: disable=import-outside-toplevel
+    def _new_backend(self) -> SqliteVecBackend:
+        """Construct (but do not open) the sqlite-vec backend."""
+        self.vectors_path.parent.mkdir(parents=True, exist_ok=True)
+        return SqliteVecBackend(
+            self.vectors_path,
+            dim=self.embedder.dim,
+            meta_columns=_META_COLUMNS,
+        )
 
-        self.lancedb_dir.mkdir(parents=True, exist_ok=True)
-        db = lancedb.connect(str(self.lancedb_dir))  # type: ignore[attr-defined]
+    def _get_backend(self) -> SqliteVecBackend:
+        """Return the backend for reading, opening it on first use."""
+        if self._backend is None:
+            self._backend = self._new_backend()
+            self._backend.open()
+        return self._backend
 
-        if self.table_name in db.list_tables().tables:
-            if wipe:
-                db.drop_table(self.table_name)
-            else:
-                return db.open_table(self.table_name)
+    def _open_for_build(self, *, wipe: bool) -> SqliteVecBackend:
+        """Open the backend for a write pass, re-opening a cached one.
 
-        import numpy as np  # pylint: disable=import-outside-toplevel
+        ``SqliteVecBackend`` decides at ``open()`` whether ``upsert`` needs its
+        delete-before-insert dedup — a freshly created or wiped store has
+        nothing to replace — and never revisits that verdict.  Re-opening is
+        what makes a second build on the same instance correct: without it the
+        first build's "fresh" verdict survives, the dedup stays off, and
+        re-indexing the same nodes raises ``UNIQUE constraint failed``.
 
-        dummy = {
-            "id": "__dummy__",
-            "kind": "dummy",
-            "name": "__dummy__",
-            "title": "",
-            "file_path": "",
-            "text": "__dummy__",
-            "vector": np.zeros((self.embedder.dim,), dtype="float32").tolist(),
-        }
-        tbl = db.create_table(self.table_name, data=[dummy])
-        tbl.delete("id = '__dummy__'")
-        return tbl
+        :param wipe: Drop existing vectors before indexing.
+        :return: The open backend.
+        """
+        if self._backend is None:
+            self._backend = self._new_backend()
+        else:
+            # open() rebinds the connection without closing the old one.
+            self._backend.close()
+        self._backend.open(wipe=wipe)
+        return self._backend
 
-    def _get_table(self):
-        """Return the cached LanceDB table handle, opening it on first access."""
-        if self._tbl is None:
-            import lancedb  # pylint: disable=import-outside-toplevel
-
-            db = lancedb.connect(str(self.lancedb_dir))  # type: ignore[attr-defined]
-            self._tbl = db.open_table(self.table_name)
-        return self._tbl
+    def count(self) -> int:
+        """Return the number of indexed vectors, or 0 when nothing is built."""
+        if self._backend is None and not self.vectors_path.exists():
+            return 0
+        return self._get_backend().count()
 
     def __repr__(self) -> str:
         """Return string representation."""
-        return (
-            f"SemanticIndex(lancedb_dir={self.lancedb_dir!r}, "
-            f"table={self.table_name!r}, embedder={self.embedder!r})"
-        )
+        return f"SemanticIndex(vectors_path={self.vectors_path!r}, embedder={self.embedder!r})"
 
 
 # ---------------------------------------------------------------------------
@@ -724,7 +726,12 @@ def _build_index_text(n: dict) -> str:
 
 
 def _extract_distance(row: dict, fallback_rank: int) -> float:
-    """Extract a distance value from a LanceDB result row."""
+    """Extract a distance value from a vector-search result row.
+
+    ``SqliteVecBackend`` returns ``_distance`` (cosine), which is tried first;
+    the remaining fallbacks are tolerated so a row from any other backend still
+    yields a usable ordering.
+    """
     for key in ("_distance", "distance"):
         if key in row and row[key] is not None:
             return float(row[key])
@@ -734,5 +741,10 @@ def _extract_distance(row: dict, fallback_rank: int) -> float:
 
 
 def _escape(s: str) -> str:
-    """Escape single quotes for use in LanceDB delete predicates."""
+    """Escape single quotes for embedding in a SQL string literal.
+
+    Still load-bearing after the sqlite-vec port: ``search`` builds its
+    ``kind IN (...)`` / ``file_path IN (...)`` prefilter as a SQL predicate
+    string, and a path containing an apostrophe would otherwise break it.
+    """
     return s.replace("'", "''")

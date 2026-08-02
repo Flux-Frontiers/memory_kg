@@ -41,7 +41,7 @@ class BuildStats:
     :param total_edges: Total edges written to SQLite.
     :param node_counts: Node counts broken down by kind.
     :param edge_counts: Edge counts broken down by relation.
-    :param indexed_rows: Number of nodes embedded into LanceDB (None if not built).
+    :param indexed_rows: Number of nodes embedded into the vector store (None if not built).
     :param index_dim: Embedding dimension (None if not built).
     :param similar_edges_added: Number of SIMILAR_TO edges discovered.
     """
@@ -292,7 +292,7 @@ class MemoryKG:
 
     * :class:`~memory_kg.graph.DocGraph` — corpus parsing and chunking
     * :class:`~memory_kg.store.GraphStore` — SQLite persistence
-    * :class:`~memory_kg.index.SemanticIndex` — LanceDB vector index
+    * :class:`~memory_kg.index.SemanticIndex` — sqlite-vec vector index
     * Query / text-packing logic
 
     Typical usage::
@@ -309,9 +309,8 @@ class MemoryKG:
 
     :param corpus_root: Corpus root directory.
     :param db_path: SQLite database path.
-    :param lancedb_dir: LanceDB directory.
+    :param vectors_path: Path to the ``vectors.sqlite`` store.
     :param model: Sentence-transformer model name.
-    :param table: LanceDB table name.
     :param chunk_size: Approximate max characters per chunk.
     :param chunk_overlap: Character overlap between chunks.
     :param similarity_threshold: Semantic split threshold for chunker.
@@ -332,10 +331,9 @@ class MemoryKG:
         self,
         corpus_root: str | Path,
         db_path: str | Path | None = None,
-        lancedb_dir: str | Path | None = None,
+        vectors_path: str | Path | None = None,
         *,
         model: str = DEFAULT_MODEL,
-        table: str = "memorykg_nodes",
         chunk_strategy: str = "semantic",
         chunk_size: int = 512,
         chunk_overlap: int = 64,
@@ -359,13 +357,12 @@ class MemoryKG:
             if db_path is not None
             else self.corpus_root / ".memorykg" / "graph.sqlite"
         )
-        self.lancedb_dir = (
-            Path(lancedb_dir)
-            if lancedb_dir is not None
-            else self.corpus_root / ".memorykg" / "lancedb"
+        self.vectors_path = (
+            Path(vectors_path)
+            if vectors_path is not None
+            else self.corpus_root / ".memorykg" / "vectors.sqlite"
         )
         self.model_name = model
-        self.table_name = table
         self.chunk_strategy = chunk_strategy
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
@@ -434,12 +431,11 @@ class MemoryKG:
 
     @property
     def index(self) -> SemanticIndex:
-        """LanceDB semantic index (lazy)."""
+        """sqlite-vec semantic index (lazy)."""
         if self._index is None:
             self._index = SemanticIndex(
-                self.lancedb_dir,
+                self.vectors_path,
                 embedder=self.embedder,
-                table=self.table_name,
             )
         return self._index
 
@@ -455,7 +451,7 @@ class MemoryKG:
         discover_similar: bool = True,
         n_workers: int = 8,
     ) -> BuildStats:
-        """Full pipeline: corpus parsing → SQLite → LanceDB + SIMILAR_TO edges.
+        """Full pipeline: corpus parsing → SQLite → vectors + SIMILAR_TO edges.
 
         :param wipe: Clear existing data before writing.
         :param batch_size: Number of nodes to embed per batch.
@@ -473,7 +469,7 @@ class MemoryKG:
             f"{graph_stats.total_edges} edges ({time.time() - t0:.1f}s)",
             flush=True,
         )
-        print("  Phase 2: embedding → LanceDB...", flush=True)
+        print("  Phase 2: embedding → vectors...", flush=True)
         index_stats = self.build_index(
             wipe=wipe, batch_size=batch_size, discover_similar=discover_similar, n_workers=n_workers
         )
@@ -508,7 +504,7 @@ class MemoryKG:
         discover_similar: bool = True,
         n_workers: int = 8,
     ) -> BuildStats:
-        """SQLite → LanceDB only (graph must already exist).
+        """SQLite → vector index only (graph must already exist).
 
         :param wipe: Delete existing vectors before indexing.
         :param batch_size: Number of nodes to embed per batch.
@@ -755,6 +751,6 @@ class MemoryKG:
         return (
             f"MemoryKG(corpus_root={self.corpus_root!r}, "
             f"db_path={self.db_path!r}, "
-            f"lancedb_dir={self.lancedb_dir!r}, "
+            f"vectors_path={self.vectors_path!r}, "
             f"model={self.model_name!r})"
         )

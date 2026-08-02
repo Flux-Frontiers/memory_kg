@@ -13,6 +13,90 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+## [0.7.0] - 2026-08-02
+
+LanceDB → sqlite-vec migration (fleet Phase 3). The vector store moves from a
+`.memorykg/lancedb/` directory to a single `.memorykg/vectors.sqlite` file.
+**Breaking**: the `SemanticIndex`/`MemoryKG` constructor parameters and the CLI
+flag both change, with no fallback.
+
+Vector stores are derived from SQLite and rebuildable — there is no conversion
+step. Delete `.memorykg/lancedb/` and rebuild:
+
+```bash
+memorykg build-index --repo <corpus>
+```
+
+### Changed
+
+- **`SemanticIndex` writes through `SqliteVecBackend`** instead of a LanceDB
+  table. The embedding text built by `_build_index_text` and the SIMILAR_TO
+  discovery pass are untouched — only where the vectors live changed. That
+  discovery pass already took its LanceDB table handle as an explicitly unused
+  parameter, so it ported without modification; the parameter is now gone.
+
+- **Metadata columns are explicit: `kind`, `name`, `title`, `file_path`,
+  `text`.** `search()` reads `title` and `file_path` off every hit *and*
+  filters on `file_path`, but the backend's default column set carries
+  neither — a default-configured port would have returned blank titles and
+  paths, and the haystack prefilter would have referenced a column that does
+  not exist. Both are now covered by tests.
+
+- **Distances are now cosine, and the scale changed.** The LanceDB table was
+  created with `db.create_table(...)` and no explicit metric, so it defaulted
+  to **squared L2**; sqlite-vec uses cosine. For normalised embeddings these
+  differ by a factor of ~2, so raw `_distance` values roughly halve. Ranking is
+  unaffected and nothing derives a score from the distance — `SeedHit.distance`
+  reaches consumers as a raw passthrough — so no recalibration was needed.
+
+- **`MemoryKG(lancedb_dir=…)` → `MemoryKG(vectors_path=…)`**, taking a file
+  rather than a directory. `SemanticIndex(lancedb_dir, …, table=…)` becomes
+  `SemanticIndex(vectors_path, …)`. The LanceDB-only `table` parameter and the
+  `--table` CLI flag are removed, along with `MemoryKG.table_name`.
+
+- **CLI: `--lancedb PATH` → `--vectors PATH`** on `build`, `build-index`,
+  `query`, `pack`, `analyze`, `semantic-analyze`, and `mcp`.
+
+- **`kgmodule-utils[semantic,sqlite-vec]>=0.9.0`** replaces the bare
+  `kgmodule-utils>=0.9.0`.
+
+- **ruff now excludes `*.md`.** ruff 0.16 formats Python blocks embedded in
+  Markdown as stable behaviour (0.15 gated it behind preview), so
+  `ruff format --check .` would start failing on prose. The sibling KG repos
+  carry the same exclusion.
+
+- Docs swept for the flag, path and env-var renames — `README`,
+  `architecture.md`, `docs/{cli-reference,CHEATSHEET,installation,ingestion,
+  ingestion_infographic,memorykg_workflow,SNAPSHOTS,MCP,deployment}.md`,
+  `scripts/install-skill.sh`, and the agent instructions. The published
+  `announcements/` and benchmark articles are left as written.
+
+### Removed
+
+- **`lancedb>=0.29.0`** as a direct dependency. It still arrives transitively
+  via `kgmodule-utils[semantic]` until KG_utils splits its extras, so the venv
+  will not shrink yet.
+
+### Fixed
+
+- **`scripts/install-skill.sh` probed the vector store with `-d` and `ls -A`.**
+  Correct for a LanceDB directory, wrong for a file: after the rename it would
+  have reported every existing store as missing and every successful build as
+  failed. Now uses `-f`.
+
+- **The Streamlit app read `DOCKG_LANCEDB`** for its default vector-store path —
+  a copy-paste from doc_kg, so MemoryKG's own environment variable never
+  applied. Now reads `MEMORYKG_VECTORS`.
+
+### Added
+
+- **`tests/test_index_vectors.py`** — 29 cases over the ported index, model-free
+  via a stub embedder. Covers the metadata round-trip, both prefilters
+  (`seed_kinds`, `haystack_files`) including SQL-quote escaping, that the
+  prefilter draws `k` from the matching subset rather than post-filtering a
+  global top-k, rebuild idempotence, cold reads, and that reporting on an
+  unbuilt index does not create it. Every guard is mutation-tested.
+
 ### Fixed
 
 ## [0.6.2] - 2026-07-29

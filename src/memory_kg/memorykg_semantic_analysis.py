@@ -799,7 +799,7 @@ def _print_summary(console: Console, result: dict) -> None:
 def main(
     corpus_root: str = ".",
     db_path: str | None = None,
-    lancedb_path: str | None = None,
+    vectors_path: str | None = None,
     report_path: str | None = None,
     json_path: str | None = None,
     quiet: bool = False,
@@ -808,7 +808,7 @@ def main(
 
     :param corpus_root: Corpus root path.
     :param db_path: SQLite database path.
-    :param lancedb_path: LanceDB directory path.
+    :param vectors_path: Path to the sqlite-vec store.
     :param report_path: Markdown report output path.
     :param json_path: JSON output path.
     :param quiet: Suppress Rich summary output.
@@ -817,9 +817,9 @@ def main(
     console = Console()
     root = Path(corpus_root).resolve()
     db = Path(db_path) if db_path else (root / ".memorykg" / "graph.sqlite")
-    lancedb = Path(lancedb_path) if lancedb_path else (root / ".memorykg" / "lancedb")
+    vectors = Path(vectors_path) if vectors_path else (root / ".memorykg" / "vectors.sqlite")
 
-    kg = MemoryKG(corpus_root=root, db_path=db, lancedb_dir=lancedb)
+    kg = MemoryKG(corpus_root=root, db_path=db, vectors_path=vectors)
     analyzer = MemoryKGSemanticAnalyzer(kg, console=console)
 
     report_out = report_path or _default_report_path(root)
