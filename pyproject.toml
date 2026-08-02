@@ -50,14 +50,14 @@ packages = [{ include = "memory_kg", from = "src" }]
 # ---------------------------------------------------------------------------
 [project]
 name = "memory-kg"
-version = "0.6.2"
+version = "0.7.0"
 description = "A tool to build a semantically searchable knowledge graph from memories"
 readme = "README.md"
 license = "Elastic-2.0"
 authors = [
     { name = "Eric G. Suchanek, PhD", email = "suchanek@flux-frontiers.com" }
 ]
-keywords = ["knowledge-graph", "document-analysis", "markdown", "lancedb", "sqlite", "semantic-search"]
+keywords = ["knowledge-graph", "document-analysis", "markdown", "sqlite-vec", "sqlite", "semantic-search"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -71,7 +71,6 @@ requires-python = ">=3.12,<3.14"
 dependencies = [
     "click>=8.1.0,<9",
     "einops>=0.8.2",
-    "lancedb>=0.29.0",
     "markdown-it-py>=3.0.0",
     # Upper-bounded: mcp 2.0 removed the bundled `mcp.server.fastmcp` module
     # (FastMCP was split out into the standalone `fastmcp` package) and rebuilt
@@ -88,7 +87,11 @@ dependencies = [
     "sentence-transformers>=5.4.1",
     "torch>=2.5.1",
     "transformers>=5.5.0,<6",
-    "kgmodule-utils>=0.9.0",
+    # `[sqlite-vec]` only, deliberately not `[semantic]`. That extra bundles
+    # numpy, rich, sentence-transformers, torch, transformers and sqlite-vec —
+    # all of which are already declared directly above — plus `lancedb`, which
+    # was the last thing pulling the retired backend into a clean install.
+    "kgmodule-utils[sqlite-vec]>=0.9.0",
 ]
 
 [project.optional-dependencies]
@@ -149,7 +152,11 @@ memorykg-viz          = "memory_kg.cli.cmd_viz:viz"
 [tool.ruff]
 line-length    = 100
 target-version = "py312"
-exclude = [".claude"]
+# ruff 0.16 formats Python code blocks embedded in Markdown as stable behaviour
+# (0.15 gated it behind preview), so `ruff format --check .` starts rewriting
+# prose docs. Keep docs out of its reach; the sibling KG repos carry the same
+# exclusion.
+exclude = [".claude", "*.md"]
 
 [tool.ruff.lint]
 select = [

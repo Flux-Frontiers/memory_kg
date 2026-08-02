@@ -2,7 +2,7 @@ You are an AI agent with a brand new MCP tool. It is called **MemoryKG**. It was
 
 https://github.com/Flux-Frontiers/memory_kg.git
 
-MemoryKG is a hybrid semantic + structural knowledge graph for **document corpora** — Markdown files, plain text, personal notes, memories, and any text collection. It parses documents into nodes (documents, sections, chunks, topics, entities, keywords) and edges (CONTAINS, HAS_TOPIC, MENTIONS_ENTITY, HAS_KEYWORD, REFERENCES, SIMILAR_TO), persists the graph in SQLite, and builds a LanceDB vector index for semantic search.
+MemoryKG is a hybrid semantic + structural knowledge graph for **document corpora** — Markdown files, plain text, personal notes, memories, and any text collection. It parses documents into nodes (documents, sections, chunks, topics, entities, keywords) and edges (CONTAINS, HAS_TOPIC, MENTIONS_ENTITY, HAS_KEYWORD, REFERENCES, SIMILAR_TO), persists the graph in SQLite, and builds a sqlite-vec vector index for semantic search.
 
 The conceptual progenitor of the tool was **DocKG**, my earlier document knowledge graph system, which MemoryKG grew from and superseded. MemoryKG extends DocKG with:
 

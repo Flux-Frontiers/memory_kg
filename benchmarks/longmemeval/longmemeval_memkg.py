@@ -13,7 +13,7 @@ Architecture:
 
 Every unique haystack session across all 500 questions is written once as
 ``<session_id>.md`` under ``benchmarks/longmemeval/data/longmemeval_corpus/``. The KG
-runs a single time, producing a persistent SQLite graph + LanceDB vector index
+runs a single time, producing a persistent SQLite graph + sqlite-vec vector index
 plus full relational structure: document/section/chunk hierarchy, SIMILAR_TO
 edges (cosine ≥ 0.85), HAS_TOPIC, MENTIONS_ENTITY, HAS_KEYWORD.
 
@@ -126,7 +126,7 @@ from memory_kg.store import DEFAULT_RELS
 
 CORPUS_DIR = REPO_ROOT / "benchmarks" / "longmemeval" / "data" / "longmemeval_corpus"
 DOCKG_DB = REPO_ROOT / "benchmarks" / "longmemeval" / "data" / ".dockg" / "graph.sqlite"
-DOCKG_LANCEDB = REPO_ROOT / "benchmarks" / "longmemeval" / "data" / ".dockg" / "lancedb"
+DOCKG_VECTORS = REPO_ROOT / "benchmarks" / "longmemeval" / "data" / ".dockg" / "vectors.sqlite"
 DOCKG_EMB_CACHE = REPO_ROOT / "benchmarks" / "longmemeval" / "data" / ".dockg" / "embeddings.json"
 
 
@@ -260,7 +260,7 @@ def write_corpus(data_file: Path, corpus_dir: Path, force: bool = False) -> dict
 def build_kg(
     corpus_dir: Path,
     db_path: Path,
-    lancedb_dir: Path,
+    vectors_path: Path,
     wipe: bool = True,
     model: str | None = None,
     chunk_strategy: str = "semantic",
@@ -272,7 +272,7 @@ def build_kg(
     print(f"  Building MemoryKG ({'wipe' if wipe else 'incremental'})...")
     print(f"    corpus:  {corpus_dir}")
     print(f"    sqlite:  {db_path}")
-    print(f"    lancedb: {lancedb_dir}")
+    print(f"    vectors: {vectors_path}")
     print(f"    model:   {model or DEFAULT_MODEL}")
     print(f"    chunk:   {chunk_strategy}")
     print(f"    batch:   {batch_size}")
@@ -283,13 +283,13 @@ def build_kg(
     print(f"    similar: {'yes' if discover_similar else 'no (use --similar to enable)'}")
 
     db_path.parent.mkdir(parents=True, exist_ok=True)
-    lancedb_dir.mkdir(parents=True, exist_ok=True)
+    vectors_path.parent.mkdir(parents=True, exist_ok=True)
 
     t0 = time.time()
     kg = MemoryKG(
         corpus_root=corpus_dir,
         db_path=db_path,
-        lancedb_dir=lancedb_dir,
+        vectors_path=vectors_path,
         model=model or DEFAULT_MODEL,
         chunk_strategy=chunk_strategy,
         n_workers=n_workers,
@@ -358,7 +358,7 @@ def cmd_prepare(args: argparse.Namespace) -> None:
     build_kg(
         CORPUS_DIR,
         DOCKG_DB,
-        DOCKG_LANCEDB,
+        DOCKG_VECTORS,
         wipe=args.wipe,
         model=args.model,
         chunk_strategy=getattr(args, "chunk_strategy", "semantic"),
@@ -686,7 +686,7 @@ def query_sessions(
 ) -> tuple[list[SessionHit], Any]:
     """Run ``DocKG.query`` and collapse its ranked nodes to session-level hits.
 
-    This is the pure DocKG retrieval path: semantic seeding over LanceDB plus
+    This is the pure DocKG retrieval path: semantic seeding over sqlite-vec plus
     graph expansion over ``rels`` (CONTAINS / NEXT / SIMILAR_TO / HAS_TOPIC /
     MENTIONS_ENTITY / HAS_KEYWORD / CO_OCCURS_WITH / REFERENCES). No rerank,
     no inference — the graph is the retrieval engine.
@@ -697,14 +697,14 @@ def query_sessions(
 
     :param kg: An open :class:`memory_kg.kg.MemoryKG` instance.
     :param question: Natural-language query.
-    :param k: Semantic seed count (LanceDB top-K before graph expansion).
+    :param k: Semantic seed count (sqlite-vec top-K before graph expansion).
     :param hop: Graph expansion hops.
     :param rels: Edge types to traverse during expansion.
     :param max_nodes: Cap on ranked nodes returned by ``DocKG.query``.
     :param haystack: If supplied, only sessions in this set are returned.
-    :param seed_kinds: If set, restrict LanceDB seeding to these node kinds.
+    :param seed_kinds: If set, restrict sqlite-vec seeding to these node kinds.
         Pass ``("document",)`` to seed only from session-root document nodes.
-    :param haystack_files: If set, restrict LanceDB seeding to nodes from these
+    :param haystack_files: If set, restrict sqlite-vec seeding to nodes from these
         file paths only (e.g. the 50 haystack session files per question).
     :return: Tuple of (session-level hits sorted by ascending rank, raw QueryResult).
     """
@@ -753,7 +753,7 @@ def cmd_run(args: argparse.Namespace) -> None:
     data_file = Path(args.data_file).resolve()
     if not data_file.exists():
         sys.exit(f"ERROR: data file not found: {data_file}")
-    if not DOCKG_DB.exists() or not DOCKG_LANCEDB.exists():
+    if not DOCKG_DB.exists() or not DOCKG_VECTORS.exists():
         sys.exit(
             "ERROR: MemoryKG index not found. Run `prepare` first:\n"
             f"  python {Path(__file__).name} prepare {data_file}"
@@ -783,7 +783,7 @@ def cmd_run(args: argparse.Namespace) -> None:
     kg = MemoryKG(
         corpus_root=CORPUS_DIR,
         db_path=DOCKG_DB,
-        lancedb_dir=DOCKG_LANCEDB,
+        vectors_path=DOCKG_VECTORS,
     )
 
     ks = [1, 3, 5, 10, 30, 50]
@@ -1039,7 +1039,7 @@ def _add_run_args(p: argparse.ArgumentParser) -> None:
         "--k",
         type=int,
         default=50,
-        help="Semantic seed count (LanceDB top-K before graph expansion). Default: 50.",
+        help="Semantic seed count (sqlite-vec top-K before graph expansion). Default: 50.",
     )
     p.add_argument(
         "--hop",
@@ -1082,7 +1082,7 @@ def _add_run_args(p: argparse.ArgumentParser) -> None:
         "--haystack-filter",
         action="store_true",
         default=True,
-        help="Restrict LanceDB seeding to the per-question haystack files only (default: on).",
+        help="Restrict sqlite-vec seeding to the per-question haystack files only (default: on).",
     )
     p.add_argument(
         "--no-haystack-filter",

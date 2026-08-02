@@ -24,10 +24,10 @@ from memory_kg.memorykg import DEFAULT_MODEL
     help="SQLite database path.",
 )
 @click.option(
-    "--lancedb",
-    default=".memorykg/lancedb",
+    "--vectors",
+    default=".memorykg/vectors.sqlite",
     type=click.Path(),
-    help="LanceDB directory path.",
+    help="Path to the sqlite-vec store.",
 )
 @click.option(
     "--model",
@@ -40,7 +40,7 @@ from memory_kg.memorykg import DEFAULT_MODEL
     default="stdio",
     help="MCP transport protocol.",
 )
-def mcp(repo: str, db: str, lancedb: str, model: str, transport: str) -> None:
+def mcp(repo: str, db: str, vectors: str, model: str, transport: str) -> None:
     """Start the MemoryKG MCP server."""
     try:
         import importlib.util  # pylint: disable=import-outside-toplevel
@@ -56,8 +56,8 @@ def mcp(repo: str, db: str, lancedb: str, model: str, transport: str) -> None:
         repo,
         "--db",
         db,
-        "--lancedb",
-        lancedb,
+        "--vectors",
+        vectors,
         "--model",
         model,
         "--transport",

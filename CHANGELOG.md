@@ -9,9 +9,174 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`tests/test_benchmarks_api.py`** — static guards pinning `benchmarks/` to
+  the live `MemoryKG` / `SemanticIndex` API. The runners are not imported by
+  the package and not covered by any other test, so drift only surfaced on a
+  multi-hour eval against a downloaded corpus. Both benchmark breakages below
+  are now caught in milliseconds, at the call site, with no corpus, model or
+  network.
+
+### Fixed
+
+- **The eval suite was broken by the 0.7.0 rename.** Every runner constructed
+  `MemoryKG(lancedb_dir=...)`, which became a `TypeError`; `build_dockg.py`
+  also passed the removed `SemanticIndex(table=...)`. All five runners now use
+  `vectors_path`, `--vectors` and `DOCKG_VECTORS`.
+
+- **Runners created the vector store as a directory.**
+  `vectors_path.mkdir(parents=True)` was correct for a LanceDB directory and
+  fatal for a sqlite-vec file — `sqlite3.connect` then failed with `unable to
+  open database file`, but only after the graph phase had already completed.
+  Now `vectors_path.parent.mkdir(...)` in all four affected runners.
+
+- **`benchmarks/test_similar.py`** called `SemanticIndex._open_table`/`_tbl`,
+  removed by DocKG 0.20.0. Ported to the backend API. Note that it drives
+  *DocKG's* `SemanticIndex`, where `lancedb_dir` remains the real parameter
+  name and still takes a directory — it is not covered by the new guards.
+
+- **`build_dockg.py` usage example** showed `--vectors /tmp/.memorykg/vectors`,
+  a directory path left over from LanceDB.
+
 ### Changed
 
+- **LoCoMo parity run recorded** (`benchmarks/locomobench/results/`). The
+  sqlite-vec port reproduces the LanceDB-era baseline exactly on all 1,986
+  questions: avg recall 0.981, identical per-category recall and identical
+  perfect/partial/zero distribution. Per-question `retrieved_ids` differ on 20
+  questions (1.0%) — tail composition at the k=50 seed boundary, consistent
+  with the squared-L2 → cosine metric change — and recall is unchanged on every
+  one of them. Elapsed time in that report is from a CPU-only sandbox and is
+  not comparable to the baseline's hardware.
+
 ### Removed
+
+## [0.7.0] - 2026-08-02
+
+LanceDB → sqlite-vec migration (fleet Phase 3). The vector store moves from a
+`.memorykg/lancedb/` directory to a single `.memorykg/vectors.sqlite` file.
+**Breaking**: the `SemanticIndex`/`MemoryKG` constructor parameters and the CLI
+flag both change, with no fallback.
+
+Vector stores are derived from SQLite and rebuildable — there is no conversion
+step. Delete `.memorykg/lancedb/` and rebuild:
+
+```bash
+memorykg build-index --repo <corpus>
+```
+
+### Changed
+
+- **`SemanticIndex` writes through `SqliteVecBackend`** instead of a LanceDB
+  table. The embedding text built by `_build_index_text` and the SIMILAR_TO
+  discovery pass are untouched — only where the vectors live changed. That
+  discovery pass already took its LanceDB table handle as an explicitly unused
+  parameter, so it ported without modification; the parameter is now gone.
+
+- **Metadata columns are explicit: `kind`, `name`, `title`, `file_path`,
+  `text`.** `search()` reads `title` and `file_path` off every hit *and*
+  filters on `file_path`, but the backend's default column set carries
+  neither — a default-configured port would have returned blank titles and
+  paths, and the haystack prefilter would have referenced a column that does
+  not exist. Both are now covered by tests.
+
+- **Distances are now cosine, and the scale changed.** The LanceDB table was
+  created with `db.create_table(...)` and no explicit metric, so it defaulted
+  to **squared L2**; sqlite-vec uses cosine. For normalised embeddings these
+  differ by a factor of ~2, so raw `_distance` values roughly halve. Ranking is
+  unaffected and nothing derives a score from the distance — `SeedHit.distance`
+  reaches consumers as a raw passthrough — so no recalibration was needed.
+
+- **`MemoryKG(lancedb_dir=…)` → `MemoryKG(vectors_path=…)`**, taking a file
+  rather than a directory. `SemanticIndex(lancedb_dir, …, table=…)` becomes
+  `SemanticIndex(vectors_path, …)`. The LanceDB-only `table` parameter and the
+  `--table` CLI flag are removed, along with `MemoryKG.table_name`.
+
+- **CLI: `--lancedb PATH` → `--vectors PATH`** on `build`, `build-index`,
+  `query`, `pack`, `analyze`, `semantic-analyze`, and `mcp`.
+
+- **`kgmodule-utils[semantic,sqlite-vec]>=0.9.0`** replaces the bare
+  `kgmodule-utils>=0.9.0`.
+
+- **ruff now excludes `*.md`.** ruff 0.16 formats Python blocks embedded in
+  Markdown as stable behaviour (0.15 gated it behind preview), so
+  `ruff format --check .` would start failing on prose. The sibling KG repos
+  carry the same exclusion.
+
+- **The three unposted announcements were CodeKG documents**, not MemoryKG ones —
+  62 references to CodeKG and zero to MemoryKG across 506 lines, instructing
+  readers to run `codekg-build-lancedb`. Rewritten for MemoryKG against
+  verifiable repo facts: the real CLI, the four MCP tools, the LongMemEval-S
+  results, and the ablation deltas recomputed from the progression table rather
+  than quoted from prose.
+
+- Docs swept for the flag, path and env-var renames — `README`,
+  `architecture.md`, `docs/{cli-reference,CHEATSHEET,installation,ingestion,
+  ingestion_infographic,memorykg_workflow,SNAPSHOTS,MCP,deployment}.md`,
+  `scripts/install-skill.sh`, and the agent instructions. The published
+  `announcements/` and benchmark articles are left as written.
+
+### Removed
+
+- **`lancedb` is gone from the dependency tree entirely**, not just as a direct
+  dependency. It kept arriving transitively through
+  `kgmodule-utils[semantic]`, which is now narrowed to
+  `kgmodule-utils[sqlite-vec]`. No upstream change was needed — KG_utils
+  already ships `[sqlite-vec]` as its own extra, and the six other members of
+  `[semantic]` (numpy, rich, sentence-transformers, torch, transformers,
+  sqlite-vec) are all declared directly by this package already, so `lancedb`
+  was the only thing the wider extra uniquely contributed.
+
+  `poetry install --sync` now removes `lancedb`, `pyarrow`, `lance-namespace`
+  and `lance-namespace-urllib3-client`. Verified with the full CI check set
+  (`ruff format --check`, `ruff check`, `ty check src/`, `pytest` — 390
+  passing) against an environment where `lancedb` is not importable. Safe
+  because every `import lancedb` in `kg_utils.vector_backend` is function-local
+  and this package only ever constructs `SqliteVecBackend`.
+
+### Fixed
+
+- **README badges and `CITATION.cff` were stale after the version bump** — the
+  version badge and both citation formats still read 0.6.2, and the CFF
+  abstract and keywords still advertised LanceDB. The DOI badge also used the
+  repo-ID form (`zenodo.org/badge/<id>` → `latestdoi/<id>`) rather than the
+  concept-DOI form the sibling repos use; it now renders and links
+  `10.5281/zenodo.21282909` directly. **The DOI value itself was already
+  correct** — checked against the Zenodo API before changing anything, since
+  21282909 is the concept record and 21686871 is merely v0.6.2's version DOI.
+
+- **`scripts/install-skill.sh` probed the vector store with `-d` and `ls -A`.**
+  Correct for a LanceDB directory, wrong for a file: after the rename it would
+  have reported every existing store as missing and every successful build as
+  failed. Now uses `-f`.
+
+- **The Streamlit app read `DOCKG_LANCEDB`** for its default vector-store path —
+  a copy-paste from doc_kg, so MemoryKG's own environment variable never
+  applied. Now reads `MEMORYKG_VECTORS`.
+
+### Added
+
+- **Release-metadata drift guards** (in `tests/test_cli_vectors.py`) — the
+  version lives independently in `pyproject.toml`, the README badge, the README
+  APA/BibTeX citation and `CITATION.cff`, and after the 0.7.0 bump three of the
+  four still said 0.6.2. Also pins that every DOI in the repo is the **concept**
+  DOI (`10.5281/zenodo.21282909`, confirmed against the Zenodo API) rather than
+  a version DOI, that the CI badge names a workflow that exists, and that the
+  Python badge agrees with `requires-python`.
+
+- **`tests/test_cli_vectors.py`** — 49 cases over the renamed CLI and constructor
+  surface, which coverage showed at 30–61% after the port: the commands declare
+  `--vectors` but nothing invoked them, and `MemoryKG.index` — the one real
+  `SemanticIndex` construction site — was never reached. Click passes options by
+  keyword, so a decorator renamed against a function still declaring the old
+  parameter raises `TypeError` at call time and `--help` never notices. These
+  invoke each command and assert the value reaches `MemoryKG(vectors_path=…)`.
+
+- **`tests/test_index_vectors.py`** — 29 cases over the ported index, model-free
+  via a stub embedder. Covers the metadata round-trip, both prefilters
+  (`seed_kinds`, `haystack_files`) including SQL-quote escaping, that the
+  prefilter draws `k` from the matching subset rather than post-filtering a
+  global top-k, rebuild idempotence, cold reads, and that reporting on an
+  unbuilt index does not create it. Every guard is mutation-tested.
 
 ### Fixed
 

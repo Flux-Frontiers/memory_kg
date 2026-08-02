@@ -97,8 +97,8 @@ def _kg_db(granularity: str) -> Path:
     return _DATA_DIR / f".memorykg_{granularity}" / "graph.sqlite"
 
 
-def _kg_lancedb(granularity: str) -> Path:
-    return _DATA_DIR / f".memorykg_{granularity}" / "lancedb"
+def _kg_vectors(granularity: str) -> Path:
+    return _DATA_DIR / f".memorykg_{granularity}" / "vectors.sqlite"
 
 
 # =============================================================================
@@ -236,7 +236,7 @@ def write_corpus(
 def build_kg(
     corpus_dir: Path,
     db_path: Path,
-    lancedb_dir: Path,
+    vectors_path: Path,
     *,
     wipe: bool = True,
     model: str | None = None,
@@ -250,20 +250,20 @@ def build_kg(
     print(f"  Building MemoryKG ({'wipe' if wipe else 'incremental'})...")
     print(f"    corpus:  {corpus_dir}")
     print(f"    sqlite:  {db_path}")
-    print(f"    lancedb: {lancedb_dir}")
+    print(f"    vectors: {vectors_path}")
     print(f"    model:   {model or DEFAULT_MODEL}")
     print(f"    chunk:   {chunk_strategy}")
     print(f"    workers: {n_workers}")
     print(f"    similar: {'yes' if discover_similar else 'no'}")
 
     db_path.parent.mkdir(parents=True, exist_ok=True)
-    lancedb_dir.mkdir(parents=True, exist_ok=True)
+    vectors_path.parent.mkdir(parents=True, exist_ok=True)
 
     t0 = time.time()
     kg = MemoryKG(
         corpus_root=corpus_dir,
         db_path=db_path,
-        lancedb_dir=lancedb_dir,
+        vectors_path=vectors_path,
         model=model or DEFAULT_MODEL,
         chunk_strategy=chunk_strategy,
         n_workers=n_workers,
@@ -596,7 +596,7 @@ def cmd_prepare(args: argparse.Namespace) -> None:
     granularity = args.granularity
     corpus_dir = _corpus_dir(granularity)
     db_path = _kg_db(granularity)
-    lancedb_dir = _kg_lancedb(granularity)
+    vectors_path = _kg_vectors(granularity)
 
     print("=" * 60)
     print("  MemoryKG × LoCoMo — PREPARE")
@@ -613,7 +613,7 @@ def cmd_prepare(args: argparse.Namespace) -> None:
     build_kg(
         corpus_dir,
         db_path,
-        lancedb_dir,
+        vectors_path,
         wipe=args.wipe,
         model=args.model,
         chunk_strategy=args.chunk_strategy,
@@ -636,9 +636,9 @@ def cmd_run(args: argparse.Namespace) -> None:
     granularity = args.granularity
     corpus_dir = _corpus_dir(granularity)
     db_path = _kg_db(granularity)
-    lancedb_dir = _kg_lancedb(granularity)
+    vectors_path = _kg_vectors(granularity)
 
-    if not db_path.exists() or not lancedb_dir.exists():
+    if not db_path.exists() or not vectors_path.exists():
         sys.exit(
             f"ERROR: MemoryKG index not found for granularity '{granularity}'. Run prepare first:\n"
             f"  python {Path(__file__).resolve().relative_to(REPO_ROOT)} prepare {data_file} --granularity {granularity}"
@@ -672,7 +672,7 @@ def cmd_run(args: argparse.Namespace) -> None:
     kg = MemoryKG(
         corpus_root=corpus_dir,
         db_path=db_path,
-        lancedb_dir=lancedb_dir,
+        vectors_path=vectors_path,
         model=args.model or DEFAULT_MODEL,
         embedder=embedder,
     )
@@ -891,7 +891,7 @@ def _add_run_args(p: argparse.ArgumentParser) -> None:
         "--k",
         type=int,
         default=50,
-        help="Semantic seed count (LanceDB top-K before graph expansion). Default: 50.",
+        help="Semantic seed count (sqlite-vec top-K before graph expansion). Default: 50.",
     )
     p.add_argument(
         "--hop",

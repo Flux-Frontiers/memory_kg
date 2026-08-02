@@ -208,7 +208,7 @@ def retrieve_for_item(
         kg = MemoryKG(
             corpus_root=corpus_dir,
             db_path=kg_dir / "graph.sqlite",
-            lancedb_dir=kg_dir / "lancedb",
+            vectors_path=kg_dir / "vectors.sqlite",
             chunk_strategy="heading",
             enable_topics=False,
             enable_entities=False,

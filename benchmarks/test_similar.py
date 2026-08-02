@@ -73,27 +73,37 @@ def main():
 
         vecs = make_vecs(N_CHUNKS, DIM)
 
-        # Build a tiny LanceDB table (required by SemanticIndex init)
+        # Seed the vector store. `_discover_similar_edges` works off the
+        # in-memory vector matrix rather than the store, so this only has to
+        # exist and be non-empty.
+        #
+        # NOTE: `lancedb_dir` is still the real parameter name on DocKG's
+        # SemanticIndex and still takes a *directory* — a pre-0.20.0 leftover in
+        # kg_utils, not something to rename. DocKG derives a sqlite-vec sidecar
+        # from it. `_open_table`/`_tbl` were removed by DocKG 0.20.0, which is
+        # what this script used to call.
         idx = SemanticIndex(lancedb_dir, embedder=FakeEmbedder())
-        tbl = idx._open_table(wipe=True)
-        rows = [
-            {
-                "id": nid,
-                "kind": "chunk",
-                "name": nid,
-                "title": "",
-                "file_path": "test/doc.md",
-                "text": f"text {i}",
-                "vector": vecs[i].tolist(),
-            }
-            for i, nid in enumerate(node_ids)
-        ]
-        tbl.add(rows)
-        idx._tbl = tbl
+        backend = idx._get_backend()
+        backend.open(wipe=True)
+        backend.upsert(
+            [
+                {
+                    "id": nid,
+                    "kind": "chunk",
+                    "name": nid,
+                    "title": "",
+                    "file_path": "test/doc.md",
+                    "text": f"text {i}",
+                    "vector": vecs[i].tolist(),
+                }
+                for i, nid in enumerate(node_ids)
+            ]
+        )
 
         print(f"Calling _discover_similar_edges (threshold={THRESHOLD})...")
         n_edges = idx._discover_similar_edges(
             store,
+            None,  # `tbl` is accepted for call-site compatibility and unused
             node_ids,
             vecs,
             k=5,

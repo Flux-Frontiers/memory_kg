@@ -6,7 +6,7 @@ abstract: >
   MemoryKG builds a hybrid semantic + structural knowledge graph from Markdown
   and plain-text document corpora. It chunks text semantically, discovers
   structural and semantic relationships between sections and chunks, stores them
-  in SQLite, and augments retrieval with vector embeddings via LanceDB. It also
+  in SQLite, and augments retrieval with vector embeddings via sqlite-vec. It also
   supports a conversational memory layer — ingesting and indexing agent turns,
   consolidating them into summaries, and enabling semantic recall across sessions
   via MCP-based AI integration.
@@ -16,9 +16,9 @@ authors:
     orcid: "https://orcid.org/0009-0009-0891-1507"
     email: suchanek@flux-frontiers.com
     affiliation: "Flux-Frontiers"
-version: "0.6.2"
+version: "0.7.0"
 doi: "10.5281/zenodo.21282909"
-date-released: "2026-07-29"
+date-released: "2026-08-02"
 license-url: "https://www.elastic.co/licensing/elastic-license"
 repository-code: "https://github.com/Flux-Frontiers/memory_kg"
 url: "https://github.com/Flux-Frontiers/memory_kg"
@@ -28,5 +28,5 @@ keywords:
   - conversational-memory
   - markdown
   - semantic-search
-  - lancedb
+  - sqlite-vec
   - mcp

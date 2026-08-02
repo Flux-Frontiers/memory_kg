@@ -119,9 +119,9 @@ All three benchmarks use the same core pattern:
 
 1. **Write conversations as Markdown** — one file per session (LoCoMo, LongMemEval) or one file per item (MemBench). Each turn or dialog is a `## Heading` that becomes its own chunk.
 
-2. **Build one persistent MemoryKG** — SQLite graph + LanceDB vector index over the entire corpus. Built once, queried many times.
+2. **Build one persistent MemoryKG** — SQLite graph + sqlite-vec vector index over the entire corpus. Built once, queried many times.
 
-3. **Query with `haystack_files` scoping** — at query time, LanceDB seeding is restricted to the files relevant to the current question. This eliminates cross-conversation noise without needing a separate database per conversation.
+3. **Query with `haystack_files` scoping** — at query time, vector seeding is restricted to the files relevant to the current question. This eliminates cross-conversation noise without needing a separate database per conversation.
 
 4. **Graph expansion (hop=1)** — seed nodes expand through structural edges (CONTAINS, NEXT, HAS_TOPIC, MENTIONS_ENTITY, HAS_KEYWORD) to recover vocabulary-mismatched neighbors.
 

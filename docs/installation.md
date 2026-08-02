@@ -7,7 +7,7 @@
 ## pip (from GitHub)
 
 ```bash
-# Core install (SQLite + LanceDB + MCP server)
+# Core install (SQLite + sqlite-vec + MCP server)
 pip install 'memory-kg @ git+https://github.com/Flux-Frontiers/memory_kg.git'
 
 # With Streamlit web visualizer (adds Streamlit, pyvis, plotly)

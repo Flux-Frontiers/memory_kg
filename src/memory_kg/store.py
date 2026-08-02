@@ -5,7 +5,7 @@ store.py
 GraphStore — SQLite persistence layer for MemoryKG.
 
 Mirrors CodeKG's GraphStore almost exactly.  SQLite is the authoritative,
-canonical store.  No embeddings, no LanceDB, no text parsing.
+canonical store.  No embeddings, no vector store, no text parsing.
 
 Schema differences from CodeKG:
   - ``nodes.text``   replaces  ``nodes.docstring``

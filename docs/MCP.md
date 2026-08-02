@@ -51,7 +51,7 @@ memorykg-mcp --repo /absolute/path/to/repo
 Optional flags:
 
 - `--db .memorykg/graph.sqlite`
-- `--lancedb .memorykg/lancedb`
+- `--vectors .memorykg/vectors.sqlite`
 - `--model all-mpnet-base-v2`
 - `--transport stdio|sse`
 
@@ -70,8 +70,8 @@ Create `.mcp.json` in project root:
         "/absolute/path/to/repo",
         "--db",
         "/absolute/path/to/repo/.memorykg/graph.sqlite",
-        "--lancedb",
-        "/absolute/path/to/repo/.memorykg/lancedb"
+        "--vectors",
+        "/absolute/path/to/repo/.memorykg/vectors.sqlite"
       ]
     }
   }
@@ -94,8 +94,8 @@ Create `.vscode/mcp.json`:
         "/absolute/path/to/repo",
         "--db",
         "/absolute/path/to/repo/.memorykg/graph.sqlite",
-        "--lancedb",
-        "/absolute/path/to/repo/.memorykg/lancedb"
+        "--vectors",
+        "/absolute/path/to/repo/.memorykg/vectors.sqlite"
       ]
     }
   }
@@ -117,8 +117,8 @@ Add to `claude_desktop_config.json`:
         "/absolute/path/to/repo",
         "--db",
         "/absolute/path/to/repo/.memorykg/graph.sqlite",
-        "--lancedb",
-        "/absolute/path/to/repo/.memorykg/lancedb"
+        "--vectors",
+        "/absolute/path/to/repo/.memorykg/vectors.sqlite"
       ]
     }
   }
@@ -171,4 +171,4 @@ Run `memorykg build <corpus_root>` first.
 Verify absolute paths in MCP config and restart the client.
 
 - Wrong corpus queried
-Ensure `--repo`, `--db`, and `--lancedb` all point to the same repository.
+Ensure `--repo`, `--db`, and `--vectors` all point to the same repository.

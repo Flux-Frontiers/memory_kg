@@ -112,9 +112,9 @@ def _parse_args(argv: list | None = None) -> argparse.Namespace:
         help="Path to SQLite graph (default: .memorykg/graph.sqlite)",
     )
     p.add_argument(
-        "--lancedb",
-        default=".memorykg/lancedb",
-        help="Path to LanceDB directory (default: .memorykg/lancedb)",
+        "--vectors",
+        default=".memorykg/vectors.sqlite",
+        help="Path to the sqlite-vec store (default: .memorykg/vectors.sqlite)",
     )
     p.add_argument(
         "--model",
@@ -138,7 +138,7 @@ def main(argv: list | None = None) -> None:
 
     repo = Path(args.repo).resolve()
     db = Path(args.db) if Path(args.db).is_absolute() else repo / args.db
-    lancedb_dir = Path(args.lancedb) if Path(args.lancedb).is_absolute() else repo / args.lancedb
+    vectors_path = Path(args.vectors) if Path(args.vectors).is_absolute() else repo / args.vectors
 
     if not db.exists():
         print(
@@ -150,7 +150,7 @@ def main(argv: list | None = None) -> None:
         f"MemoryKG MCP server starting\\n"
         f"  repo     : {repo}\\n"
         f"  db       : {db}\\n"
-        f"  lancedb  : {lancedb_dir}\\n"
+        f"  vectors  : {vectors_path}\\n"
         f"  model    : {args.model}\\n"
         f"  transport: {args.transport}",
         file=sys.stderr,
@@ -159,7 +159,7 @@ def main(argv: list | None = None) -> None:
     _kg = MemoryKG(
         corpus_root=repo,
         db_path=db,
-        lancedb_dir=lancedb_dir,
+        vectors_path=vectors_path,
         model=args.model,
     )
 

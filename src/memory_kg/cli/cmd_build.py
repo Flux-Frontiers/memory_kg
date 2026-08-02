@@ -3,9 +3,9 @@ cmd_build.py
 
 Click subcommands for building the MemoryKG:
 
-    build       — full pipeline: parse corpus → SQLite → LanceDB + SIMILAR_TO edges
+    build       — full pipeline: parse corpus → SQLite → vectors + SIMILAR_TO edges
     build-graph — parse corpus → SQLite only
-    build-index — SQLite → LanceDB + optional SIMILAR_TO edges
+    build-index — SQLite → vectors + optional SIMILAR_TO edges
 
 Author: Eric G. Suchanek, PhD
 """
@@ -20,10 +20,10 @@ from rich.rule import Rule
 
 from memory_kg.cli.group import cli
 from memory_kg.cli.options import (
-    lancedb_option,
     model_option,
     repo_option,
     sqlite_option,
+    vectors_option,
 )
 from memory_kg.config import load_exclude_dirs
 from memory_kg.kg import MemoryKG
@@ -34,14 +34,8 @@ _console = Console()
 @cli.command("build")
 @repo_option
 @sqlite_option
-@lancedb_option
+@vectors_option
 @model_option
-@click.option(
-    "--table",
-    default="memorykg_nodes",
-    show_default=True,
-    help="LanceDB table name.",
-)
 @click.option(
     "--chunk-size",
     type=int,
@@ -152,9 +146,8 @@ _console = Console()
 def build(
     repo: str,
     sqlite: str,
-    lancedb: str,
+    vectors: str,
     model: str,
-    table: str,
     chunk_size: int,
     chunk_overlap: int,
     similarity_threshold: float,
@@ -175,12 +168,12 @@ def build(
     """Build the MemoryKG from a corpus directory.
 
     Parses all .md and .txt files under CORPUS_ROOT, builds the structural
-    and semantic graph, persists it to SQLite, and indexes it in LanceDB.
+    and semantic graph, persists it to SQLite, and indexes it in sqlite-vec.
     Also discovers SIMILAR_TO edges between semantically related chunks.
     """
     repo_root = Path(repo).resolve()
     db_path = Path(sqlite) if sqlite else repo_root / ".memorykg" / "graph.sqlite"
-    lancedb_dir = Path(lancedb) if lancedb else repo_root / ".memorykg" / "lancedb"
+    vectors_path = Path(vectors) if vectors else repo_root / ".memorykg" / "vectors.sqlite"
     wipe = not update
     extensions = {e if e.startswith(".") else f".{e}" for e in ext}
     exclude = load_exclude_dirs(repo_root) | set(exclude_dir)
@@ -189,9 +182,8 @@ def build(
         corpus_root=repo_root,
         exclude=exclude or None,
         db_path=db_path,
-        lancedb_dir=lancedb_dir,
+        vectors_path=vectors_path,
         model=model,
-        table=table,
         chunk_size=chunk_size,
         chunk_overlap=chunk_overlap,
         similarity_threshold=similarity_threshold,
@@ -227,7 +219,7 @@ def build(
     _console.print(f"  model    : {model}")
     _console.print(f"  batch    : {batch}")
     _console.print(f"  sqlite   : {db_path}")
-    _console.print(f"  lancedb  : {lancedb_dir}")
+    _console.print(f"  vectors  : {vectors_path}")
     _console.print(f"  ext      : {', '.join(sorted(extensions))}")
     _console.print(f"  exclude  : {', '.join(sorted(exclude)) if exclude else '(none)'}")
     _console.print(f"  features : {features}")
@@ -240,8 +232,8 @@ def build(
     _console.print(f"  {'─' * 19}")
     _console.print(f"  {'nodes':<12} {graph_stats.total_nodes:>6}  edges {graph_stats.total_edges}")
 
-    # Step 2: SQLite → LanceDB + SIMILAR_TO
-    _console.print("\n[bold][2/2][/bold] Embedding nodes \u2192 LanceDB \u2026")
+    # Step 2: SQLite → vectors + SIMILAR_TO
+    _console.print("\n[bold][2/2][/bold] Embedding nodes \u2192 vectors \u2026")
     idx_stats = kg.index.build(
         kg.store,
         wipe=wipe,
@@ -413,14 +405,8 @@ def build_graph(
 @cli.command("build-index")
 @repo_option
 @sqlite_option
-@lancedb_option
+@vectors_option
 @model_option
-@click.option(
-    "--table",
-    default="memorykg_nodes",
-    show_default=True,
-    help="LanceDB table name.",
-)
 @click.option(
     "--update",
     is_flag=True,
@@ -450,33 +436,30 @@ def build_graph(
 def build_index(
     repo: str,
     sqlite: str,
-    lancedb: str,
+    vectors: str,
     model: str,
-    table: str,
     update: bool,
     no_similar: bool,
     batch: int,
     workers: int,
 ) -> None:
-    """Build only the LanceDB semantic index from an existing SQLite graph."""
+    """Build only the sqlite-vec semantic index from an existing SQLite graph."""
     repo_root = Path(repo).resolve()
     db_path = Path(sqlite) if sqlite else repo_root / ".memorykg" / "graph.sqlite"
-    lancedb_dir = Path(lancedb) if lancedb else repo_root / ".memorykg" / "lancedb"
+    vectors_path = Path(vectors) if vectors else repo_root / ".memorykg" / "vectors.sqlite"
     wipe = not update
     kg = MemoryKG(
         corpus_root=repo_root,
         db_path=db_path,
-        lancedb_dir=lancedb_dir,
+        vectors_path=vectors_path,
         model=model,
-        table=table,
     )
 
     _console.print(Rule(f"MemoryKG build-index — {db_path.name}", style="bold blue"))
     _console.print(f"  sqlite  : {db_path}")
-    _console.print(f"  lancedb : {lancedb_dir}")
-    _console.print(f"  table   : {table}")
+    _console.print(f"  vectors : {vectors_path}")
 
-    _console.print("\nEmbedding nodes \u2192 LanceDB \u2026")
+    _console.print("\nEmbedding nodes \u2192 vectors \u2026")
     idx_stats = kg.index.build(
         kg.store,
         wipe=wipe,

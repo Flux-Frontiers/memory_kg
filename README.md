@@ -1,9 +1,9 @@
 [![CI](https://github.com/Flux-Frontiers/memory_kg/actions/workflows/ci.yml/badge.svg)](https://github.com/Flux-Frontiers/memory_kg/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.12%20%7C%203.13-blue.svg)](https://www.python.org/)
 [![License: Elastic-2.0](https://img.shields.io/badge/License-Elastic%202.0-blue.svg)](https://www.elastic.co/licensing/elastic-license)
-[![Version](https://img.shields.io/badge/version-0.6.2-blue.svg)](https://github.com/Flux-Frontiers/memory_kg/releases)
+[![Version](https://img.shields.io/badge/version-0.7.0-blue.svg)](https://github.com/Flux-Frontiers/memory_kg/releases)
 [![Poetry](https://img.shields.io/endpoint?url=https://python-poetry.org/badge/v0.json)](https://python-poetry.org/)
-[![DOI](https://zenodo.org/badge/1205364687.svg)](https://zenodo.org/badge/latestdoi/1205364687)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21282909.svg)](https://doi.org/10.5281/zenodo.21282909)
 
 **MemoryKG** — A Hybrid Knowledge Graph for Conversational Memory and Document Corpora
 
@@ -56,7 +56,7 @@ Most "memory" systems flatten a session into a single embedding and lean on an L
 
 ## What MemoryKG Is
 
-A **deterministic, explainable knowledge graph** built from conversational logs and document corpora (Markdown, plain text). MemoryKG semantically chunks text, extracts topics/entities/keywords, links them through typed edges, stores everything in SQLite, and adds a LanceDB vector index as an *acceleration layer* — not the source of truth.
+A **deterministic, explainable knowledge graph** built from conversational logs and document corpora (Markdown, plain text). MemoryKG semantically chunks text, extracts topics/entities/keywords, links them through typed edges, stores everything in SQLite, and adds a sqlite-vec vector index as an *acceleration layer* — not the source of truth.
 
 Structure is treated as ground truth. Semantic search is a tool, not the system. The result is a searchable, auditable representation that supports precise navigation, source-grounded passage extraction, and downstream LLM reasoning — a practical foundation for **Knowledge-Graph RAG (KGRAG)**.
 
@@ -69,7 +69,7 @@ MemoryKG shares its architecture with [PyCodeKG](https://github.com/Flux-Frontie
 - **Semantic chunking** — Multiple strategies: `heading` (one chunk per `## Section`), `fixed`, `sentence_group`, `semantic` (embedding-boundary detection)
 - **Deterministic knowledge graph** — SQLite-backed canonical store with typed nodes and provenance-tracked edges
 - **Relation extraction** — Topics, named entities, keywords; co-occurrence and similarity edges built automatically
-- **Hybrid query model** — Semantic seeding (LanceDB) + structural expansion (graph traversal) + score-first ranking
+- **Hybrid query model** — Semantic seeding (sqlite-vec) + structural expansion (graph traversal) + score-first ranking
 - **Haystack-scoped search** — Restrict vector seeding to a per-question candidate pool for benchmark-grade precision
 - **Passage packing** — Source-grounded text passages with headings, ready to paste into an LLM prompt
 - **Coverage analysis & temporal snapshots** — Per-document metrics, hot chunks, orphan detection, version-over-version diffs
@@ -82,7 +82,7 @@ MemoryKG shares its architecture with [PyCodeKG](https://github.com/Flux-Frontie
 ## Quick Start
 
 ```bash
-# Index a corpus (SQLite + LanceDB in one step; wipe is the default)
+# Index a corpus (SQLite + sqlite-vec in one step; wipe is the default)
 memorykg build --repo docs/
 
 # Natural-language query — returns ranked chunks
@@ -109,12 +109,12 @@ See [docs/installation.md](docs/installation.md) for editable installs, dev setu
 ### Build the knowledge graph
 
 ```bash
-# Full pipeline: parse → SQLite graph → LanceDB index (wipe is default)
+# Full pipeline: parse → SQLite graph → sqlite-vec index (wipe is default)
 memorykg build --repo docs/
 
 # Granular steps for large corpora
 memorykg build-graph --repo docs/   # SQLite only
-memorykg build-index                 # LanceDB from existing SQLite
+memorykg build-index                 # vector index from existing SQLite
 
 # Incremental update — keep existing data
 memorykg build --repo docs/ --update
@@ -219,11 +219,11 @@ poetry run python3 benchmarks/convomem/convomem_bench.py --limit 1000 --tier 4
 
 If you use MemoryKG in your research or project, please cite it:
 
-[![DOI](https://zenodo.org/badge/1205364687.svg)](https://zenodo.org/badge/latestdoi/1205364687)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21282909.svg)](https://doi.org/10.5281/zenodo.21282909)
 
 **APA**
 
-> Suchanek, E. G. (2026). *MemoryKG: Hybrid Semantic-Graph Knowledge Base for Conversational Memory* (Version 0.6.2) [Software]. Flux-Frontiers. https://github.com/Flux-Frontiers/memory_kg
+> Suchanek, E. G. (2026). *MemoryKG: Hybrid Semantic-Graph Knowledge Base for Conversational Memory* (Version 0.7.0) [Software]. Flux-Frontiers. https://github.com/Flux-Frontiers/memory_kg
 
 **BibTeX**
 
@@ -231,7 +231,7 @@ If you use MemoryKG in your research or project, please cite it:
 @software{suchanek_memory_kg,
   author    = {Suchanek, Eric G.},
   title     = {{MemoryKG}: Hybrid Semantic-Graph Knowledge Base for Conversational Memory},
-  version   = {0.6.2},
+  version   = {0.7.0},
   year      = {2026},
   publisher = {Flux-Frontiers},
   url       = {https://github.com/Flux-Frontiers/memory_kg},
