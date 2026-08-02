@@ -86,6 +86,15 @@ memorykg build-index --repo <corpus>
 
 ### Fixed
 
+- **README badges and `CITATION.cff` were stale after the version bump** — the
+  version badge and both citation formats still read 0.6.2, and the CFF
+  abstract and keywords still advertised LanceDB. The DOI badge also used the
+  repo-ID form (`zenodo.org/badge/<id>` → `latestdoi/<id>`) rather than the
+  concept-DOI form the sibling repos use; it now renders and links
+  `10.5281/zenodo.21282909` directly. **The DOI value itself was already
+  correct** — checked against the Zenodo API before changing anything, since
+  21282909 is the concept record and 21686871 is merely v0.6.2's version DOI.
+
 - **`scripts/install-skill.sh` probed the vector store with `-d` and `ls -A`.**
   Correct for a LanceDB directory, wrong for a file: after the rename it would
   have reported every existing store as missing and every successful build as
@@ -96,6 +105,14 @@ memorykg build-index --repo <corpus>
   applied. Now reads `MEMORYKG_VECTORS`.
 
 ### Added
+
+- **Release-metadata drift guards** (in `tests/test_cli_vectors.py`) — the
+  version lives independently in `pyproject.toml`, the README badge, the README
+  APA/BibTeX citation and `CITATION.cff`, and after the 0.7.0 bump three of the
+  four still said 0.6.2. Also pins that every DOI in the repo is the **concept**
+  DOI (`10.5281/zenodo.21282909`, confirmed against the Zenodo API) rather than
+  a version DOI, that the CI badge names a workflow that exists, and that the
+  Python badge agrees with `requires-python`.
 
 - **`tests/test_cli_vectors.py`** — 49 cases over the renamed CLI and constructor
   surface, which coverage showed at 30–61% after the port: the commands declare

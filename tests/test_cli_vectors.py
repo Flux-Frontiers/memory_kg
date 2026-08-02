@@ -313,3 +313,112 @@ class TestAnalysisEntryPoints:
         params = inspect.signature(fn).parameters
         assert "vectors_path" in params
         assert "lancedb_path" not in params
+
+
+# ---------------------------------------------------------------------------
+# Release metadata
+# ---------------------------------------------------------------------------
+
+
+class TestReleaseMetadata:
+    """Version and DOI drift silently — nothing type-checks a badge.
+
+    The version badge, the README citation block, CITATION.cff and
+    pyproject.toml all carry the version independently, and after the 0.7.0
+    bump three of the four still said 0.6.2.
+    """
+
+    @staticmethod
+    def _root():
+        import pathlib
+
+        return pathlib.Path(__file__).resolve().parents[1]
+
+    @staticmethod
+    def _project_version(root):
+        import tomllib
+
+        return tomllib.load(open(root / "pyproject.toml", "rb"))["project"]["version"]
+
+    def test_readme_version_badge_matches_pyproject(self):
+        import re
+
+        root = self._root()
+        badge = re.search(r"badge/version-([0-9][0-9.]*)-", (root / "README.md").read_text())
+        assert badge, "no version badge found in README"
+        assert badge.group(1) == self._project_version(root)
+
+    def test_citation_version_matches_pyproject(self):
+        import yaml
+
+        root = self._root()
+        cff = yaml.safe_load((root / "CITATION.cff").read_text())
+        assert cff["version"] == self._project_version(root)
+
+    def test_readme_citation_text_matches_pyproject(self):
+        import re
+
+        root = self._root()
+        readme = (root / "README.md").read_text()
+        version = self._project_version(root)
+        assert f"(Version {version})" in readme, "APA citation version is stale"
+        assert re.search(rf"version\s*=\s*\{{{re.escape(version)}\}}", readme), (
+            "BibTeX version is stale"
+        )
+
+    def test_all_dois_agree_and_are_the_concept_doi(self):
+        """One DOI everywhere, and it must be the concept record.
+
+        A version DOI pins the citation to one release; the concept DOI always
+        resolves to the latest. Verified against Zenodo: 21282909 is the
+        concept, 21686871 was the v0.6.2 version DOI.
+        """
+        import re
+
+        import yaml
+
+        root = self._root()
+        found = set(re.findall(r"10\.5281/zenodo\.(\d+)", (root / "README.md").read_text()))
+        found.add(yaml.safe_load((root / "CITATION.cff").read_text())["doi"].rsplit(".", 1)[-1])
+        assert found == {"21282909"}, f"DOIs disagree or are not the concept DOI: {sorted(found)}"
+
+    def test_citation_carries_the_required_cff_keys(self):
+        import yaml
+
+        cff = yaml.safe_load((self._root() / "CITATION.cff").read_text())
+        for key in ("cff-version", "message", "title", "authors", "version", "doi"):
+            assert key in cff, f"CITATION.cff missing {key}"
+
+    def test_citation_does_not_advertise_a_retired_backend(self):
+        text = (self._root() / "CITATION.cff").read_text().lower()
+        assert "lancedb" not in text
+
+    def test_ci_badge_points_at_a_workflow_that_exists(self):
+        """Structural check — this sandbox cannot fetch github.com badge URLs."""
+        import re
+
+        root = self._root()
+        refs = re.findall(
+            r"actions/workflows/([\w.-]+)/badge\.svg", (root / "README.md").read_text()
+        )
+        assert refs, "no CI badge found"
+        for wf in refs:
+            assert (root / ".github" / "workflows" / wf).is_file(), f"badge names missing {wf}"
+
+    def test_python_badge_matches_requires_python(self):
+        import re
+        import tomllib
+
+        root = self._root()
+        requires = tomllib.load(open(root / "pyproject.toml", "rb"))["project"]["requires-python"]
+        badge = re.search(r"badge/python-([0-9.%A-Za-z]+)-", (root / "README.md").read_text())
+        assert badge, "no python badge found"
+        shown = set(re.findall(r"3\.\d+", badge.group(1)))
+        # Every advertised minor must satisfy the declared floor and ceiling.
+        floor = re.search(r">=3\.(\d+)", requires)
+        ceiling = re.search(r"<3\.(\d+)", requires)
+        for v in shown:
+            minor = int(v.split(".")[1])
+            assert minor >= int(floor.group(1)), f"{v} is below requires-python {requires}"
+            if ceiling:
+                assert minor < int(ceiling.group(1)), f"{v} is above requires-python {requires}"
