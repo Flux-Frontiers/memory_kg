@@ -1,9 +1,9 @@
 # MemoryKG × LoCoMo Benchmark Results
 
-**Date:** 2026-08-02 04:08  
-**Commit:** `95a0475` (claude/diarykg-setup-gf80dz)  
-**Granularity:** session  
-**k (seeds):** 50  **hop:** 1  
+**Date:** 2026-08-02 04:08
+**Commit:** `95a0475` (claude/diarykg-setup-gf80dz)
+**Granularity:** session
+**k (seeds):** 50  **hop:** 1
 
 ## Summary
 

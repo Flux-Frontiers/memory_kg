@@ -1,7 +1,7 @@
 {
-  "key": "73d3cba14b625d99e6d81be70acd317b94127709",
-  "branch": "fix/ty-streamlit-submodule",
-  "timestamp": "2026-08-03T18:58:12.941512+00:00",
+  "key": "69247a62f3580873057297276e93d072551eaa05",
+  "branch": "chore/kg-tooling-group",
+  "timestamp": "2026-08-03T20:23:38.071986+00:00",
   "version": "0.7.0",
   "metrics": {
     "db_path": "/Users/egs/repos/memory_kg/.memorykg/graph.sqlite",

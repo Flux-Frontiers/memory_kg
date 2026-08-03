@@ -11,7 +11,7 @@
 #   pip install -e ".[viz]"          core + Streamlit/Plotly/PyVis visualizer
 #   pip install -e ".[all]"          everything above
 #   pip install -e "."               core runtime only
-#   (cross-KG siblings pycode-kg / doc-kg are optional — install manually)
+#   poetry install --with kg         adds the dockg/pycodekg CLIs (maintainer tooling)
 #
 # Quick install (poetry)
 # ----------------------
@@ -106,11 +106,9 @@ viz = [
     "pyvis>=0.3.2",
     "streamlit>=1.35.0",
 ]
-# Cross-KG sibling integrations (pycode-kg, doc-kg, ftree-kg, agent-kg) are
-# OPTIONAL and installed manually — they are never imported by memory_kg's core
-# code, and pinning them here forces poetry's universal resolution to reconcile
-# their (often newer) transformers requirement against this project's cap.
-#   pip install pycode-kg doc-kg          # PyPI
+# Cross-KG siblings are never imported by memory_kg, so none are extras. The two
+# whose CLIs this repo actually runs (doc-kg, pycode-kg) live in
+# [tool.poetry.group.kg] below; the rest stay manual installs:
 #   pip install 'ftree-kg @ git+https://github.com/Flux-Frontiers/ftree_kg.git'
 #   pip install 'agent-kg @ git+https://github.com/Flux-Frontiers/agent_kg.git'
 all = [
@@ -125,6 +123,30 @@ all = [
     "ruff>=0.4.0",
     "streamlit>=1.35.0",
 ]
+
+# ---------------------------------------------------------------------------
+# Maintainer tooling (Poetry group, not a PEP 621 extra)
+# ---------------------------------------------------------------------------
+# doc-kg and pycode-kg are tools this repo *runs*, not libraries it imports.
+# Nothing under src/ imports either one; they are here because .mcp.json serves
+# `dockg` and `pycodekg` MCP servers, which need those CLIs on PATH. Without a
+# declaration a fresh clone gets dead MCP servers and no hint why.
+#
+# A Poetry group rather than [project.optional-dependencies] on purpose. Groups
+# are maintainer-facing: locked and installable, but NOT written into the
+# wheel's metadata -- so no published extra acquires a sibling package, and
+# `pip install memory-kg[...]` is unaffected. An extra would put sibling KG
+# packages into the published dependency graph, which is what couples their
+# resolution together.
+#
+#   poetry install --with kg      # get the dockg / pycodekg CLIs into .venv/bin
+#   poetry install                # default: group is optional, skipped
+[tool.poetry.group.kg]
+optional = true
+
+[tool.poetry.group.kg.dependencies]
+doc-kg = ">=0.21.1"
+pycode-kg = ">=0.21.4"
 
 [project.urls]
 Homepage   = "https://github.com/Flux-Frontiers/memory_kg"
