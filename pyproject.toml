@@ -190,6 +190,12 @@ root = ["src"]
 [tool.ty.rules]
 # Be lenient about third-party stubs (mirrors mypy's ignore_missing_imports).
 unresolved-import = "ignore"
+# Whether a `ty: ignore` is *needed* depends on what happens to be installed.
+# The suppressions on the tqdm monkey-patching in index.py are load-bearing when
+# tqdm resolves and dead when it does not — tqdm reaches this package only as a
+# transitive of sentence-transformers, so both states are reachable. Deleting
+# them to satisfy one install would break `ty` for the other. Mirrors doc-kg.
+unused-ignore-comment = "ignore"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
