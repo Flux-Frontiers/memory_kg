@@ -1,8 +1,8 @@
 # MemoryKG × LongMemEval — Multi-Run Comparison
 
-**Generated:** 2026-08-02 09:30:42  
-**Repository:** memory_kg @ `207dbe3` (claude/diarykg-setup-gf80dz)  
-**Machine:** Apple M5 Max MacBook Pro, 64 GB RAM, 2 TB SSD  
+**Generated:** 2026-08-02 09:30:42
+**Repository:** memory_kg @ `207dbe3` (claude/diarykg-setup-gf80dz)
+**Machine:** Apple M5 Max MacBook Pro, 64 GB RAM, 2 TB SSD
 
 ---
 
@@ -362,4 +362,3 @@ eac54add
 gpt4_68e94288
 ```
 </details>
-
