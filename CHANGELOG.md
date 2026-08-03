@@ -59,8 +59,11 @@ memorykg build-index --repo <corpus>
 - **CLI: `--lancedb PATH` → `--vectors PATH`** on `build`, `build-index`,
   `query`, `pack`, `analyze`, `semantic-analyze`, and `mcp`.
 
-- **`kgmodule-utils[semantic,sqlite-vec]>=0.9.0`** replaces the bare
-  `kgmodule-utils>=0.9.0`.
+- **`kgmodule-utils[sqlite-vec]>=0.10.0`** replaces the bare
+  `kgmodule-utils>=0.9.0`. The extra carries the new backend (see *Removed* for
+  why it is `[sqlite-vec]` and not `[semantic]`), and the floor moves to the
+  current release so a fresh install cannot resolve a shared core older than
+  the one this package is developed against.
 
 - **ruff now excludes `*.md`.** ruff 0.16 formats Python blocks embedded in
   Markdown as stable behaviour (0.15 gated it behind preview), so
@@ -132,6 +135,18 @@ memorykg build-index --repo <corpus>
   passing) against an environment where `lancedb` is not importable. Safe
   because every `import lancedb` in `kg_utils.vector_backend` is function-local
   and this package only ever constructs `SqliteVecBackend`.
+
+- **`einops` dropped as a direct dependency.** It arrived with the initial
+  commit as doc_kg scaffolding and is imported nowhere in `src/`, `tests/`,
+  `benchmarks/` or `scripts/`; removing it takes it out of the lock entirely,
+  so nothing else required it either. Verified by embedding with the default
+  model while `einops` was blocked at import. Note that some
+  `trust_remote_code` sentence-transformer models (jina, nomic) do need it at
+  runtime — install it alongside if you point `--model` at one.
+
+- **The commented local-path override for `kgmodule-utils`** — a
+  `develop = true` pin at an absolute developer path — removed from the build
+  section.
 
 ### Fixed
 

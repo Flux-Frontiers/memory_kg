@@ -40,8 +40,6 @@
 requires = ["poetry-core>=2.0.0"]
 build-backend = "poetry.core.masonry.api"
 
-#[tool.poetry.dependencies]
-#kgmodule-utils = {path = "/Users/egs/repos/KG_utils", develop = true}
 [tool.poetry]
 packages = [{ include = "memory_kg", from = "src" }]
 
@@ -70,7 +68,6 @@ classifiers = [
 requires-python = ">=3.12,<3.14"
 dependencies = [
     "click>=8.1.0,<9",
-    "einops>=0.8.2",
     "markdown-it-py>=3.0.0",
     # Upper-bounded: mcp 2.0 removed the bundled `mcp.server.fastmcp` module
     # (FastMCP was split out into the standalone `fastmcp` package) and rebuilt
@@ -91,7 +88,7 @@ dependencies = [
     # numpy, rich, sentence-transformers, torch, transformers and sqlite-vec —
     # all of which are already declared directly above — plus `lancedb`, which
     # was the last thing pulling the retired backend into a clean install.
-    "kgmodule-utils[sqlite-vec]>=0.9.0",
+    "kgmodule-utils[sqlite-vec]>=0.10.0",
 ]
 
 [project.optional-dependencies]
