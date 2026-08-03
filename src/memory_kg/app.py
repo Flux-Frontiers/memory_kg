@@ -15,6 +15,10 @@ from pathlib import Path
 
 # pylint: disable=import-error
 import streamlit as st  # type: ignore[import-not-found]
+
+# `st.components.v1` is a submodule: `import streamlit` does not guarantee it is
+# bound, so reference it only after importing it explicitly.
+import streamlit.components.v1  # type: ignore[import-not-found]
 from pyvis.network import Network  # type: ignore[import-not-found]
 
 from memory_kg.kg import MemoryKG
