@@ -88,7 +88,7 @@ dependencies = [
     # numpy, rich, sentence-transformers, torch, transformers and sqlite-vec —
     # all of which are already declared directly above — plus `lancedb`, which
     # was the last thing pulling the retired backend into a clean install.
-    "kgmodule-utils[sqlite-vec]>=0.12.0",
+    "kgmodule-utils[sqlite-vec]>=0.12.1",
 ]
 
 [project.optional-dependencies]
@@ -99,7 +99,7 @@ dev = [
     "pre-commit>=4.5.1",
     "pytest>=9.0.3",
     "pytest-cov>=5.0.0",
-    "ruff>=0.4.0",
+    "ruff>=0.4.0,<0.16",
 ]
 viz = [
     "plotly>=5.14.0",
@@ -120,7 +120,7 @@ all = [
     "pytest>=9.0.3",
     "pytest-cov>=5.0.0",
     "pyvis>=0.3.2",
-    "ruff>=0.4.0",
+    "ruff>=0.4.0,<0.16",
     "streamlit>=1.35.0",
 ]
 
