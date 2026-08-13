@@ -88,7 +88,7 @@ dependencies = [
     # numpy, rich, sentence-transformers, torch, transformers and sqlite-vec —
     # all of which are already declared directly above — plus `lancedb`, which
     # was the last thing pulling the retired backend into a clean install.
-    "kgmodule-utils[sqlite-vec]>=0.10.0",
+    "kgmodule-utils[sqlite-vec]>=0.12.0",
 ]
 
 [project.optional-dependencies]
@@ -146,7 +146,7 @@ optional = true
 
 [tool.poetry.group.kg.dependencies]
 doc-kg = ">=0.21.1"
-pycode-kg = ">=0.21.4"
+pycode-kg = ">=0.22.0"
 
 [project.urls]
 Homepage   = "https://github.com/Flux-Frontiers/memory_kg"
