@@ -233,7 +233,7 @@ Automate snapshot capture in your pipeline:
 # In GitHub Actions or CI workflow
 
 # Build graph
-codekg build --repo . --wipe
+pycodekg build --repo .
 
 # Capture snapshot
 VERSION=$(git describe --tags --always)

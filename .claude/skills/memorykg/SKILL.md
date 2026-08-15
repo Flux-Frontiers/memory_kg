@@ -1,6 +1,6 @@
 ---
 name: memorykg
-description: Expert knowledge for installing, configuring, and using MemoryKG — a hybrid semantic + structural knowledge graph for document corpora (.md and .txt files). Use this skill when the user asks about: setting up MemoryKG in a project, adding memory-kg as a Poetry dependency, building the SQLite or LanceDB knowledge graph from documents, running the multipass analysis pipeline (memorykg pipeline run/embed/manifold), configuring .mcp.json for Claude Code or Kilo Code, configuring .vscode/mcp.json for GitHub Copilot, configuring claude_desktop_config.json for Claude Desktop, using the memorykg CLI (memorykg build, memorykg build-graph, memorykg build-index, memorykg query, memorykg pack, memorykg analyze, memorykg semantic-analyze, memorykg pipeline, memorykg viz, memorykg mcp, memorykg snapshot), using the graph_stats / query_docs / pack_docs / get_node MCP tools, or troubleshooting MemoryKG errors.
+description: Expert knowledge for installing, configuring, and using MemoryKG — a hybrid semantic + structural knowledge graph for document corpora (.md and .txt files). Use this skill when the user asks about: setting up MemoryKG in a project, adding memory-kg as a Poetry dependency, building the SQLite graph or the sqlite-vec vector index from documents, running the multipass analysis pipeline (memorykg pipeline run/embed/manifold), configuring .mcp.json for Claude Code or Kilo Code, configuring .vscode/mcp.json for GitHub Copilot, configuring claude_desktop_config.json for Claude Desktop, using the memorykg CLI (memorykg build, memorykg build-graph, memorykg build-index, memorykg query, memorykg pack, memorykg analyze, memorykg semantic-analyze, memorykg pipeline, memorykg viz, memorykg mcp, memorykg snapshot), using the graph_stats / query_docs / pack_docs / get_node MCP tools, or troubleshooting MemoryKG errors.
 ---
 
 # MemoryKG Skill
@@ -9,7 +9,7 @@ description: Expert knowledge for installing, configuring, and using MemoryKG �
 >
 > Text search finds strings. MemoryKG understands documents. It knows which sections contain which chunks, how topics and entities cross-reference across files, and surfaces the most semantically relevant excerpts in a single query. One `pack_docs` call replaces five rounds of search-and-read and gives the agent real structural insight into the corpus — not just keyword matches.
 
-MemoryKG indexes `.md` and `.txt` document corpora into a hybrid knowledge graph (SQLite + LanceDB) and exposes it as MCP tools for AI agents. It also provides a **multipass analysis pipeline** (diary_kg-style) for deep NLP transformation with diversity sampling, hybrid topic classification, corpus embedding, and manifold analysis.
+MemoryKG indexes `.md` and `.txt` document corpora into a hybrid knowledge graph (SQLite + sqlite-vec) and exposes it as MCP tools for AI agents. It also provides a **multipass analysis pipeline** (diary_kg-style) for deep NLP transformation with diversity sampling, hybrid topic classification, corpus embedding, and manifold analysis.
 
 ## Installation (Poetry)
 
@@ -25,7 +25,7 @@ memory-kg = { git = "https://github.com/Flux-Frontiers/memory_kg.git" }
 
 ## Build the Knowledge Graph
 
-MemoryKG uses a **single build command** that runs corpus parsing, SQLite persistence, and LanceDB vector indexing in one step. **Wipe is the default** — use `--update` to keep existing data instead.
+MemoryKG uses a **single build command** that runs corpus parsing, SQLite persistence, and sqlite-vec vector indexing in one step. **Wipe is the default** — use `--update` to keep existing data instead.
 
 ```bash
 # Build from a corpus directory (wipes and rebuilds by default)
@@ -46,7 +46,7 @@ For large corpora you can run steps independently:
 # Step 1 — parse corpus and write SQLite graph
 memorykg build-graph --repo docs/
 
-# Step 2 — build LanceDB vector index from existing SQLite
+# Step 2 — build the sqlite-vec vector index from an existing SQLite graph
 memorykg build-index
 
 # Incremental variants
@@ -82,7 +82,7 @@ The knowledge graph is a snapshot of the corpus at build time. It does **not** u
 | Minor edits within existing documents | `--update` is usually sufficient |
 | New file added | `--update` is sufficient |
 
-> **Why full rebuild matters:** Deleted or renamed documents remain as phantom entries with `--update`. The default wipe clears orphan nodes from both SQLite and LanceDB.
+> **Why full rebuild matters:** Deleted or renamed documents remain as phantom entries with `--update`. The default full rebuild clears orphan nodes from both the graph and the vector store.
 
 ## Additional CLI Commands
 
@@ -180,7 +180,7 @@ Both Claude Code and Kilo Code read per-repo config from `.mcp.json` in the proj
         "mcp",
         "--repo",   "/absolute/path/to/repo",
         "--db",     "/absolute/path/to/repo/.memorykg/graph.sqlite",
-        "--lancedb","/absolute/path/to/repo/.memorykg/lancedb"
+        "--vectors","/absolute/path/to/repo/.memorykg/vectors.sqlite"
       ]
     }
   }
@@ -205,7 +205,7 @@ GitHub Copilot requires `"servers"` key and `"type": "stdio"`:
         "mcp",
         "--repo",    "/absolute/path/to/repo",
         "--db",      "/absolute/path/to/repo/.memorykg/graph.sqlite",
-        "--lancedb", "/absolute/path/to/repo/.memorykg/lancedb"
+        "--vectors", "/absolute/path/to/repo/.memorykg/vectors.sqlite"
       ]
     }
   }
@@ -235,7 +235,7 @@ Config path: `~/Library/Application Support/Claude/claude_desktop_config.json` (
         "mcp",
         "--repo",    "/abs/path",
         "--db",      "/abs/path/.memorykg/graph.sqlite",
-        "--lancedb", "/abs/path/.memorykg/lancedb"
+        "--vectors", "/abs/path/.memorykg/vectors.sqlite"
       ]
     }
   }
@@ -331,7 +331,7 @@ Config path: `~/Library/Application Support/Claude/claude_desktop_config.json` (
 - `k=8, hop=1, rels="CONTAINS,NEXT,REFERENCES,SIMILAR_TO,HAS_TOPIC,MENTIONS_ENTITY,HAS_KEYWORD,CO_OCCURS_WITH"`
 - `max_chars=2000` (pack_docs), `max_nodes=15` (pack_docs), `max_nodes=25` (query_docs)
 - Embedding model (all pipelines): `BAAI/bge-small-en-v1.5` (384-d)
-- Storage: `.memorykg/graph.sqlite` (SQLite) + `.memorykg/lancedb/` (LanceDB)
+- Storage: `.memorykg/graph.sqlite` (graph) + `.memorykg/vectors.sqlite` (sqlite-vec)
 - Pipeline output: `.memorykg/pipeline/` (`.psv` runs, `embeddings.json` cache)
 - Feature cache: `.memorykg/cache/` (pickle, per-file with SHA-256 invalidation)
 - Transport: `stdio` (Claude Code/Desktop), `sse` (HTTP clients)
@@ -342,17 +342,17 @@ Config path: `~/Library/Application Support/Claude/claude_desktop_config.json` (
 .memorykg/
 ```
 
-The `.memorykg/` directory holds the SQLite graph, LanceDB vector index, snapshots, pipeline outputs, feature caches, and embedding caches. All are local reproducible artifacts. Add this to `.gitignore` when installing MemoryKG in a new repo.
+The `.memorykg/` directory holds the SQLite graph, the sqlite-vec vector store, snapshots, pipeline outputs, feature caches, and embedding caches. All are local reproducible artifacts. Add this to `.gitignore` when installing MemoryKG in a new repo.
 
 ## Troubleshooting
 
 | Error | Fix |
 |---|---|
 | `WARNING: SQLite database not found` | Run `memorykg build --repo <corpus_root>` first |
-| `mcp package not found` | `poetry install` (ensure `[mcp]` extra is included) |
+| `mcp package not found` | Re-run `poetry install` — `mcp` is a core dependency, not an extra |
 | No tools visible in MCP client | Use absolute paths in config; restart the client |
 | Empty query results | Run `memorykg build --repo <corpus_root>` |
-| Wrong corpus queried | Verify `--repo`, `--db`, and `--lancedb` all point to the same repo |
+| Wrong corpus queried | Verify `--repo`, `--db` and `--vectors` all point to the same repo |
 | Stale nodes after deleting files | Run full rebuild (no `--update`) after deletions or renames |
 
 ## Full Reference

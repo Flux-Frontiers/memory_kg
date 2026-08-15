@@ -1,6 +1,6 @@
 {
   "format": "1.0",
-  "last_update": "2026-08-03T20:23:38.072486+00:00",
+  "last_update": "2026-08-15T17:30:26.455174+00:00",
   "snapshots": [
     {
       "key": "92f29d06e99afffef54d0710b101554a74a2eace",
@@ -245,6 +245,49 @@
         "vs_baseline": {
           "nodes": 41,
           "edges": -742,
+          "coverage_delta": 0.01795376345755828,
+          "issues_delta": 0
+        }
+      }
+    },
+    {
+      "key": "99d6ea1deb3dcae80eb36796d721ac333ed2eac9",
+      "branch": "chore/fleet-currency",
+      "timestamp": "2026-08-15T17:30:26.454746+00:00",
+      "version": "0.7.0",
+      "file": "99d6ea1deb3dcae80eb36796d721ac333ed2eac9.json",
+      "metrics": {
+        "db_path": ".memorykg/graph.sqlite",
+        "total_nodes": 3750,
+        "total_edges": 21076,
+        "node_counts": {
+          "chunk": 953,
+          "document": 20,
+          "entity": 701,
+          "keyword": 1051,
+          "section": 375,
+          "topic": 650
+        },
+        "edge_counts": {
+          "CONTAINS": 1328,
+          "CO_OCCURS_WITH": 10424,
+          "HAS_KEYWORD": 3337,
+          "HAS_TOPIC": 897,
+          "MENTIONS_ENTITY": 2237,
+          "NEXT": 513,
+          "REFERENCES": 19,
+          "SIMILAR_TO": 2321
+        },
+        "meaningful_nodes": 3730,
+        "coverage_score": 0.8593913955928647,
+        "issues_count": 0,
+        "complexity_median": 20.0
+      },
+      "deltas": {
+        "vs_previous": null,
+        "vs_baseline": {
+          "nodes": 40,
+          "edges": -744,
           "coverage_delta": 0.01795376345755828,
           "issues_delta": 0
         }

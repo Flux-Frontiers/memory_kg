@@ -8,7 +8,6 @@ CLI command for installing MemoryKG git hooks and Claude Code auto-ingest hooks:
   install-hooks --global  — install Claude Code hooks into ~/.claude/settings.json
 
   Author: Eric G. Suchanek, PhD
-  Last Revision: 2026-07-29
 """
 
 # pylint: disable=import-outside-toplevel

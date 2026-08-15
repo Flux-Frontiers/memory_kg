@@ -89,7 +89,6 @@ The model directory name must use ``--`` in place of ``/`` in the HuggingFace
 model ID (e.g. ``BAAI/bge-small-en-v1.5`` → ``BAAI--bge-small-en-v1.5``).
 
 Author: Eric G. Suchanek, PhD
-Last Revision: 2026-04-25
 
 License: Elastic 2.0
 """

@@ -27,8 +27,8 @@
 # What it does:
 #   1. Creates skill directories for Claude Code, Kilo Code, and other agents
 #      and installs SKILL.md + references/installation.md into each
-#   2. Installs Claude Code slash commands (memorykg, memorykg-rebuild, setup-mcp,
-#      changelog-commit, release) to ~/.claude/commands/
+#   2. Installs Claude Code slash commands (memorykg, memorykg-rebuild,
+#      setup-mcp) to ~/.claude/commands/
 #   3. Installs the /memorykg slash command into the target repo for Cline
 #   4. Installs memory-kg if memorykg is not found:
 #        a. pip install from latest GitHub release wheel (preferred, no git needed)
@@ -40,7 +40,6 @@
 #   8. Prints a final summary
 #
 # Author: Eric G. Suchanek, PhD
-# Last Revision: 2026-04-25
 # License: Elastic 2.0
 # =============================================================================
 
@@ -120,12 +119,13 @@ SKILL_DIRS=(
 )
 
 # Global Claude Code command files to install to ~/.claude/commands/
+# MemoryKG-specific commands only. changelog-commit and release are fleet-wide
+# and live in ~/.claude/commands already — shipping repo copies meant every
+# install overwrote the global ones with a stale fork.
 CLAUDE_COMMAND_FILES=(
     "memorykg.md"
     "memorykg-rebuild.md"
     "setup-mcp.md"
-    "changelog-commit.md"
-    "release.md"
 )
 
 # ── Detect if we're running from inside the repo ─────────────────────────────
@@ -415,12 +415,15 @@ if [ -f "$GRAPH_DB" ] && [ -z "$WIPE_FLAG" ]; then
     echo "    (Run with --wipe to force rebuild)"
 else
     if [ -n "$DRY_RUN" ]; then
-        echo "  [dry-run] would run: memorykg build-graph ${TARGET_REPO}${WIPE_FLAG:+ --wipe}"
+        echo "  [dry-run] would run: memorykg build-graph --repo ${TARGET_REPO}"
     else
         _exec mkdir -p "$(dirname "$GRAPH_DB")"
         echo "  → Building graph store at: ${GRAPH_DB}"
-        _WIPE_ARG=${WIPE_FLAG:+--wipe}
-        (cd "${TARGET_REPO}" && "${MEMORYKG_BIN}" build-graph "${TARGET_REPO}" ${_WIPE_ARG})
+        # No --wipe passed through: build-graph has no such flag (it always
+        # rebuilds; --update is the opt-in incremental path), and passing one
+        # exits 2. The script's own --wipe still does its job above — it
+        # decides whether to build at all when the store already exists.
+        (cd "${TARGET_REPO}" && "${MEMORYKG_BIN}" build-graph --repo "${TARGET_REPO}")
         if [ -f "$GRAPH_DB" ]; then
             echo "  ✓ Built: ${GRAPH_DB}"
         else
@@ -440,11 +443,11 @@ if [ -f "$VECTORS_PATH" ] && [ -z "$WIPE_FLAG" ]; then
     echo "    (Run with --wipe to force rebuild)"
 else
     if [ -n "$DRY_RUN" ]; then
-        echo "  [dry-run] would run: memorykg build-index${WIPE_FLAG:+ --wipe}"
+        echo "  [dry-run] would run: memorykg build-index"
     else
         echo "  → Building vector index at: ${VECTORS_PATH}"
-        _WIPE_ARG=${WIPE_FLAG:+--wipe}
-        (cd "${TARGET_REPO}" && "${MEMORYKG_BIN}" build-index ${_WIPE_ARG})
+        # See the note in step 5: build-index has no --wipe either.
+        (cd "${TARGET_REPO}" && "${MEMORYKG_BIN}" build-index)
         if [ -f "$VECTORS_PATH" ]; then
             echo "  ✓ Built: ${VECTORS_PATH}"
         else
@@ -579,8 +582,6 @@ echo "  Claude commands installed:"
 echo "    ✓ ~/.claude/commands/memorykg.md"
 echo "    ✓ ~/.claude/commands/memorykg-rebuild.md"
 echo "    ✓ ~/.claude/commands/setup-mcp.md"
-echo "    ✓ ~/.claude/commands/changelog-commit.md"
-echo "    ✓ ~/.claude/commands/release.md"
 echo ""
 echo "  Providers configured:"
 ( [ "$DO_CLAUDE" = "1" ] || [ "$DO_KILO" = "1" ] ) && echo "    ✓ Claude Code + Kilo Code  (.mcp.json)"

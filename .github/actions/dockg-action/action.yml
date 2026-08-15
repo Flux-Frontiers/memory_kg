@@ -151,8 +151,7 @@ runs:
       shell: bash
       run: |
         memorykg-build-graph \
-          "${{ steps.resolve-paths.outputs.corpus-abs }}" \
-          --wipe
+          --repo "${{ steps.resolve-paths.outputs.corpus-abs }}"
 
     # ------------------------------------------------------------------
     # 6. Build LanceDB semantic index  (skip when cache was restored)
@@ -164,9 +163,8 @@ runs:
         DOCKG_MODEL: ${{ inputs.model }}
       run: |
         memorykg-build-index \
-          "${{ steps.resolve-paths.outputs.corpus-abs }}" \
-          --model "${{ inputs.model }}" \
-          --wipe
+          --repo "${{ steps.resolve-paths.outputs.corpus-abs }}" \
+          --model "${{ inputs.model }}"
 
     # ------------------------------------------------------------------
     # 7. Run thorough analysis
