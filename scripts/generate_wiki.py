@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Generate GitHub Wiki pages for the code_kg repository.
+Generate GitHub Wiki pages for the memory_kg repository.
 
 This script creates wiki pages by processing markdown files from docs/,
 article/, and README.md, structuring them appropriately for the GitHub wiki.
@@ -9,10 +9,9 @@ All content is sourced from living markdown files — no hardcoded content strin
 Usage:
     python scripts/generate_wiki.py
     python scripts/generate_wiki.py --dry-run
-    python scripts/generate_wiki.py --repo Flux-Frontiers/code_kg
+    python scripts/generate_wiki.py --repo Flux-Frontiers/memory_kg
 
 Author: Eric G. Suchanek, PhD
-Last Revision: 2026-03-02 14:03:04
 """
 
 import argparse
@@ -155,7 +154,7 @@ def generate_installation_page(readme_path: Path) -> str:
     if section is None:
         return (
             "# Installation\n\n"
-            "See [README.md](https://github.com/Flux-Frontiers/code_kg/blob/main/README.md) "
+            "See [README.md](https://github.com/Flux-Frontiers/memory_kg/blob/main/README.md) "
             "for installation instructions."
         )
 
@@ -186,7 +185,7 @@ def generate_cli_reference_page(readme_path: Path) -> str:
     if section is None:
         return (
             "# CLI Reference\n\n"
-            "See [README.md](https://github.com/Flux-Frontiers/code_kg/blob/main/README.md) "
+            "See [README.md](https://github.com/Flux-Frontiers/memory_kg/blob/main/README.md) "
             "for CLI documentation."
         )
 
@@ -259,7 +258,7 @@ def generate_python_api_page(docs_dir: Path) -> str:
 
     header = """# Python API Reference
 
-This page documents the public Python API for the `code_kg` package.
+This page documents the public Python API for the `memory_kg` package.
 For architectural context see the [Architecture](Architecture) page.
 
 """
@@ -322,7 +321,7 @@ def generate_sidebar_page() -> str:
 
 ## Resources
 
-- [GitHub Repository](https://github.com/Flux-Frontiers/code_kg)
+- [GitHub Repository](https://github.com/Flux-Frontiers/memory_kg)
 - [Medium Article](https://medium.com/@coder/code-kg)
 """
     return sidebar
@@ -341,7 +340,7 @@ def clone_wiki(repo_url: str, temp_dir: str) -> None:
     ``GITHUB_TOKEN`` / ``GITHUB_PERSONAL_ACCESS_TOKEN`` environment variables,
     and finally to an unauthenticated HTTPS clone.
 
-    :param repo_url: GitHub repository slug (e.g. ``'Flux-Frontiers/code_kg'``).
+    :param repo_url: GitHub repository slug (e.g. ``'Flux-Frontiers/memory_kg'``).
     :param temp_dir: Destination directory for the wiki clone.
     """
     github_token: str | None = None
@@ -444,8 +443,8 @@ def main() -> None:
     )
     parser.add_argument(
         "--repo",
-        default="Flux-Frontiers/code_kg",
-        help="GitHub repository slug (default: Flux-Frontiers/code_kg)",
+        default="Flux-Frontiers/memory_kg",
+        help="GitHub repository slug (default: Flux-Frontiers/memory_kg)",
     )
 
     args = parser.parse_args()

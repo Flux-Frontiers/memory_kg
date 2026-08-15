@@ -25,9 +25,9 @@ This command accepts an optional corpus path argument:
 
 All artifact paths use the defaults relative to `CORPUS_ROOT`:
 - `DB_PATH` → `$CORPUS_ROOT/.memorykg/graph.sqlite`
-- `LANCEDB_DIR` → `$CORPUS_ROOT/.memorykg/lancedb`
+- `VECTORS_PATH` → `$CORPUS_ROOT/.memorykg/vectors.sqlite`
 
-Do not pass `--db` or `--lancedb` flags — the commands default to `.memorykg/` automatically.
+Do not pass `--sqlite` or `--vectors` flags — the commands default to `.memorykg/` automatically.
 
 ---
 
@@ -70,12 +70,12 @@ The package is managed via Poetry, so all checks use `poetry run`.
    ```
 2. If it exists, ask the user:
    > "A knowledge graph already exists at `$CORPUS_ROOT/.memorykg/graph.sqlite`. Rebuild it from scratch (wipe), or keep the existing graph?"
-   - **Wipe**: proceed with `--wipe`
+   - **Wipe**: just run the build below — it always rebuilds from scratch
    - **Keep**: skip to Step 3
 
 3. Run the corpus parsing build:
    ```bash
-   poetry run memorykg build-graph "$CORPUS_ROOT" --wipe
+   poetry run memorykg build-graph --repo "$CORPUS_ROOT"
    ```
 4. Verify the database was created and is non-empty:
    ```bash
@@ -85,24 +85,24 @@ The package is managed via Poetry, so all checks use `poetry run`.
 
 ---
 
-## Step 3: Build the Semantic Index (LanceDB)
+## Step 3: Build the Semantic Index (sqlite-vec)
 
-1. Check whether `LANCEDB_DIR` already exists and is non-empty:
+1. Check whether the vector store already exists and is non-empty:
    ```bash
-   ls "$CORPUS_ROOT/.memorykg/lancedb" 2>/dev/null
+   ls -l "$CORPUS_ROOT/.memorykg/vectors.sqlite" 2>/dev/null
    ```
 2. If it exists and the user chose to keep the SQLite graph (Step 2), ask:
-   > "A vector index already exists at `$CORPUS_ROOT/.memorykg/lancedb`. Rebuild it?"
-   - **Yes**: proceed with `--wipe`
+   > "A vector index already exists at `$CORPUS_ROOT/.memorykg/vectors.sqlite`. Rebuild it?"
+   - **Yes**: just run the build below — it always rebuilds from scratch
    - **No**: skip to Step 4
 
 3. Run the embedding build (from corpus root so defaults resolve):
    ```bash
-   cd "$CORPUS_ROOT" && poetry run memorykg build-index --wipe
+   cd "$CORPUS_ROOT" && poetry run memorykg build-index
    ```
-4. Confirm the LanceDB directory was populated:
+4. Confirm the vector store was populated:
    ```bash
-   ls -lh "$LANCEDB_DIR"
+   ls -lh "$VECTORS_PATH"
    ```
 5. Report the number of indexed vectors (shown in the command output).
 
@@ -114,7 +114,7 @@ Run a quick end-to-end test to confirm the full pipeline works before configurin
 
 1. Run a graph stats check via the MCP server tools (or CLI):
    ```bash
-   cd "$CORPUS_ROOT" && poetry run memorykg query "document overview" --limit 3
+   cd "$CORPUS_ROOT" && poetry run memorykg query "document overview" --k 3
    ```
 
 2. If the command errors, diagnose and report the issue before proceeding.
@@ -309,7 +309,7 @@ Present a summary of everything that was done:
 ```
 ✓ Corpus indexed:    <CORPUS_ROOT>
 ✓ SQLite graph:      <CORPUS_ROOT>/.memorykg/graph.sqlite  (<N> nodes, <M> edges)
-✓ LanceDB index:     <CORPUS_ROOT>/.memorykg/lancedb  (<V> vectors)
+✓ Vector store:      <CORPUS_ROOT>/.memorykg/vectors.sqlite  (<V> vectors)
 ✓ Smoke test:        passed
 ✓ Claude Code config: <CORPUS_ROOT>/.mcp.json
 ✓ Claude Desktop config: <CONFIG_PATH>
@@ -346,8 +346,8 @@ When the document corpus changes, the graph must be rebuilt. Remind the user:
 
 ```bash
 # Rebuild both artifacts (idempotent — safe to re-run)
-poetry run memorykg build-graph "$CORPUS_ROOT" --wipe
-cd "$CORPUS_ROOT" && poetry run memorykg build-index --wipe
+poetry run memorykg build-graph --repo "$CORPUS_ROOT"
+cd "$CORPUS_ROOT" && poetry run memorykg build-index
 ```
 
 The MCP client configs do not need to change — they point to the same file paths.

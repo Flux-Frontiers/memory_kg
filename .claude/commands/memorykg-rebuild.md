@@ -1,6 +1,6 @@
 # MemoryKG Rebuild
 
-Wipe and rebuild the MemoryKG SQLite knowledge graph and LanceDB semantic index for a document corpus. Execute the following steps in sequence.
+Rebuild the MemoryKG SQLite knowledge graph and sqlite-vec semantic index for a document corpus. Execute the following steps in sequence.
 
 ## Command Argument Handling
 
@@ -21,7 +21,7 @@ Wipe and rebuild the MemoryKG SQLite knowledge graph and LanceDB semantic index 
    ```
 3. If no documents are found, stop and report the issue.
 
-All artifact paths default to `$CORPUS_ROOT/.memorykg/` — do not pass `--db` or `--lancedb` flags.
+All artifact paths default to `$CORPUS_ROOT/.memorykg/` — do not pass `--sqlite` or `--vectors` flags.
 
 Detect how to invoke MemoryKG — try in order:
 1. `poetry run memorykg` (preferred if inside a Poetry project)
@@ -76,7 +76,7 @@ Present a summary:
 ```
 ✓ Corpus root:   <CORPUS_ROOT>
 ✓ SQLite graph:  <CORPUS_ROOT>/.memorykg/graph.sqlite  (<N> nodes, <M> edges)
-✓ LanceDB index: <CORPUS_ROOT>/.memorykg/lancedb  (<V> vectors)
+✓ Vector store:  <CORPUS_ROOT>/.memorykg/vectors.sqlite  (<V> vectors)
 
 Node breakdown:  document=X  section=X  chunk=X  topic=X  entity=X  keyword=X
 Edge breakdown:  CONTAINS=X  NEXT=X  REFERENCES=X  SIMILAR_TO=X  HAS_TOPIC=X

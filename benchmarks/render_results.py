@@ -40,7 +40,6 @@ Custom output::
     python benchmarks/render_results.py results.jsonl --out benchmarks/BENCHMARKS_MEMKG.md --pdf
 
 Author: Eric G. Suchanek, PhD
-Last Revision: 2026-04-08
 License: Elastic 2.0
 """
 

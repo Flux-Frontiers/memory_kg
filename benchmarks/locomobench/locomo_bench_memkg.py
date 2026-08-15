@@ -42,7 +42,6 @@ All-in-one:
     python benchmarks/locomobench/locomo_bench_memkg.py all /path/to/locomo10.json
 
 Author: Eric G. Suchanek, PhD
-Last Revision: 2026-04-25
 
 License: Elastic 2.0
 """

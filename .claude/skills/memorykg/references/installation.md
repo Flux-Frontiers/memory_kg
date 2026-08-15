@@ -17,19 +17,19 @@
 
 | Flag | Required | Default | Description |
 |---|---|---|---|
-| `<corpus>` | ✅ | — | Corpus root path (positional) |
-| `--db` | | `.memorykg/graph.sqlite` | SQLite output path |
-| `--wipe` | | false | Delete existing graph first |
+| `--repo` | | `.` | Corpus root directory (a flag, **not** positional) |
+| `--sqlite` | | `.memorykg/graph.sqlite` | SQLite output path |
+| `--update` | | false | Incremental update; the default is a full rebuild |
 | `--exclude-dir` | | — | Directory name(s) to exclude (repeatable) |
 
 ### `memorykg build-index`
 
 | Flag | Required | Default | Description |
 |---|---|---|---|
-| `--db` | | `.memorykg/graph.sqlite` | Path to SQLite graph |
-| `--lancedb` | | `.memorykg/lancedb` | LanceDB output directory |
-| `--model` | | `all-mpnet-base-v2` | Sentence-transformer model |
-| `--wipe` | | false | Delete existing vectors first |
+| `--sqlite` | | `.memorykg/graph.sqlite` | Path to SQLite graph |
+| `--vectors` | | `.memorykg/vectors.sqlite` | sqlite-vec vector store |
+| `--model` | | `BAAI/bge-small-en-v1.5` | Sentence-transformer model |
+| `--update` | | false | Incremental update; the default is a full rebuild |
 
 ### `memorykg mcp`
 
@@ -37,14 +37,35 @@
 |---|---|---|
 | `--repo` | `.` | Corpus root |
 | `--db` | `.memorykg/graph.sqlite` | SQLite path |
-| `--lancedb` | `.memorykg/lancedb` | LanceDB directory |
+| `--vectors` | `.memorykg/vectors.sqlite` | sqlite-vec vector store |
 | `--transport` | `stdio` | `stdio` or `sse` |
 
 ### `memorykg query`
 
 ```bash
-poetry run memorykg query "your query here" --limit 10
+poetry run memorykg query "your query here" --k 10
 ```
+
+| Flag | Default | Description |
+|---|---|---|
+| `--repo` | `.` | Corpus root directory |
+| `--sqlite` | `.memorykg/graph.sqlite` | Path to the SQLite graph |
+| `--vectors` | `.memorykg/vectors.sqlite` | Path to the sqlite-vec store |
+| `--k` | `10` | Number of seed hits (there is no `--limit`) |
+| `--hop` | `1` | Graph expansion hops from each seed |
+| `--rels` | all | Restrict expansion to these relation types |
+| `--max-nodes` | — | Cap on total nodes returned |
+| `--model` | `BAAI/bge-small-en-v1.5` | Sentence-transformer model |
+
+### `memorykg install-hooks`
+
+Installs the pre-commit hook that rebuilds the local index and saves a snapshot
+on each commit.
+
+### `memorykg download-model`
+
+Pre-fetches the sentence-transformer model so the first build does not pay the
+download cost.
 
 ---
 
@@ -76,7 +97,7 @@ poetry run memorykg query "your query here" --limit 10
         "mcp",
         "--repo",    "/absolute/path/to/corpus",
         "--db",      "/absolute/path/to/corpus/.memorykg/graph.sqlite",
-        "--lancedb", "/absolute/path/to/corpus/.memorykg/lancedb"
+        "--vectors", "/absolute/path/to/corpus/.memorykg/vectors.sqlite"
       ]
     }
   }
@@ -97,7 +118,7 @@ GitHub Copilot uses a different schema — `"servers"` key (not `"mcpServers"`) 
         "mcp",
         "--repo",    "/absolute/path/to/corpus",
         "--db",      "/absolute/path/to/corpus/.memorykg/graph.sqlite",
-        "--lancedb", "/absolute/path/to/corpus/.memorykg/lancedb"
+        "--vectors", "/absolute/path/to/corpus/.memorykg/vectors.sqlite"
       ]
     }
   }
@@ -119,7 +140,7 @@ VS Code will prompt you to **Trust** the server on first use.
         "mcp",
         "--repo",    "/absolute/path/to/corpus",
         "--db",      "/absolute/path/to/corpus/.memorykg/graph.sqlite",
-        "--lancedb", "/absolute/path/to/corpus/.memorykg/lancedb"
+        "--vectors", "/absolute/path/to/corpus/.memorykg/vectors.sqlite"
       ]
     }
   }
@@ -176,7 +197,7 @@ Get venv path: `poetry env info --path`
 
 ```bash
 # Sample query (CLI)
-cd /path/to/corpus && poetry run memorykg query "document structure" --limit 5
+cd /path/to/corpus && poetry run memorykg query "document structure" --k 5
 
 # Verify SQLite row counts
 sqlite3 .memorykg/graph.sqlite "SELECT COUNT(*) FROM nodes; SELECT COUNT(*) FROM edges;"
@@ -191,11 +212,11 @@ sqlite3 .memorykg/graph.sqlite "SELECT id FROM nodes WHERE kind='document' LIMIT
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| `WARNING: SQLite database not found` | Graph not built | Run `memorykg build-graph <corpus>` first |
-| `mcp package not found` | Optional dep missing | `poetry add mcp` or `poetry install --extras mcp` |
+| `WARNING: SQLite database not found` | Graph not built | Run `memorykg build-graph --repo <corpus>` first |
+| `mcp package not found` | Install is incomplete | `mcp` is a core dependency — re-run `poetry install` (there is no `mcp` extra) |
 | No tools visible in MCP client | Relative paths or wrong location | Use absolute paths in `.mcp.json`; restart client |
-| Empty query results | LanceDB stale or missing | Run `memorykg build-index --wipe` from corpus root |
-| Wrong corpus queried | Wrong `--repo` path | Verify `--repo`, `--db`, and `--lancedb` all point to same corpus |
-| Stale nodes after deleting files | Orphan entries in graph | Always use `--wipe` after deletions or renames |
+| Empty query results | Vector store stale or missing | Run `memorykg build-index` from corpus root |
+| Wrong corpus queried | Wrong `--repo` path | Verify `--repo`, `--sqlite` and `--vectors` all point to same corpus |
+| Stale nodes after deleting files | Orphan entries in graph | Rebuild without `--update` — a plain build always clears first |
 | `Command not found: memorykg` in VS Code MCP log | VS Code doesn't inherit shell PATH | Use absolute path: `"command": "/path/to/venv/bin/memorykg"` |
 | Cline shows all repos pointing to same path | Global config used | Use unique entry name per repo (e.g. `memorykg-myproject`) |

@@ -60,7 +60,7 @@ A **deterministic, explainable knowledge graph** built from conversational logs 
 
 Structure is treated as ground truth. Semantic search is a tool, not the system. The result is a searchable, auditable representation that supports precise navigation, source-grounded passage extraction, and downstream LLM reasoning — a practical foundation for **Knowledge-Graph RAG (KGRAG)**.
 
-MemoryKG shares its architecture with [PyCodeKG](https://github.com/Flux-Frontiers/code_kg) (Python codebases) and [DocKG](https://github.com/Flux-Frontiers/doc_kg) (general document corpora).
+MemoryKG shares its architecture with [PyCodeKG](https://github.com/Flux-Frontiers/pycode_kg) (Python codebases) and [DocKG](https://github.com/Flux-Frontiers/doc_kg) (general document corpora).
 
 ---
 

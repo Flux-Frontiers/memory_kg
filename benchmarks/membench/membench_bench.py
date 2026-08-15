@@ -39,7 +39,6 @@ All-in-one:
     python benchmarks/membench/membench_bench.py all --topic movie --limit 200
 
 Author: Eric G. Suchanek, PhD
-Last Revision: 2026-04-25
 
 License: Elastic 2.0
 """
