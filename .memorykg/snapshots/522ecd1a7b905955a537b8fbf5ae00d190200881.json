@@ -4,7 +4,7 @@
   "timestamp": "2026-08-02T20:14:25.693981+00:00",
   "version": "0.7.0",
   "metrics": {
-    "db_path": "/Users/egs/repos/memory_kg/.memorykg/graph.sqlite",
+    "db_path": ".memorykg/graph.sqlite",
     "total_nodes": 3720,
     "total_edges": 20867,
     "node_counts": {
