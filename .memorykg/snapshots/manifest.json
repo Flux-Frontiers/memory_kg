@@ -9,7 +9,7 @@
       "version": "0.7.0",
       "file": "92f29d06e99afffef54d0710b101554a74a2eace.json",
       "metrics": {
-        "db_path": "/Users/egs/repos/memory_kg/.memorykg/graph.sqlite",
+        "db_path": ".memorykg/graph.sqlite",
         "total_nodes": 3710,
         "total_edges": 21820,
         "node_counts": {
@@ -47,7 +47,7 @@
       "version": "0.7.0",
       "file": "e0cd1fe5884dca1668674a92ed5ad89f9dff146d.json",
       "metrics": {
-        "db_path": "/Users/egs/repos/memory_kg/.memorykg/graph.sqlite",
+        "db_path": ".memorykg/graph.sqlite",
         "total_nodes": 3699,
         "total_edges": 20780,
         "node_counts": {
@@ -90,7 +90,7 @@
       "version": "0.7.0",
       "file": "1b9b02735e66230ca75a7fa5d94c32fd514f41c9.json",
       "metrics": {
-        "db_path": "/Users/egs/repos/memory_kg/.memorykg/graph.sqlite",
+        "db_path": ".memorykg/graph.sqlite",
         "total_nodes": 3700,
         "total_edges": 20736,
         "node_counts": {
@@ -128,7 +128,7 @@
       "version": "0.7.0",
       "file": "522ecd1a7b905955a537b8fbf5ae00d190200881.json",
       "metrics": {
-        "db_path": "/Users/egs/repos/memory_kg/.memorykg/graph.sqlite",
+        "db_path": ".memorykg/graph.sqlite",
         "total_nodes": 3720,
         "total_edges": 20867,
         "node_counts": {
@@ -171,7 +171,7 @@
       "version": "0.7.0",
       "file": "857d11628715ddc72e61914c8640f25bb65291bb.json",
       "metrics": {
-        "db_path": "/Users/egs/repos/memory_kg/.memorykg/graph.sqlite",
+        "db_path": ".memorykg/graph.sqlite",
         "total_nodes": 3738,
         "total_edges": 21047,
         "node_counts": {
@@ -214,7 +214,7 @@
       "version": "0.7.0",
       "file": "69247a62f3580873057297276e93d072551eaa05.json",
       "metrics": {
-        "db_path": "/Users/egs/repos/memory_kg/.memorykg/graph.sqlite",
+        "db_path": ".memorykg/graph.sqlite",
         "total_nodes": 3751,
         "total_edges": 21078,
         "node_counts": {
