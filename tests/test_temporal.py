@@ -1,0 +1,146 @@
+"""MemoryKG's adoption of the shared kg_utils.temporal contract.
+
+This is the module where the contract earns its keep for personal-agent work:
+real temporal memory without a large backend. Hindsight draws the same
+distinction with its own ``occurred_start`` / ``occurred_end`` fields, and
+personal_agent's DiaryTransformer already writes to them — so a MemoryKG index
+speaking this vocabulary is a lightweight substitute for that part of it.
+
+The distinction is the point. A note written tonight about last Tuesday
+happened on Tuesday and was recorded tonight; a timeline that files it under
+tonight is wrong about it.
+"""
+
+from __future__ import annotations
+
+import os
+from pathlib import Path
+
+import pytest
+from kg_utils.temporal import parse_temporal, read_span
+
+from memory_kg.memorykg import _document_temporal
+
+# 2025-06-15T15:06:40Z — deliberately long after the remembered date below,
+# so "occurred" and "recorded" cannot be confused for one another.
+_MTIME = 1750000000
+
+_DATED = "---\ntimestamp: 2026-04-10\ncategory: work\n---\n\nRemembered a thing.\n"
+_PLAIN = "Just a note, with no frontmatter at all.\n"
+
+
+@pytest.fixture
+def doc(tmp_path: Path):
+    def _make(text: str, name: str = "m.md") -> Path:
+        p = tmp_path / name
+        p.write_text(text, encoding="utf-8")
+        os.utime(p, (_MTIME, _MTIME))
+        return p
+
+    return _make
+
+
+class TestOccurredVersusRecorded:
+    def test_both_keys_when_the_document_is_dated(self, doc):
+        p = doc(_DATED)
+        assert set(_document_temporal(p, _DATED)) == {"occurred_start", "recorded_at"}
+
+    def test_occurred_comes_from_the_frontmatter(self, doc):
+        p = doc(_DATED)
+        assert _document_temporal(p, _DATED)["occurred_start"] == "2026-04-10"
+
+    def test_recorded_comes_from_the_file(self, doc):
+        p = doc(_DATED)
+        recorded = _document_temporal(p, _DATED)["recorded_at"]
+        assert parse_temporal(recorded)[0].year == 2025
+
+    def test_a_memory_is_filed_by_when_it_happened(self, doc):
+        """Written June 2025, about April 2026. It belongs in April 2026."""
+        p = doc(_DATED)
+        span = read_span(_document_temporal(p, _DATED))
+        assert span.overlaps("2026-04-01", "2026-04-30")
+
+    def test_not_filed_by_when_it_was_written(self, doc):
+        p = doc(_DATED)
+        span = read_span(_document_temporal(p, _DATED))
+        assert not span.overlaps("2025-06-01", "2025-06-30")
+
+
+class TestUndatedDocuments:
+    def test_plain_document_gets_recorded_only(self, doc):
+        p = doc(_PLAIN)
+        assert set(_document_temporal(p, _PLAIN)) == {"recorded_at"}
+
+    def test_a_recorded_only_document_is_still_datable(self, doc):
+        """The contract falls back to recorded_at, so these are not lost."""
+        p = doc(_PLAIN)
+        span = read_span(_document_temporal(p, _PLAIN))
+        assert span.overlaps("2025-06-01", "2025-06-30")
+        assert not span.overlaps("2026-01-01", "2026-12-31")
+
+    def test_frontmatter_without_a_timestamp_is_fine(self, doc):
+        text = "---\ncategory: work\n---\n\nA note.\n"
+        p = doc(text)
+        assert set(_document_temporal(p, text)) == {"recorded_at"}
+
+
+class TestRobustness:
+    def test_unparseable_timestamp_keeps_the_recorded_time(self, doc):
+        """One bad date must not cost the document its date entirely."""
+        text = "---\ntimestamp: sometime-last-spring\n---\n\nA note.\n"
+        p = doc(text)
+        out = _document_temporal(p, text)
+        assert "recorded_at" in out
+        assert "occurred_start" not in out
+
+    def test_missing_file_yields_nothing(self, tmp_path):
+        assert _document_temporal(tmp_path / "gone.md", _PLAIN) == {}
+
+    def test_year_precision_is_preserved(self, doc):
+        text = "---\ntimestamp: 2026\n---\n\nA note.\n"
+        p = doc(text)
+        span = read_span(_document_temporal(p, text))
+        assert span.overlaps("2026-07-01", "2026-07-31")
+
+
+class TestNodesCarryIt:
+    """Documents, sections and chunks alike — a query hits chunks."""
+
+    def test_metadata_field_defaults_empty(self):
+        from memory_kg.memorykg import DocNode
+
+        n = DocNode(
+            id="d",
+            kind="document",
+            name="n",
+            title=None,
+            file_path="f.md",
+            char_start=0,
+            char_end=1,
+            heading_level=None,
+            text="t",
+        )
+        assert n.metadata == {}
+
+    def test_metadata_round_trips_through_the_store(self, tmp_path):
+        from memory_kg.memorykg import DocNode
+        from memory_kg.store import GraphStore
+
+        store = GraphStore(tmp_path / "g.sqlite")
+        node = DocNode(
+            id="doc:m.md",
+            kind="document",
+            name="m",
+            title=None,
+            file_path="m.md",
+            char_start=0,
+            char_end=1,
+            heading_level=None,
+            text="t",
+            metadata={"occurred_start": "2026-04-10"},
+        )
+        store._upsert_nodes([node])
+        got = store.node("doc:m.md")
+        store.close()
+        assert got is not None
+        assert got["metadata"] == {"occurred_start": "2026-04-10"}

@@ -7,6 +7,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+> **Blocked on the `kgmodule-utils 0.18.0` release.** The floor names 0.18.0;
+> `poetry.lock` still resolves 0.13.2 and cannot follow until the version is on
+> PyPI. One `poetry lock` after the release clears it.
+
+### Added
+
+- **Temporal memory: documents carry `occurred_start` and `recorded_at`.**
+  This is where the shared `kg_utils.temporal` contract earns its keep for
+  personal-agent work — real temporal memory handling without a large backend.
+  Hindsight draws the same distinction with its own `occurred_start` /
+  `occurred_end` fields, and personal_agent's `DiaryTransformer` already writes
+  to them, so a MemoryKG index speaking this vocabulary is a lightweight
+  substitute for that part of it.
+
+  The distinction is the whole point. A note written tonight about last Tuesday
+  *happened* on Tuesday and was *recorded* tonight; a timeline that files it
+  under tonight is wrong about it. So:
+
+  - `occurred_start` — the document's own `timestamp:` frontmatter, the
+    convention DiaryKG's corpora use. Precision is preserved, so a memory dated
+    only by year stays a year.
+  - `recorded_at` — the file's modification time, always available, saying when
+    the memory was written down and claiming nothing about when the remembered
+    thing happened.
+
+  A document with no frontmatter date gets `recorded_at` alone, and is still
+  datable: the contract falls back to it, so undated notes are filtered and
+  ordered rather than dropped. An unparseable frontmatter date costs the
+  document its `occurred_start` but never its recorded time, and never fails a
+  build.
+
+  Documents, sections and chunks are all stamped, because a federated query
+  hits chunks — an undated chunk drops out of a time-scoped query even when its
+  document is dated.
+
+- **`DocNode.metadata`, persisted.** MemoryKG's store is its own copy of the
+  node schema and had no column for extension data. Added, along with the three
+  hand-written `SELECT`s that feed the single `_row_to_node` mapper — all three,
+  since a missed one reads as "undated" rather than failing.
+
+  **No in-place migration.** A MemoryKG index is rebuilt from its corpus, so an
+  older database is replaced rather than altered. Querying one before
+  rebuilding fails loudly on the missing column, which is the signal to rebuild.
+
+
 ### Added
 
 ### Changed

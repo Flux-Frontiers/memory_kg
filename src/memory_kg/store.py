@@ -43,7 +43,12 @@ CREATE TABLE IF NOT EXISTS nodes (
   char_start    INTEGER,
   char_end      INTEGER,
   heading_level INTEGER,
-  text          TEXT
+  text          TEXT,
+  -- Added 2026-08-22. There is no in-place migration: a MemoryKG index is
+  -- rebuilt from its corpus, so an older database is replaced rather than
+  -- altered. Querying one before rebuilding fails loudly on this column,
+  -- which is the signal to rebuild.
+  metadata      TEXT
 );
 
 CREATE TABLE IF NOT EXISTS edges (
@@ -208,14 +213,16 @@ class GraphStore:
                 n.char_end,
                 n.heading_level,
                 n.text,
+                json.dumps(n.metadata, ensure_ascii=False) if n.metadata else None,
             )
             for n in nodes
         ]
         self.con.executemany(
             """
             INSERT INTO nodes
-              (id, kind, name, title, file_path, char_start, char_end, heading_level, text)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+              (id, kind, name, title, file_path, char_start, char_end, heading_level,
+               text, metadata)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(id) DO UPDATE SET
               kind=excluded.kind,
               name=excluded.name,
@@ -224,7 +231,8 @@ class GraphStore:
               char_start=excluded.char_start,
               char_end=excluded.char_end,
               heading_level=excluded.heading_level,
-              text=excluded.text
+              text=excluded.text,
+              metadata=excluded.metadata
             """,
             rows,
         )
@@ -264,7 +272,7 @@ class GraphStore:
         """
         row = self.con.execute(
             """
-            SELECT id, kind, name, title, file_path, char_start, char_end, heading_level, text
+            SELECT id, kind, name, title, file_path, char_start, char_end, heading_level, text, metadata
             FROM nodes WHERE id = ?
             """,
             (node_id,),
@@ -321,7 +329,7 @@ class GraphStore:
         where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
         rows = self.con.execute(
             f"""
-            SELECT id, kind, name, title, file_path, char_start, char_end, heading_level, text
+            SELECT id, kind, name, title, file_path, char_start, char_end, heading_level, text, metadata
             FROM nodes {where}
             ORDER BY file_path, char_start
             """,
@@ -355,7 +363,7 @@ class GraphStore:
         where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
         cursor = self.con.execute(
             f"""
-            SELECT id, kind, name, title, file_path, char_start, char_end, heading_level, text
+            SELECT id, kind, name, title, file_path, char_start, char_end, heading_level, text, metadata
             FROM nodes {where}
             ORDER BY file_path, char_start
             """,
@@ -517,4 +525,24 @@ def _row_to_node(row: tuple) -> dict:
         "char_end": row[6],
         "heading_level": row[7],
         "text": row[8],
+        "metadata": _decode_metadata(row[9] if len(row) > 9 else None),
     }
+
+
+def _decode_metadata(blob: str | None) -> dict:
+    """Decode a stored metadata blob, tolerating anything unreadable.
+
+    Extension data is not worth making a node unreadable over, so a blob that
+    fails to parse -- or that decodes to something other than an object --
+    reads as ``{}`` rather than raising.
+
+    :param blob: JSON text from the ``metadata`` column, or ``None``.
+    :return: The decoded mapping, or ``{}``.
+    """
+    if not blob:
+        return {}
+    try:
+        loaded = json.loads(blob)
+    except (TypeError, ValueError):
+        return {}
+    return loaded if isinstance(loaded, dict) else {}

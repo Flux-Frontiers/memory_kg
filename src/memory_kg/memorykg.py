@@ -38,11 +38,13 @@ import os
 import re
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Literal, cast
+from typing import Any, Literal, cast
 
 from kg_utils.embed import DEFAULT_MODEL as DEFAULT_MODEL
+from kg_utils.temporal import temporal_metadata
 
 from memory_kg.relations import (
     cooccur_pairs,
@@ -62,6 +64,56 @@ from memory_kg.topics import TopicExtractor
 # ============================================================================
 
 
+#: A ``timestamp:`` line in a document's YAML frontmatter -- the convention
+#: DiaryKG's corpora use and personal_agent's DiaryTransformer emits.
+_FM_TIMESTAMP_RE = re.compile(r"^---\n(.*?)\n---", re.DOTALL)
+_TIMESTAMP_LINE_RE = re.compile(r"^timestamp:\s*(\S+)\s*$", re.MULTILINE)
+
+
+def _document_temporal(path: Path, raw_text: str) -> dict[str, str]:
+    """Derive the shared temporal contract for one memory document.
+
+    Keeps *occurred* and *recorded* apart, which is the whole point for memory:
+    a note written tonight about last Tuesday happened on Tuesday and was
+    recorded tonight, and a timeline that files it under tonight is wrong about
+    it. The same distinction Hindsight draws with its own
+    ``occurred_start``/``occurred_end`` fields.
+
+    - ``occurred_start`` -- the document's own ``timestamp:`` frontmatter, when
+      it has one. Precision is preserved, so a memory dated only by year stays
+      a year.
+    - ``recorded_at`` -- the file's modification time, always available, which
+      says when the memory was written down and claims nothing about when the
+      remembered thing happened.
+
+    A document with no frontmatter date gets ``recorded_at`` alone; the
+    contract still treats such a node as datable, by that.
+
+    :param path: Absolute path to the source document.
+    :param raw_text: The document's full text, for frontmatter.
+    :return: The contract keys, or ``{}`` when neither source yields a date.
+    """
+    occurred: str | None = None
+    block = _FM_TIMESTAMP_RE.match(raw_text)
+    if block and (line := _TIMESTAMP_LINE_RE.search(block.group(1))):
+        occurred = line.group(1)
+
+    try:
+        mtime = datetime.fromtimestamp(path.stat().st_mtime, tz=UTC)
+    except (OSError, ValueError, OverflowError):
+        mtime = None
+
+    try:
+        return temporal_metadata(occurred_start=occurred, recorded_at=mtime)
+    except (ValueError, TypeError):
+        # An unparseable frontmatter date must not cost the document its
+        # recorded time, nor fail a corpus build.
+        try:
+            return temporal_metadata(recorded_at=mtime)
+        except (ValueError, TypeError):
+            return {}
+
+
 @dataclass(frozen=True)
 class DocNode:
     """
@@ -78,6 +130,9 @@ class DocNode:
     :param char_end: End character offset
     :param heading_level: Markdown heading level (1–6) for section nodes; None otherwise
     :param text: Raw text content of this node
+    :param metadata: Domain-specific extension data, persisted as JSON. Carries
+                     the :mod:`kg_utils.temporal` contract keys for dated
+                     corpora; ``{}`` when a node has none.
     """
 
     id: str
@@ -89,6 +144,7 @@ class DocNode:
     char_end: int | None
     heading_level: int | None
     text: str | None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -351,6 +407,11 @@ def parse_corpus(
         topic_extractor = _get_topic_extractor()
 
         doc_title = _extract_doc_title(raw_text, abs_path)
+        # When this memory was written down. MemoryKG parses no dates out of a
+        # document's text, so it cannot say when the remembered thing happened
+        # -- only `recorded_at` is honest here, and the contract reads a
+        # recorded-only node as datable by that.
+        doc_temporal = _document_temporal(abs_path, raw_text)
         local_nodes[doc_id] = DocNode(
             id=doc_id,
             kind="document",
@@ -361,6 +422,7 @@ def parse_corpus(
             char_end=len(raw_text),
             heading_level=None,
             text=raw_text[:512],
+            metadata=dict(doc_temporal),
         )
 
         chunks = chunker.chunk(raw_text, file_path=file_path)
@@ -393,6 +455,7 @@ def parse_corpus(
                         char_end=char_end,
                         heading_level=section_level,
                         text=None,
+                        metadata=dict(doc_temporal),
                     )
                     local_edges[(doc_id, "CONTAINS", sec_id)] = DocEdge(
                         src=doc_id, rel="CONTAINS", dst=sec_id
@@ -413,6 +476,7 @@ def parse_corpus(
                 char_end=char_end,
                 heading_level=None,
                 text=text,
+                metadata=dict(doc_temporal),
             )
 
             local_edges[(parent_id, "CONTAINS", chunk_id)] = DocEdge(
