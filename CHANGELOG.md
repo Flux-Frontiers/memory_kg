@@ -42,6 +42,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   hits chunks — an undated chunk drops out of a time-scoped query even when its
   document is dated.
 
+- **One column list drives every node read.** `_NODE_COLUMNS` is now the single
+  source of truth: all three `SELECT`s interpolate it and `_row_to_node` builds
+  its dict by zipping against it, so a column cannot reach some read paths and
+  not others.
+
+  That failure is silent by construction — a `SELECT` omitting a column yields
+  a node dict missing that key, and a missing `metadata` key reads as "this
+  node is undated" rather than raising. It is how an unselected column reached
+  three of ftree_kg's query paths and one of doc_kg's.
+
+  Guarded by tests asserting `node()`, `query_nodes()` and `iter_nodes()`
+  return identical key sets, that every declared column is a key, and that
+  `metadata` carries its value through all three rather than merely existing.
+
 - **`DocNode.metadata`, persisted.** MemoryKG's store is its own copy of the
   node schema and had no column for extension data. Added, along with the three
   hand-written `SELECT`s that feed the single `_row_to_node` mapper — all three,

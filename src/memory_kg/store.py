@@ -30,6 +30,27 @@ from memory_kg.memorykg import DocEdge, DocNode
 # Schema
 # ---------------------------------------------------------------------------
 
+#: The node columns, in the order every read path selects them and
+#: :func:`_row_to_node` unpacks them. One tuple drives both, so a column can
+#: never reach some reads and not others -- the failure that put an unselected
+#: `metadata` column into three of ftree_kg's query paths and one of doc_kg's,
+#: where a missing key reads as "undated" rather than raising.
+_NODE_COLUMNS: tuple[str, ...] = (
+    "id",
+    "kind",
+    "name",
+    "title",
+    "file_path",
+    "char_start",
+    "char_end",
+    "heading_level",
+    "text",
+    "metadata",
+)
+
+#: ``"id, kind, name, ..."`` -- interpolated into every node SELECT.
+_NODE_COLUMN_SQL = ", ".join(_NODE_COLUMNS)
+
 _SCHEMA_SQL = """
 PRAGMA journal_mode=WAL;
 PRAGMA synchronous=NORMAL;
@@ -271,8 +292,8 @@ class GraphStore:
         :return: Node dict or ``None`` if not found.
         """
         row = self.con.execute(
-            """
-            SELECT id, kind, name, title, file_path, char_start, char_end, heading_level, text, metadata
+            f"""
+            SELECT {_NODE_COLUMN_SQL}
             FROM nodes WHERE id = ?
             """,
             (node_id,),
@@ -329,7 +350,7 @@ class GraphStore:
         where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
         rows = self.con.execute(
             f"""
-            SELECT id, kind, name, title, file_path, char_start, char_end, heading_level, text, metadata
+            SELECT {_NODE_COLUMN_SQL}
             FROM nodes {where}
             ORDER BY file_path, char_start
             """,
@@ -363,7 +384,7 @@ class GraphStore:
         where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
         cursor = self.con.execute(
             f"""
-            SELECT id, kind, name, title, file_path, char_start, char_end, heading_level, text, metadata
+            SELECT {_NODE_COLUMN_SQL}
             FROM nodes {where}
             ORDER BY file_path, char_start
             """,
@@ -514,19 +535,17 @@ class GraphStore:
 
 
 def _row_to_node(row: tuple) -> dict:
-    """Convert a raw SQLite row into a node dict."""
-    return {
-        "id": row[0],
-        "kind": row[1],
-        "name": row[2],
-        "title": row[3],
-        "file_path": row[4],
-        "char_start": row[5],
-        "char_end": row[6],
-        "heading_level": row[7],
-        "text": row[8],
-        "metadata": _decode_metadata(row[9] if len(row) > 9 else None),
-    }
+    """Convert a raw SQLite row into a node dict.
+
+    Built from :data:`_NODE_COLUMNS`, the same tuple every SELECT interpolates,
+    so the mapper cannot fall out of step with what was actually selected.
+
+    :param row: A row in ``_NODE_COLUMNS`` order.
+    :return: Node dict keyed by column name, with ``metadata`` decoded.
+    """
+    node = dict(zip(_NODE_COLUMNS, row, strict=True))
+    node["metadata"] = _decode_metadata(node.get("metadata"))
+    return node
 
 
 def _decode_metadata(blob: str | None) -> dict:
