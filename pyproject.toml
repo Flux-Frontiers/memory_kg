@@ -86,7 +86,7 @@ dependencies = [
     # numpy, rich, sentence-transformers, torch, transformers and sqlite-vec —
     # all of which are already declared directly above — plus `lancedb`, which
     # was the last thing pulling the retired backend into a clean install.
-    "kgmodule-utils[sqlite-vec]>=0.13.2",
+    "kgmodule-utils[sqlite-vec]>=0.18.0",
 ]
 
 [project.optional-dependencies]
@@ -145,7 +145,7 @@ ruff = ">=0.4.0,<0.16"
 optional = true
 
 [tool.poetry.group.kg.dependencies]
-doc-kg = ">=0.21.2"
+doc-kg = ">=0.22.0"
 pycode-kg = ">=0.23.1"
 
 [project.urls]
