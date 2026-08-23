@@ -1,0 +1,3302 @@
+[
+  {
+    "question": "For my upcoming performance review, I need to summarize my activity on the four key accounts from last month. Can you list each company and categorize its outcome as either 'Confirmed Demo', 'Stalled by Budget', 'Dead End (Bad Info)', or 'Pending Follow-up'?",
+    "answer": "Based on your updates, here is the summary for your four key accounts:\n- Confirmed Demo: QuantumLeap AI\n- Stalled by Budget: ChicBoutique Retail\n- Dead End (Bad Info): Precision Parts Manufacturing\n- Pending Follow-up: Global Freight Forwarders",
+    "category": "user_evidence",
+    "recall": 0.5,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 2
+    }
+  },
+  {
+    "question": "Can you please synthesize my follow-up scheduling protocols? I need a summary of the four distinct rules I use, detailing the action and timeline for each specific call outcome I've mentioned.",
+    "answer": "Based on your descriptions, here are your four follow-up scheduling rules:\n1. For a 'Warm Lead,' you schedule a follow-up in 3 days.\n2. For a 'Not Interested' outcome, you set a long-term reminder for a check-in after 6 months.\n3. If you reach the 'Wrong Person,' you try to find the correct contact within 24 hours.\n4. If a prospect makes a 'Specific Request' (e.g., 'call back in a month'), you honor their timeline, overriding your standard rules.",
+    "category": "user_evidence",
+    "recall": 0.25,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 1
+    }
+  },
+  {
+    "question": "Before my next mentoring session with the new hire, can you please summarize the four key pieces of my telemarketing advice that I've shared? I need a consolidated list covering my specific strategies for call timing, product positioning, objection handling, and data tracking.",
+    "answer": "Based on the advice you've shared, here is the consolidated summary for the new hire: 1) The best time to call new prospects is on Tuesday mornings. 2) Mention the software's SaaS integration capabilities within the first 90 seconds of the call. 3) If a prospect says 'just send me an email,' counter by asking two quick questions to tailor the information. 4) Log every detail from every call in your personal spreadsheet, as the company CRM is insufficient.",
+    "category": "user_evidence",
+    "recall": 0.25,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 1
+    }
+  },
+  {
+    "question": "Based on the costs I've mentioned for Cooper, can you calculate the total amount I've spent on him recently? I'm looking for the combined sum of his large bag of food, the vet visit for vaccinations, his new chew toy, and the puppy training class.",
+    "answer": "Based on the information you've provided, the total amount you've spent on Cooper for those items is $360. That includes $70 for food, $120 for the vet visit, $20 for the chew toy, and $150 for the training class.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "A friend wants to buy me some coffee for my birthday and asked for my exact preferences. To make sure they get it right, can you summarize my four specific coffee preferences for me: my brewing method, preferred roast, bean origin, and how I take it?",
+    "answer": "Your preferred brewing method is a French press, you exclusively drink dark roast coffee, your favorite bean origin is Sumatra, and you always take your coffee black.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "My family is asking for an update on the move. Based on our recent chats, could you summarize which three areas I've already organized and which room I've mentioned is still completely filled with boxes?",
+    "answer": "Based on your updates, you have organized the kitchen, your bedroom, and the garage. The room that you mentioned is still completely filled with boxes is your home office.",
+    "category": "user_evidence",
+    "recall": 0.5,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 2
+    }
+  },
+  {
+    "question": "Based on our recent conversation about my oak desk restoration project, please compile a shopping list containing the four specific supplies I've identified that I need to purchase.",
+    "answer": "Of course. Here is the shopping list based on what you mentioned: 220-grit sandpaper, a new paintbrush, a satin polyurethane topcoat, and mineral spirits.",
+    "category": "user_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "What is the total minimum time I need to block out this weekend to accomplish my four main tasks: restoring the desk, taking Cooper to the park, cooking pho, and calling my parents?",
+    "answer": "You need to block out a total minimum of 8 hours for your four main activities. This includes: 3 hours for sanding the desk, 2 hours for the trip to the dog park with Cooper (1 hour of travel plus 1 hour at the park), 2 hours for cooking pho, and 1 hour for your call with your parents.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "I'm preparing for my upcoming quarterly performance review. Based on our conversations, can you summarize my four main accomplishments from this past quarter, specifically mentioning the high-priority ticket resolution, my key performance metric improvement, the positive customer feedback I received, and my contribution to the team's resources?",
+    "answer": "Certainly. Here is a summary of your four main accomplishments from this past quarter: 1. You successfully resolved a high-priority P1 ticket for a major client, MegaCorp, by identifying a misconfigured firewall rule that had taken their billing system offline. 2. You improved a key performance metric by decreasing your average call handling time by 15% compared to the previous quarter. 3. You received excellent customer feedback, including a 5-star rating and a comment praising your patience and knowledge from a user involved in the DataFlow Systems integration case. 4. You contributed to team resources by authoring a new troubleshooting guide for VPN connectivity issues, which was approved and adopted into the team's internal knowledge base.",
+    "category": "user_evidence",
+    "recall": 0.5,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 2
+    }
+  },
+  {
+    "question": "I'm putting together a quick reference guide for our new team member. Based on what I've mentioned in our past conversations, could you create a simple checklist of the four distinct situations that I've learned require a case to be immediately escalated to Tier 2 support?",
+    "answer": "Certainly. Here is a checklist for immediate Tier 2 escalation based on the criteria you've learned:\n1. The issue requires direct database access.\n2. The main client contact is a C-level executive.\n3. There is any potential for data loss.\n4. The support case has been unresolved for over 48 hours.",
+    "category": "user_evidence",
+    "recall": 0.25,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 1
+    }
+  },
+  {
+    "question": "Regarding the new 'CaseIQ' CRM plugin discussed in our last meeting, what is my specific action item, what temporary policy change is in effect during its rollout, and what compatibility concern was raised by a colleague?",
+    "answer": "Your action item is to review the documentation for the new 'CaseIQ' plugin. During its rollout, there is a temporary freeze on performance metric tracking. A concern was raised about its compatibility with the existing ticketing API.",
+    "category": "user_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "Based on the four key data-related incidents I described at my old fintech job, could you reconstruct the timeline of events that illustrates the company's decline? Please start with the foundational issue and sequence them chronologically to the final event.",
+    "answer": "Certainly. The timeline of the company's decline, based on the events you described, is as follows: First, the company was plagued by high engineering turnover, which created a foundational instability and prevented consistent data practices. Recognizing this, you then proposed a data governance committee to create stable processes, but management rejected the idea. Sometime after this rejection, a major product launch had to be delayed because of unreliable test data, signaling a significant operational failure. The final event that sealed the company's fate was a major reporting error that caused the loss of a key client, a financial blow from which the company could not recover.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Based on my notes from the different stakeholder meetings and my own project standard, what is the primary challenge or goal for the lead data quality project from each of the four distinct perspectives: Marketing, Sales, IT, and my own Data Quality role?",
+    "answer": "The primary challenges and goals from each perspective are: Marketing is concerned about adding friction to their lead capture forms; Sales is worried about potential CRM downtime during a mass update; the IT department has cited resource constraints for building a new validation service; and your own primary goal is to achieve a 99% data accuracy rate.",
+    "category": "user_evidence",
+    "recall": 0.5,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 2
+    }
+  },
+  {
+    "question": "Considering only the figures I've provided for my housing and commute, what is the net monthly financial impact of my move from San Francisco to Oakland?",
+    "answer": "The net monthly financial impact is a savings of $400. The $750 saved on rent is partially offset by the new $150 parking fee and $200 in commute costs.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "To help me plan, can you synthesize the details from our conversations about my memorable mushroom foraging trip from two years ago? I need the four key components for a perfect recreation: the specific park I visited, the name of the lodge I stayed at, the ideal time of year, and how I got there.",
+    "answer": "To perfectly recreate your trip, the four components were: visiting Ecola State Park, staying at The Tillamook Pines Lodge, going during the last week of September, and driving your own car.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "I'm preparing my self-assessment for my quarterly performance review. Can you please compile a list of the four main accomplishments I have shared with you recently?",
+    "answer": "You mentioned four main accomplishments recently. You successfully de-escalated a major issue with your partner, SynergyTech. Your joint success plan format was adopted as the new company-wide template. You also co-managed and secured a complex renewal for the customer, Vehement Capital. Lastly, you proposed a new internal process for tracking partner-influenced leads.",
+    "category": "user_evidence",
+    "recall": 0.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 0
+    }
+  },
+  {
+    "question": "I'm trying to put together a budget for some things around the apartment. Can you remind me of the four specific home improvement items I've recently mentioned wanting to get?",
+    "answer": "You are planning to get a shade cloth for your balcony plants, a new shelving unit for your vinyl record collection, an area rug for the living room, and a frame for your Southeast Asia travel poster.",
+    "category": "user_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "Based on my case logs for the 'Innovate Inc.' account, what are the four distinct issues I've recorded, specifically regarding data synchronization, user access, feature setup, and reporting?",
+    "answer": "Innovate Inc. has faced four main issues: 1) A high-priority data sync error with their Salesforce instance. 2) A user permission problem preventing their marketing team lead from accessing the campaign analytics dashboard. 3) A feature configuration request to enable custom lead scoring rules. 4) Confusion regarding how the 'active user' metric is calculated in the 'Quarterly User Engagement' report.",
+    "category": "user_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "Can you provide a chronological summary of Max's health history for his upcoming vet appointment? For each major event\u2014his paw injury, diet change, and kennel cough\u2014please state the date it occurred and approximately how many months after his adoption it happened.",
+    "answer": "Certainly. Here is the chronological health summary for Max: First, he sustained a minor paw sprain on July 22nd, which was about 5 months after you adopted him. Next, you implemented a diet change to address his allergies on October 5th, roughly 8 months after his adoption. Most recently, he was diagnosed with kennel cough on December 1st, which was approximately 10 months after you adopted him.",
+    "category": "user_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "I'm doing my monthly budget review. Can you calculate the total amount I've invested in my photography hobby this year based on the four specific purchases I've told you about: the new prime lens, the annual photo editing software, the weekend workshop, and the high-capacity external hard drive?",
+    "answer": "Based on the amounts you mentioned, you have invested a total of $1095 in your photography hobby. This includes $450 for the prime lens, $120 for the software subscription, $375 for the workshop, and $150 for the external hard drive.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "I'm preparing for my mentee's monthly performance review. Based on the notes I've shared, can you summarize their three main accomplishments this month and identify the single performance metric they need to focus on improving?",
+    "answer": "For your mentee's review, their three main accomplishments are: receiving positive feedback on their first client call, successfully resolving a complex technical case independently, and scoring 95% on their product knowledge test. The single performance metric they need to improve is their case closure rate to meet the SLA target.",
+    "category": "user_evidence",
+    "recall": 0.5,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 2
+    }
+  },
+  {
+    "question": "Based on our conversations about my four quarterly performance goals, can you provide a final summary of which targets I met and which I missed? Specifically, I need to know the outcome for reducing onboarding time, achieving the CSAT score, completing the certification, and contributing the knowledge base guide.",
+    "answer": "You met two of your four quarterly goals. You successfully reduced customer onboarding time by 12%, which exceeded your 10% target, and you contributed the new guide to the knowledge base. You missed your other two goals: your final CSAT score was 94%, just below the 95% target, and you did not pass the advanced certification exam this quarter.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "I'm preparing for my weekly forecast meeting and need to give my team a list of accounts to fix in the CRM. Based on the issues I've mentioned, what are the four specific client accounts I identified that require data cleanup?",
+    "answer": "The four client accounts you identified for CRM data cleanup are: Innovate Solutions, QuantumLeap Analytics, Vertex Global, and Pioneer Industries.",
+    "category": "user_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "Based on the individual costs I've mentioned for my upcoming trips to Boise, Spokane, Bend, and Seattle, what is my total projected expense for these four client visits?",
+    "answer": "Your total projected expense for the four upcoming client visits is $1,360. This is calculated from the $375 flight to Boise, the $510 hotel in Spokane, the $195 mileage reimbursement for the drive to Bend, and the $280 client dinner in Seattle.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "I'm writing a tribute for my parents' shop, 'Chen Electronics'. Can you help me pull together the key details I've mentioned before? I need a summary that includes when it was founded, its street location in Portland, my dad's specific technical specialty, and my mom's notable business skill, including the name of the supplier from that story I told you.",
+    "answer": "Your parents founded 'Chen Electronics' in 1988. The shop was located on SE 34th Avenue in Portland. Your dad's specialty was repairing vintage audio equipment like turntables, while your mom was a skilled negotiator, once getting a discount from a supplier named Apex Components by finding a flaw in their spec sheet.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "I'm creating a checklist for my condo search. Can you remind me of the four specific, non-negotiable features I've told you my next home absolutely must have?",
+    "answer": "You mentioned four non-negotiable features for your next home: a dedicated home office, a modern kitchen for entertaining, secure garage parking, and a location within a 30-minute commute to your DataStream office.",
+    "category": "user_evidence",
+    "recall": 0.25,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 1
+    }
+  },
+  {
+    "question": "I'm reviewing my budget and it seems skewed by some recent spending. I remember mentioning four large, one-off expenses. Can you please list out what those four specific items were?",
+    "answer": "Based on our conversations, you recently had four large, non-recurring expenses: an emergency vet bill for your dog, Max; a plane ticket for your friend's wedding in Austin; a deposit for your vacation to Hawaii; and the purchase of a new high-end Dell XPS laptop for personal use.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "I'm writing an entry in my career journal and want to reflect on my early struggles. Based on our conversations, can you summarize the four distinct professional challenges I faced when I first started at TechFlow Solutions, specifically relating to client outreach, data management, deal outcomes, and managerial feedback?",
+    "answer": "Based on what you've told me about your start at TechFlow Solutions, the four key challenges you faced were: 1) The intense anxiety during your first cold call blitz. 2) A significant mistake you made with a CRM entry. 3) The sting of losing your first major deal. 4) Receiving tough but necessary feedback from your manager, Dave.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Can you calculate the total project spend to date for the Fusion Dynamics implementation? I need the sum of the costs I've logged for the third-party integration license, my travel for the on-site kickoff, the freelance data migration specialist, and the specialized training module.",
+    "answer": "The total spent on the Fusion Dynamics implementation, based on the four expense items you provided, is $5,000.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "I'm trying to organize my 'Pacific Northwest Ecosystems' photography project. Thinking back through our conversations about my recent photo excursions, can you synthesize the details I've shared and list the four distinct biomes or ecosystems I've documented so far?",
+    "answer": "Based on the four photo excursions you've described, you have captured images from four distinct biomes: a coastal intertidal zone with its tide pools, a temperate rainforest characterized by old-growth trees and moss, an alpine meadow ecosystem with its high-altitude wildflowers, and a freshwater wetland environment featuring heron nesting grounds.",
+    "category": "user_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "Based on the gift ideas I've mentioned, can you compile a complete shopping list for me, specifying what I need to buy for my dad, my mom, my brother, and my cousin?",
+    "answer": "Certainly. Here is the compiled list of gifts based on your ideas: for your dad, a book on the history of the Oregon timber industry; for your mom, a pair of high-quality gardening gloves; for your brother, a craft coffee subscription box from Seattle roasters; and for your cousin, new moisture-wicking running socks.",
+    "category": "user_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "Based on our recent conversations, can you summarize the four distinct home improvement projects I'm planning for my apartment?",
+    "answer": "You are planning four projects: repainting your living room a 'sage green' color, buying a tall and sturdy bookshelf, installing a new low-flow showerhead to be more eco-friendly, and setting up a small herb garden on your balcony for basil and mint.",
+    "category": "user_evidence",
+    "recall": 0.5,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 2
+    }
+  },
+  {
+    "question": "I'm trying to budget for my gravel bike upgrades. Based on our conversations, what are the four main components I've mentioned that I'm unhappy with and want to replace?",
+    "answer": "You've mentioned being unhappy with four main components of your gravel bike: the heavy stock wheels, the underpowered mechanical brakes, the insufficient gear range for the steep local climbs, and the uncomfortable saddle on long rides.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Based on the costs for his special food, quarterly flea medication, bi-weekly treats, and annual vet check-up that I've previously mentioned, what is the total estimated monthly cost I should budget for owning my cat, Pixel?",
+    "answer": "Based on the figures you provided, the total estimated monthly cost for Pixel is $135. This is calculated from $75 for food, $20 for flea medication ($60 divided by 3 months), $20 for treats ($10 purchased twice a month), and $20 for the vet visit ($240 divided by 12 months).",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "I've been evaluating local coffee shops as potential remote work locations. Can you please compile a summary for me? I need the primary positive and negative attribute for each of the four places I've mentioned: The Grind, Bytes & Brews, Quiet Corner Cafe, and The Comfy Bean.",
+    "answer": "Certainly. Here is the summary of the pros and cons for the four coffee shops you've evaluated:\n- The Grind: Has exceptional coffee but the Wi-Fi is unusable.\n- Bytes & Brews: Offers excellent, fast Wi-Fi but is too loud to concentrate.\n- Quiet Corner Cafe: Is very quiet and good for focus but has uncomfortable seating.\n- The Comfy Bean: Provides comfortable armchairs but serves poor-quality, burnt coffee.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Based on my reflections on the last four major technical incidents I handled, can you synthesize and list the four different initial diagnostic steps I took for each of them?",
+    "answer": "The four distinct initial diagnostic actions you took across the last four major incidents were: 1) Replicating the user's specific environment, 2) Analyzing the system logs first, 3) Immediately consulting a senior developer for a familiar issue, and 4) Rolling back a recent system update as a preliminary test.",
+    "category": "user_evidence",
+    "recall": 0.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 0
+    }
+  },
+  {
+    "question": "I'm preparing for Max's vet appointment. Could you summarize his current care routine? Specifically, what brand of food does he eat, what daily supplements and monthly medications does he take, and what is the primary command we're struggling with in training?",
+    "answer": "Max's current care plan includes a diet of Hill's Science Diet dry food, a daily joint supplement, and a monthly flea-and-tick chewable given on the 1st of the month. The primary training challenge you're facing is mastering the 'stay' command during walks.",
+    "category": "user_evidence",
+    "recall": 0.5,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 2
+    }
+  },
+  {
+    "question": "Based on our conversations since I moved, can you list my four largest one-time, non-recurring expenses in descending order of cost?",
+    "answer": "Your four largest one-time expenses you've mentioned, from most to least expensive, are: your new mountain bike at $2,500, your telephoto camera lens at $800, the adoption and initial vet bills for your dog, Max, at $500, and your plane ticket to Ohio for $400.",
+    "category": "user_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "A friend who is also into cycling and photography asked for my opinion on my current equipment. Based on our recent conversations, can you summarize which two pieces of my gear I'm satisfied with and which two have presented significant issues for me?",
+    "answer": "You are satisfied with your new mountain bike because of its responsive suspension and your camera due to its excellent low-light performance. However, you have had issues with your primary camera lens because of its slow autofocus and your new cycling shoes, which you've found to be uncomfortably snug despite their durability.",
+    "category": "user_evidence",
+    "recall": 0.5,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 2
+    }
+  },
+  {
+    "question": "Given my total Q2 operational budget of $150,000, what is my department's remaining budget after factoring in the cost of the analytics consultant, the unbudgeted safety gear, the projected overtime, and the cost savings from the new calibration vendor?",
+    "answer": "After accounting for the expenses ($7,500 + $4,000 + $5,000) and the savings ($1,200), the department's remaining Q2 operational budget is $134,700.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Based on the figures I've provided for the venue, catering, attendees, speakers, and AV equipment, what is the total projected cost for the upcoming user conference?",
+    "answer": "The total projected cost for the conference is $137,750. This is calculated from the $32,500 venue fee, $77,500 for catering (500 attendees at $155 each), $18,000 for speakers, and $9,750 for AV equipment.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Using the target audience, content strategy, lead generation goals, and projected ROI, synthesize a concise business case summary for the Q3 event series to present to leadership.",
+    "answer": "The proposed Q3 event series is designed to generate a total of 450 MQLs by targeting mid-level to senior IT managers and data scientists in the finance and healthcare sectors. Our content strategy, which focuses on practical applications of new AI-driven analytics tools, is tailored to this specific audience. Based on historical performance, we project this initiative will deliver a 4:1 return on investment, making it a highly effective plan for driving growth in key enterprise markets.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Based on the figures I provided, what was the final cost per Marketing Qualified Lead (MQL) for the Innovate East trade show?",
+    "answer": "The cost per Marketing Qualified Lead (MQL) for the Innovate East trade show was $200. This is calculated by summing the event costs ($45,000 + $15,000 = $60,000) and dividing by the total number of MQLs (1,200 scans * 25% = 300 leads), which results in $60,000 / 300.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Based on the registration numbers for the first webinar, the live attendance rate for the second, the positive survey scores for the third, and the number of sales-qualified leads from the fourth, how would you evaluate the overall performance of the Q2 webinar series?",
+    "answer": "The Q2 webinar series showed strong potential with high registration numbers for the first webinar, indicating significant interest. The second webinar maintained engagement with a solid live attendance rate. The third webinar received positive feedback, as reflected in the survey scores, suggesting content satisfaction. Finally, the fourth webinar successfully converted interest into actionable outcomes, generating a notable number of sales-qualified leads. Overall, the series was effective in attracting, engaging, and converting participants.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Based on my recent complaints about my event management process, what are the four distinct, time-consuming administrative tasks I'm struggling with that could be improved?",
+    "answer": "The four administrative bottlenecks you've identified are: manually entering lead data from events into the CRM, tracking all speaker logistics and communications through email, the tedious process of compiling receipts for expense reports, and the time it takes to build post-event feedback surveys from scratch.",
+    "category": "user_evidence",
+    "recall": 0.25,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 1
+    }
+  },
+  {
+    "question": "Based on my notes for the Q2 Summit post-mortem, can you summarize the primary success factor and the three main issues that impacted the event?",
+    "answer": "The primary success of the Q2 Summit was Dr. Eva Rostova's highly-rated keynote speech. The three main issues were the significant WiFi outage on the first day, the catering service running out of vegetarian meals, and the low attendance at the 'Deep Dive into API Integration' breakout session.",
+    "category": "user_evidence",
+    "recall": 0.25,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 1
+    }
+  },
+  {
+    "question": "Drawing from my experiences at InnovateNow, the arts foundation, CloudSphere, and the university film festival, can you summarize the primary constraint or driving factor for each type of event I've managed?",
+    "answer": "Based on your experiences, the primary factors for each event type were: at the startup InnovateNow, the main constraint was the shoestring budget; at the non-profit arts foundation, it was the slow, bureaucratic approval process; at the corporate level with CloudSphere, the driving factor is data and proving ROI; and for the university film festival, it was the reliance on the passion and availability of a volunteer workforce.",
+    "category": "user_evidence",
+    "recall": 0.5,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 2
+    }
+  },
+  {
+    "question": "Based on my recent notes, what are the key logistical, dietary, and technical requirements I need to finalize for our keynote speakers, Dr. Thorne and Dr. Petrova, including any universal deadlines or policies that apply to them?",
+    "answer": "Here is a summary of the key requirements:\n1. For Dr. Aris Thorne, ensure a lavalier microphone and a secondary confidence monitor are arranged.\n2. For Dr. Lena Petrova, all meals must be prepared in a nut-free environment due to a severe allergy.\n3. The universal policy for all keynotes includes reimbursement for business class airfare and up to three nights at the Grand Hyatt.\n4. The hard deadline for all keynote speakers to submit their presentation slides for tech review is October 25th.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "I've outlined four distinct past event failures. Based on these specific incidents, can you synthesize them into the four primary operational risk categories I need to create contingency plans for?",
+    "answer": "Based on the incidents you described, the four primary operational risk categories are: talent and personnel (related to the speaker cancellation), venue and facilities logistics (related to the venue double-booking), technology systems (related to the registration platform crash), and supply chain and materials (related to the lost swag shipment).",
+    "category": "user_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "Based on my notes about the 'EngageFlow' app, can you summarize the complete business case for purchasing it? I need the annual cost and the three primary benefits related to session engagement, lead data entry, and conversion rates.",
+    "answer": "The business case for purchasing the 'EngageFlow' app is that for a $12,000 annual subscription, it is projected to increase session engagement by 25% via its real-time polling feature, eliminate 10 hours of manual lead data entry after each event due to its CRM integration, and potentially boost lead conversion by 15% through its attendee networking module.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Can you create a detailed agenda for the event day by combining the keynote speaker's arrival time, the breakout session schedule, the lunch break, and the start time of the evening networking reception?",
+    "answer": "The event day agenda is as follows: The keynote speaker arrives at 9:00 AM, followed by the breakout sessions starting at 10:00 AM. There will be a one-hour lunch break at 12:00 PM. The evening networking reception will officially start at 6:00 PM.",
+    "category": "user_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "Based on the CRM data I've just provided about last year's event, can you synthesize it into a concise target attendee persona for next year's summit? Please include their likely job title, company size, industry, and geographic location.",
+    "answer": "The ideal target attendee for next year's summit is a senior leader, such as a Senior Product Manager, VP of Engineering, or Director of IT, working at a mid-market enterprise with approximately 750 employees. This individual's company operates within the SaaS, FinTech, or Healthcare Technology industries and is geographically located in the Pacific Northwest or the Bay Area.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "What is the total number of person-hours spent by Maya's team on vendor management, speaker coordination, CRM data entry, and on-site execution for the 'Innovate 2024' conference?",
+    "answer": "The total number of person-hours spent by Maya's team on the 'Innovate 2024' conference is 150 hours.",
+    "category": "user_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "Considering the pricing model of Platform A, the advanced breakout room features of Platform B, the native CRM integration of Platform C, and the strong customer support reviews of Platform D, which virtual event platform offers the best overall solution for managing our Q4 webinar series effectively?",
+    "answer": "Platform C is the best all-around choice for the Q4 webinar series because its native CRM integration aligns perfectly with Maya's strategic focus on analyzing post-event lead conversion rates, which is crucial for justifying budgets and refining strategies.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "What are the essential resources Maya should include in the 'quick start' guide for the new junior coordinator, considering her experience and current role at CloudSphere Solutions?",
+    "answer": "The 'quick start' guide for the new junior coordinator should include the contact list for key vendors, the link to the event planning Gantt chart template, the process for submitting expense reports, and the location of the shared marketing drive. These resources are crucial for efficiently managing events and aligning with Maya's strategic approach to event coordination.",
+    "category": "user_evidence",
+    "recall": 0.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 0
+    }
+  },
+  {
+    "question": "Can you provide a detailed engagement timeline for the lead from 'Acme Corp', including their initial interaction at the trade show, subsequent email engagement, webinar attendance, and final sales meeting?",
+    "answer": "The lead from 'Acme Corp' first interacted with us at the trade show on March 15th, where they visited our booth. Following this, they opened our marketing email on March 20th. They then attended our follow-up webinar on April 5th, and finally, they booked a meeting with our sales representative on April 12th.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Using all the details I've provided, draft the formal invitation email for the upcoming VIP dinner. The email must specify who the event is for, the exact date, time, and location, mention the name of the three-course menu, and provide the RSVP deadline and contact person.",
+    "answer": "Subject: An Invitation: Exclusive VIP Client Appreciation Dinner\n\nDear [Client Name],\n\nOn behalf of the team at CloudSphere Solutions, I would like to extend a personal invitation to an exclusive VIP dinner to thank you for being one of our top revenue-generating clients this past fiscal year.\n\nThe event will be held on the evening of Saturday, October 26th, in the 'Vintner's Cellar' private room at The Gilded Fork. Cocktails will be served at 6:30 PM, with dinner beginning at 7:15 PM.\n\nGuests will enjoy the chef's specially prepared 'Autumn Harvest' three-course menu. Complimentary parking will be validated.\n\nPlease RSVP directly to me (Maya Sharma) by October 12th so we can finalize the arrangements.\n\nWe sincerely hope you can join us for an evening of fine dining and great conversation.\n\nBest regards,\n\nMaya Sharma\nEvents Coordinator\nCloudSphere Solutions",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Using the details I've provided, can you synthesize a concise justification for hiring a new junior coordinator, outlining the proposed role, its cost, and the projected impact on both my weekly workload and the team's quarterly event capacity?",
+    "answer": "The business case for hiring a new junior coordinator at a projected salary of $55,000 is based on delegating administrative duties like CRM list management, attendee follow-ups, and vendor coordination. This would free up approximately 10 of your hours weekly, which would in turn allow the team to increase its output by running two additional events each quarter.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "I'm planning a 'Best of CloudSphere Events' social media campaign using four key assets I've mentioned: the user conference keynote, the CRM integration webinar, the blog series from the sales panel, and the InnovateNow case study video. Based on the specific details of each asset, what is the best integrated strategy? Specifically, who is the primary audience for the keynote, what is the key performance indicator for the webinar, which social platform is best for the blog series, and what is the call to action for the case study video?",
+    "answer": "For your campaign, you should target existing enterprise customers with the keynote content. The key performance indicator for the webinar content is generating Marketing Qualified Leads (MQLs). The blog series should be promoted on LinkedIn for maximum engagement, and the case study video should use a 'Request a Demo' call to action.",
+    "category": "user_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "Based on the flight, venue, and hotel costs I've shared, and using the exchange rate I found, what is the total estimated cost in USD for the upcoming London event for a team of 5?",
+    "answer": "The total estimated cost for the London event for a team of 5 is $22,250. This consists of $6,250 for flights, and the combined \u00a312,500 for the venue and hotel, which converts to $16,000.",
+    "category": "user_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "Using the four points I just provided, draft a brief Q2 event performance summary for my manager. It needs to include the total quarterly spend, total leads generated, the key takeaway from our May webinar, and the testimonial from QuantumLeap Solutions.",
+    "answer": "In Q2, we executed our events strategy with a total spend of $45,000, successfully generating over 850 new leads. A key operational learning came from our May webinar, where technical issues highlighted the need to invest in a more robust virtual event platform for the future. The quarter was also marked by strong client feedback; the VP of Marketing from QuantumLeap Solutions called our Tech Innovators Summit 'the most valuable industry event' they've attended all year.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Based on the milestones I've just laid out for the Q1 product launch, can you summarize them for me as a chronological timeline? Please list each milestone and its corresponding deadline.",
+    "answer": "Here is the chronological timeline for the Q1 product launch event:\n1. Venue Confirmed: October 15th\n2. Speakers Finalized: November 1st\n3. Registration Launch: November 15th\n4. Final Agenda Published: December 1st",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "What are the distinct event marketing strategies employed by our main competitors, and how do they differ in terms of sponsorship, format, design, and target audience?",
+    "answer": "Competitor A focuses on sponsoring major industry events, which likely increases their visibility and brand association with large-scale gatherings. Competitor B runs a frequent series of technical webinars, emphasizing educational content and accessibility for a broader audience. Competitor C invests in exceptionally flashy trade show booth designs, aiming to attract attention and create memorable brand experiences at exhibitions. Competitor D organizes small, intimate executive dinners, targeting high-level networking and personalized engagement with key decision-makers.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Based on the team's requests I've shared, can you create a summary agenda for the upcoming offsite, specifying the day of the week, the type of activity, the lunch plan, and the key business topic we need to cover?",
+    "answer": "The team offsite is scheduled for a Friday. The agenda will feature an outdoor activity, a catered lunch from 'The Salty Squid', and a dedicated brainstorming session focused on the Q4 marketing lead-gen strategy.",
+    "category": "user_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "What is the complete checklist of documentation and information I need to collect from the new AV vendor to fully onboard them according to company policy and get them ready for payment?",
+    "answer": "To fully onboard the new AV vendor, you need to collect four items: a signed Master Services Agreement, a certificate of insurance, a completed security compliance questionnaire, and their banking details for payment processing.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Based on my notes for the keynote speaker search, which of the confirmed experts on 'Generative AI in CRM' offers the lowest cost per LinkedIn follower?",
+    "answer": "Dr. Sam Chen offers the lowest cost per LinkedIn follower, at approximately $0.189 per follower ($18,000 / 95,000), compared to Dr. Lena Petrova's $0.20 per follower ($20,000 / 100,000).",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Using the data I've provided for the recent marketing event, please generate a summary paragraph for the sales leadership report. It must state the total number of new leads for the combined East and West regions, list the Tier-1 target accounts that attended, and name the highest-rated session from the exit survey.",
+    "answer": "The recent marketing event generated a total of 200 new leads for the combined East and West regions. Key Tier-1 target accounts in attendance included Innovate Corp, Digital Solutions Inc., and QuantumLeap Tech. According to the exit survey, the highest-rated session was 'AI in Modern Sales Funnels'.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "To help plan the next conference, please synthesize the outcomes from our past successful events. Identify the specific activity that was best for driving attendance, the one for boosting on-site engagement, the one for lead generation, and the one that offered a memorable, tangible takeaway for attendees.",
+    "answer": "Based on past events, the celebrity author keynote was best for driving attendance, the gamified networking activity boosted on-site engagement, the live demo station was a great tool for lead generation, and offering free professional headshots provided a tangible takeaway for attendees.",
+    "category": "user_evidence",
+    "recall": 0.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 0
+    }
+  },
+  {
+    "question": "For the upcoming 'InnovateSphere Summit', can you list my four key priorities for this final week of prep, and for each one, mention the specific system, document, or stakeholder I need to interface with?",
+    "answer": "Your four main priorities for the 'InnovateSphere Summit' prep are: 1. Finalizing the catering menu with the vendor, Gourmet Gatherings. 2. Preparing the pre-event briefing document for the on-site staff. 3. Sending the final reminder email to attendees using the CRM. 4. Doing a final update of the budget tracking spreadsheet.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Considering the daily rental fees, mandatory catering policies from the Downtown Convention Hall, the quote from Epicurean Events, and my projected attendance numbers, what is the total calculated cost for the Grand Tech Center versus the Downtown Convention Hall, and which venue is the more cost-effective option?",
+    "answer": "Based on the provided figures, the total cost for the Grand Tech Center is $37,000 ($12,000 rental fee plus $25,000 for catering 200 attendees). The total cost for the Downtown Convention Hall is $40,000 ($10,000 rental fee plus $30,000 for mandatory catering for 200 attendees). Therefore, the Grand Tech Center is the more cost-effective option by $3,000.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Based on the career details I've shared, can you draft a concise, chronological summary of my professional journey, starting from my university degree and mentioning each of the three companies I've worked for and my primary responsibility at each?",
+    "answer": "After earning a Communications degree from the University of Washington, my professional journey began as a Marketing Associate at the tech startup InnovateNow, where I was responsible for planning trade shows and product launches. I then transitioned to an arts foundation, planning fundraisers and gallery openings. Currently, I am an Events Coordinator at CloudSphere Solutions, focusing on the strategic and data-driven aspects of event marketing.",
+    "category": "user_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "Can you provide a summary of the lead quality characteristics for my four primary channels: webinars, trade shows, VIP dinners, and the company website?",
+    "answer": "Based on your observations, the lead quality for your channels is as follows: webinars generate well-informed leads, trade shows produce numerous but less qualified leads, VIP dinners yield high-value prospects, and the company website results in a mixed bag of leads.",
+    "category": "user_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "Based on the expenses I've logged, what is the total combined cost for Q3 travel and logistics for all marketing events?",
+    "answer": "The total combined cost for Q3 travel and logistics is $9,350. This is calculated by adding the costs for flights ($3,250), hotels ($4,100), trade show equipment shipping ($1,850), and brochure courier fees ($150).",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Based on my team's conflicting preferences for a creative versus an active event, our per-person budget, and our required time slot, what is a specific team-building activity that would satisfy all constraints?",
+    "answer": "A terrarium building workshop would be a suitable activity. It fulfills the desire for a creative, hands-on event that appeals to both artistic and active preferences, can be scheduled on a Thursday afternoon, and typically costs less than the $100 per person budget.",
+    "category": "user_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "Based on the performance data for our four main event types\u2014the Annual Summit, the East Coast Roadshow, the AI Webinar Series, and the Local Meetup\u2014what was the average conversion rate from attendee to qualified lead across all of them?",
+    "answer": "The average conversion rate across the four main event types was 11%.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Using the details I've provided for my upcoming trip, create a sequential itinerary for my arrival day in Las Vegas on October 21st. I need to know when I land, when I can check into the hotel, where the summit is being held, and what the plan is for dinner that evening.",
+    "answer": "Here is your sequential itinerary for your arrival day, October 21st: You will land at 1:30 PM. You can check into The Venetian Resort anytime after 3:00 PM. The InnovateSphere 2024 Tech Summit is located at the Las Vegas Convention Center. Finally, your team dinner reservation is at SW Steakhouse at 7:00 PM.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Using the figures I've provided for the TechCrunch Disrupt sponsorship\u2014the total cost, the number of qualified leads, our historical conversion rate for similar events, and the average customer lifetime value\u2014can you please calculate the projected Return on Investment (ROI)?",
+    "answer": "The projected ROI for the TechCrunch Disrupt sponsorship is 200%. This is calculated by first determining the total gain ($150,000 from 10 new customers at a $15,000 CLV each) and then comparing that gain to the initial $50,000 cost.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "For my performance review, can you compile a summary statement that incorporates my successful pivot of InnovateSphere 2023, the total annual budget savings I achieved, the lead generation growth from the webinar series, and the feedback I received from the sales team?",
+    "answer": "You successfully pivoted the annual 'InnovateSphere 2023' conference to a virtual format, achieved a 15% savings on the annual event budget, increased lead generation from the webinar series by 30%, and received positive feedback from the sales team on the high quality of marketing-qualified leads.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Considering the venue rental fee, the catering cost for 20 people, the expense for flyer printing, and the travel stipend for the guest speaker, what is the total projected cost for the Ballard user group meetup?",
+    "answer": "The total projected cost for the user group meetup is $575, which is calculated by summing the $150 venue fee, $250 for catering, $75 for printing, and the $100 speaker stipend.",
+    "category": "user_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "What are four specific improvements I can implement to enhance the attendee experience at the next conference, considering feedback on networking time, device charging, room temperature, and presentation materials?",
+    "answer": "To enhance the attendee experience at the next conference, you should: 1) Allocate more time for networking sessions to facilitate better attendee interaction. 2) Install charging stations for devices to ensure attendees can stay connected throughout the event. 3) Adjust the session room temperatures to a more comfortable level to prevent discomfort. 4) Share presentation slides with attendees after the event to provide them with valuable reference materials.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "What are the four distinct strategies Maya is using in her digital marketing plan for the upcoming webinar, and how do they each contribute to reaching her target audience?",
+    "answer": "Maya's digital marketing plan for the webinar includes running social media ads to increase visibility, sending a series of three email blasts to engage their subscriber list, writing a blog post to provide in-depth information about the topic, and having the speaker promote the webinar on their personal LinkedIn to leverage their network.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Can you generate a consolidated schedule and to-do list for Buster for this week, including all appointments with their days and times, any recurring activities, and any specific supplies I need to buy for him?",
+    "answer": "Certainly. Here is the consolidated list for Buster for this week:\n- **Recurring Activity:** A daily morning walk between 7:00 AM and 7:30 AM.\n- **Appointment:** Vet appointment for a vaccination this Tuesday at 4:00 PM.\n- **Appointment:** Puppy training class this Wednesday at 2:00 PM.\n- **To-Do Item:** Purchase a new bag of his specific food, 'Taste of the Wild' puppy formula.",
+    "category": "user_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "Based on my recent move, can you summarize the major pros and the one main con of my new lifestyle in Ballard, considering changes to my living space, commute, and personal activities?",
+    "answer": "The pros are that your new apartment is more spacious and quiet, you were able to adopt a dog named Buster, and you've started a convenient local pottery class to decompress. The main con is the longer commute to your office at CloudSphere.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Considering the individual costs I've mentioned for the hotel, gas, a nice dinner, and books, what is the total calculated budget for my Portland trip?",
+    "answer": "The total calculated budget for your trip is $625, which is the sum of $400 for the hotel, $50 for gas, $100 for dinner, and $75 for books.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Can you summarize the key countries I visited and the unique experiences I had during my Southeast Asia trip?",
+    "answer": "During Maya's Southeast Asia trip, she visited Vietnam, where she experienced the sensory overload of Hanoi's Old Quarter; Thailand, where she found quiet solitude on a beach; and Cambodia, where she explored ancient temples.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "What is the total estimated monthly cost of owning Buster, considering the cost of his specific food, a new chew toy, his flea and tick medication subscription, and the fee for a dog walker used twice a week?",
+    "answer": "The total estimated monthly cost of owning Buster is $240, calculated by adding $60 for his specific food, $20 for a new chew toy, $40 for his flea and tick medication subscription, and $120 for the dog walker.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Based on our conversations, can you provide a precise timeline with the exact dates for the key events related to my move? Specifically, when I signed the lease, sold my old furniture, physically moved, and adopted Buster.",
+    "answer": "Based on what you've told me, here is the timeline: You signed the lease on May 1st, sold your old furniture on June 8th, moved into your new apartment on Saturday, June 15th, and adopted Buster on Saturday, June 22nd.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Based on the figures I've laid out for my new monthly budget spreadsheet, what is the total sum of all my fixed monthly expenses, combining my rent, utilities, student loan, and other recurring costs like my pottery class and pet insurance?",
+    "answer": "Based on the numbers you provided, your total fixed monthly expenses sum to $3,025.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Based on the various items I've mentioned needing over the past few days, can you synthesize them into a single, consolidated shopping list for me?",
+    "answer": "Here is the consolidated shopping list based on your recent messages: a bag of whole bean espresso from the Ballard roaster, chicken breast, a head of broccoli, a bag of Buster's 'Taste of the Wild' salmon recipe dog food, and a bottle of Sauvignon Blanc for your friend.",
+    "category": "user_evidence",
+    "recall": 0.25,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 1
+    }
+  },
+  {
+    "question": "Trace my career path and evolving motivations, starting with my initial plan at the University of Washington, through the key takeaways from my roles at InnovateNow and the arts foundation, and culminating in why my current position at CloudSphere is the right fit.",
+    "answer": "You started at the University of Washington planning to study journalism but discovered a passion for event logistics after organizing the student film festival. Your first job at InnovateNow provided intense experience but led to burnout after two years. Following that, your role at an arts foundation made you realize you were motivated by seeing a direct, measurable impact, which was lacking there. Your current role at CloudSphere is a great fit because it allows you to combine your passion for event planning with the ability to strategically analyze data like lead conversion rates, satisfying your need to see a clear impact.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "What is the overall progress and current focus of Buster's command training, considering his mastery, improvements, struggles, and new challenges?",
+    "answer": "Buster has mastered the 'sit' command, is improving with 'stay' even with distractions, struggles with 'come' when excited at the park, and has just started learning 'shake'.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "How can I design a microwave-safe pottery piece that combines a unique handle style, a speckled blue glaze, a minimalist shape, and is inspired by a design magazine?",
+    "answer": "To design your pottery piece, start by incorporating the unique handle style you admired online, ensuring it's ergonomic and complements the minimalist shape you want. Use the speckled blue glaze technique you saw on Instagram to add visual interest while maintaining the minimalist aesthetic. Finally, ensure all materials and glazes used are microwave-safe to meet your functional requirement.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "What are the four specific activities I have incorporated into my new wellness routine to balance my screen-heavy job?",
+    "answer": "The four components of Maya's new wellness routine are: taking a walk with Buster every morning, attending pottery classes on Tuesdays, trying a yoga class in Ballard, and limiting screen time for an hour before bed.",
+    "category": "user_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "Based on my upcoming week's activities, what is my dinner plan for Monday, Tuesday, Wednesday, and Thursday, considering my special cooking projects and classes?",
+    "answer": "Here is your dinner plan: On Monday, you will cook a large batch of chicken stir-fry. On Tuesday, you will eat the leftover stir-fry for a quick meal after your pottery class. On Wednesday, you will have a simple salad for dinner while you make a batch of food for Buster. On Thursday, you will cook the new cioppino recipe using fresh seafood.",
+    "category": "user_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "Can you provide a detailed summary of my car's maintenance needs, including the timing for an oil change, tire replacement, vehicle registration renewal, and brake pad replacement?",
+    "answer": "Your car's maintenance needs include scheduling an oil change soon since the last one was in January, purchasing new tires before the rainy season begins, renewing your vehicle registration by August, and planning for a brake pad replacement based on the quote you received.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Based on what I've mentioned about my upcoming family visit, can you summarize the four key tasks I need to handle to get everything organized?",
+    "answer": "You need to complete four main tasks for your trip: 1. Book your flight to Denver. 2. Get approval from your manager at CloudSphere for three days off. 3. Find and book a reliable sitter for your dog, Buster. 4. Buy a birthday gift for your mom.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Can you explain the four main stages of making a pot, specifically centering the clay, trimming the base, the first bisque firing, and the final glaze firing, as I've previously asked about each of these stages?",
+    "answer": "The four main stages of making a pot that you've asked about are: 1) Centering the clay on the wheel, which is crucial for ensuring the pot is balanced and symmetrical; 2) Trimming the base of the pot, which involves removing excess clay to refine the shape and create a stable foot; 3) The first bisque firing, which hardens the clay and prepares it for glazing; and 4) The final glaze firing, which melts the glaze and gives the pot its finished, glass-like surface.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "What are the four distinct locations where Maya's digital photos are stored, which she needs to consolidate for better organization?",
+    "answer": "Maya's digital photos are stored on an old external hard drive, a defunct cloud service, her phone, and her work laptop.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Can you list my four main long-term financial goals, considering my plans for a condo, emergency fund, student loans, and 401k contributions?",
+    "answer": "Your four main long-term financial goals are: saving for a down payment on a small condo in Seattle, building up your emergency fund to cover six months of expenses, creating a plan to pay off your student loans in the next five years, and increasing your 401k contribution to 10% of your salary.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Based on our conversations, can you create a consolidated to-do list for my get-together? I need to know exactly who I'm inviting, the specific food and drink items I need to purchase, and what the planned activity is.",
+    "answer": "Here is your consolidated to-do list:\n1. Invite your three friends: Chloe, Ben, and Sam.\n2. Purchase Whispering Angel ros\u00e9 wine, sharp cheddar, creamy brie, and tangy goat cheese.\n3. Prepare to play your new board game, 'Terraforming Mars'.",
+    "category": "user_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Could you create a detailed comparison summary of EngageSphere, ConnectiVerse, GamifyNow, and PulseStream? For each, please outline its main engagement feature, its specific capability for Salesforce CRM integration, and its pricing structure.",
+    "answer": "Here is the comparison:\n- EngageSphere: Features AR product demos, offers native Salesforce integration, and has an annual enterprise subscription model.\n- ConnectiVerse: Focuses on AI-powered networking, requires custom API work for Salesforce integration, and is priced per event based on attendee count.\n- GamifyNow: Uses gamification with leaderboards, relies on Zapier for CRM connections, and has a flat fee per event.\n- PulseStream: Specializes in real-time polling and Q&A, provides full native Salesforce integration, and uses a per-user, per-month subscription model.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Based on the four separate strategies we discussed for post-event engagement, can you synthesize them into a single, cohesive multi-channel follow-up plan? Please outline the precise sequence of actions and the recommended timing for deploying each channel.",
+    "answer": "Yes, here is a synthesized multi-channel plan. First, within 24 hours of the event, send a personalized email sequence based on session attendance. Second, about 3 days after the event, launch a targeted LinkedIn message campaign. Third, start a retargeting ad campaign with event highlights one week after the launch. Finally, during the second week, begin a direct-dial campaign targeting the highest-value leads who have been warmed up by the other channels.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "I'm finalizing my project plan for the upcoming trade show and want to add a risk mitigation section. Can you create a consolidated checklist for me that includes the four key pre-event risk mitigation tactics we discussed for managing potential disruptions?",
+    "answer": "Here is the consolidated pre-event risk mitigation checklist: 1. Logistics & Venue: Create a detailed weather contingency plan. 2. Personnel: Secure fully briefed backup speakers. 3. Technical: Pre-register all AV technicians to confirm access. 4. Communications: Prepare a social media crisis communication template.",
+    "category": "assistant_facts_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "Can you list the four tools I should consider for creating Gantt charts and compare their effectiveness for managing fast-paced tech events?",
+    "answer": "The four tools you should consider are: a template from a project management app, an Excel add-in for visual timelines, a collaborative online whiteboard tool, and a feature within your existing CRM. For fast-paced tech events, the project management app template offers structured, ready-to-use layouts that can save time. The Excel add-in provides detailed customization and is great for data-driven insights. The collaborative online whiteboard tool is ideal for brainstorming and real-time collaboration with your team. Lastly, the CRM feature integrates seamlessly with your existing data, allowing for efficient tracking and updates.",
+    "category": "assistant_facts_evidence",
+    "recall": 0.5,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 2
+    }
+  },
+  {
+    "question": "For my end-of-year report, can you synthesize the four ROI metrics you previously suggested into a single dashboard concept? For each of the four, please summarize its specific purpose, covering lead quality, financial efficiency, broader sales contribution, and long-term value.",
+    "answer": "Certainly. Here is a concept for an Event ROI Dashboard combining those four metrics:\n1.  **Lead-to-Opportunity Conversion Rate:** This measures lead quality by showing the percentage of event leads that become qualified sales opportunities.\n2.  **Cost Per Acquired Lead (CPAL):** This tracks financial efficiency by calculating the total event cost divided by the number of new leads.\n3.  **Pipeline Influence:** This demonstrates broader sales contribution by measuring the total value of sales pipeline that event attendees have touched.\n4.  **Customer Lifetime Value (CLV) of Attendees:** This illustrates long-term value by analyzing the CLV of customers who attended an event versus those who did not.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Could you please compile a summary of the four catering vendors we just discussed? I need a list with each caterer's name and their specific culinary specialty.",
+    "answer": "Of course. The four caterers are: Oceanique Catering (specializing in sustainable Pacific Northwest seafood), The Gilded Spoon (specializing in modern French fusion), Harvest & Hearth (specializing in farm-to-table seasonal menus), and Aether Gastronomy (specializing in molecular gastronomy experiences).",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "How can I create a step-by-step onboarding plan for delegating tasks to my new intern using the four delegation techniques you provided?",
+    "answer": "To create a step-by-step onboarding plan for delegating tasks to your new intern, start by identifying low-risk tasks that the intern can handle independently. Next, provide crystal-clear written instructions for each task to ensure understanding. Use a task management tool to track the intern's progress and keep everything organized. Finally, schedule regular, brief check-ins to discuss progress and address any questions or concerns.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Can you provide a detailed schedule for the two-day customer training event, incorporating the four engagement activities you recommended and specifying the best time for each activity?",
+    "answer": "For the two-day customer training event, the schedule should be as follows: On Day 1, start with the 'Ask Me Anything' session with a product expert in the morning to engage participants early. Follow this with the hands-on lab competition before lunch to maintain energy levels. On Day 2, begin with the peer-to-peer problem-solving workshop to encourage collaboration, and conclude with the networking lunch with assigned seating to facilitate connections among attendees.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Can you summarize the four professional development options we discussed? For each one, please identify the specific course or program and explain its primary benefit for my role as an Events Coordinator.",
+    "answer": "The four options are: 1. The Google digital marketing certification to enhance online promotion for your events. 2. A PMP course to formalize your project management skills for handling complex event logistics. 3. A public speaking workshop at the local college to improve your confidence and on-stage presence when hosting. 4. The advanced CRM analytics course from your vendor to better measure and report on post-event lead conversion and ROI.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Please provide a complete summary of the four venues. For each one\u2014Innovator's Hub, Grandview Ballroom, Chroma Gallery, and The Foundry\u2014I need to know its maximum capacity, its overall brand feel, its tech infrastructure, and its catering policy.",
+    "answer": "Of course. Here is the summary:\n- The Innovator's Hub: Has a capacity of 150, a modern/cutting-edge brand feel, and is fully equipped with fiber optic internet and A/V. You can bring in any licensed caterer.\n- The Grandview Ballroom: Has the largest capacity at 300, a formal/corporate brand feel, and standard corporate A/V and Wi-Fi. It uses a mandatory in-house catering team.\n- Chroma Gallery: Has a capacity of 100, a creative/sophisticated brand feel, and limited tech with only basic Wi-Fi. You can bring in any licensed caterer.\n- The Foundry: Has a capacity of 250, an edgy/industrial-chic brand feel, and high-speed Wi-Fi but requires A/V rental. You must use one of their pre-approved caterers.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Can you provide a comprehensive checklist that combines the four email tips you mentioned for improving the pre-event email campaign?",
+    "answer": "To create an effective pre-event email campaign, follow this checklist: First, segment your invite list based on past engagement to ensure targeted communication. Second, craft a compelling subject line that includes personalization to grab attention. Third, include a clear 'agenda highlights' section to inform recipients of key event details. Lastly, conduct A/B testing on the call-to-action button to optimize engagement.",
+    "category": "assistant_facts_evidence",
+    "recall": 0.5,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 2
+    }
+  },
+  {
+    "question": "How can I integrate arts into my tech event using the four creative ideas you suggested?",
+    "answer": "To integrate arts into your tech event, you can hire a live graphic recorder to capture key moments visually, feature a local artist's work in the reception area to create a welcoming atmosphere, set up an interactive light installation to engage attendees, and use custom-designed, artistic name badges to add a personal touch.",
+    "category": "assistant_facts_evidence",
+    "recall": 0.5,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 2
+    }
+  },
+  {
+    "question": "How can I integrate the use of tags, custom fields for dietary restrictions, workflow automation for registration confirmation, and a dashboard for monitoring registration velocity into a cohesive standard operating procedure for managing event registrations in the CRM?",
+    "answer": "To create a comprehensive standard operating procedure for managing event registrations in the CRM, start by using tags to segment attendees based on their interests or event types, which helps in targeted communication and follow-ups. Next, implement a custom field specifically for dietary restrictions to ensure all attendee needs are met efficiently. Then, build a workflow automation that automatically sends out registration confirmations, reducing manual effort and ensuring consistency. Finally, set up a dashboard to monitor registration velocity, allowing you to track trends and make data-driven decisions to optimize your event planning strategy.",
+    "category": "assistant_facts_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "Can you list the four swag items you recommended for the developer conference and explain why each is particularly suitable for a developer audience?",
+    "answer": "The four swag items recommended are a high-quality portable power bank, a subscription to a coding magazine, a pair of comfortable branded socks, and a voucher for a cloud computing service. The portable power bank is essential for developers who often work on the go and need to keep their devices charged. The coding magazine subscription provides ongoing learning and insights into the latest industry trends. Comfortable branded socks are a practical and appreciated gift for long hours of work, and the cloud computing service voucher offers developers a chance to explore new tools and services that can enhance their projects.",
+    "category": "assistant_facts_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "Before I make this vendor call, can you quickly summarize the four distinct communication strategies we discussed for managing this difficult conversation?",
+    "answer": "The four strategies are: use 'I' statements to frame your feedback non-accusatorially, provide specific data-backed examples of failures, clearly state your desired resolutions, and reference the original contract terms to ground the discussion.",
+    "category": "assistant_facts_evidence",
+    "recall": 0.5,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 2
+    }
+  },
+  {
+    "question": "Based on the four speaker profiles you provided, synthesize how Dr. Finch's focus on culture, Kenji Tanaka's on AI, Dr. Thorne's on economic structures, and Priya Desai's on human-computer interaction combine to offer a comprehensive, multi-faceted view of the 'Future of Work'.",
+    "answer": "Collectively, the four speakers provide a comprehensive 360-degree view of the 'Future of Work.' Dr. Alana Finch would establish the foundation by discussing the macro-level cultural and organizational shifts toward remote and asynchronous models. Kenji Tanaka would then build on this by detailing the specific AI and automation technologies that are driving productivity and enabling these new work structures. Dr. Marcus Thorne would provide a critical socio-economic lens, analyzing the impact of these changes on labor markets and the rise of the gig economy. Finally, Priya Desai would offer a forward-looking perspective, exploring the next generation of human-computer interaction and collaborative tools that will shape our future professional lives.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "You gave me four specific recommendations earlier for reducing eye strain from looking at my spreadsheets all day. Can you summarize all four of them for me?",
+    "answer": "I suggested you follow the 20-20-20 rule, use a matte screen filter to reduce glare, adjust your monitor's brightness to match the room's ambient light, and increase the font size in your spreadsheets.",
+    "category": "assistant_facts_evidence",
+    "recall": 0.5,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 2
+    }
+  },
+  {
+    "question": "Can you create a concise narrative summary of the four key sections you recommended for my presentation? I need it in a logical order, explaining how each part builds on the last to create a compelling argument for the new strategy.",
+    "answer": "Certainly. The narrative should begin with a review of last year's performance using CRM data to establish a data-driven baseline. Next, present the competitor analysis to identify strategic opportunities in the current market. Following that, introduce the proposed event calendar and budget as the direct plan to capitalize on those opportunities. Finally, conclude with the projected lead generation goals, which quantifies the expected impact and defines success for the strategy.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Can you create a comprehensive briefing document for our team traveling to the event by combining the cultural tips on business card etiquette, gift-giving, conversational taboos, and punctuality that you provided earlier?",
+    "answer": "To create a comprehensive briefing document for the team, consider the following cultural tips: First, ensure that business cards are exchanged with both hands and carefully examined before putting them away, as this shows respect. Second, when it comes to gift-giving, choose items that reflect your home country and avoid overly expensive gifts to prevent any discomfort. Third, steer clear of discussing politics or religion, as these are common conversational taboos. Lastly, understand that punctuality is valued differently; arriving a few minutes early is seen as respectful, but don't be surprised if meetings start a bit later than scheduled.",
+    "category": "assistant_facts_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "To finalize the event's run-of-show, please summarize your four music recommendations. I need a list that matches the specific genre to each of the four event segments: registration, networking, dinner, and the closing reception.",
+    "answer": "The recommendation for registration is an upbeat electronic playlist. For the networking sessions, instrumental lo-fi is suggested. During the dinner, a low-volume classical playlist is suitable. Finally, for the closing reception, an energetic pop playlist is recommended.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Based on the four social media ideas we just discussed, can you outline a cohesive, multi-platform engagement plan that integrates them for our upcoming conference?",
+    "answer": "Yes, here is an integrated plan. First, establish a unique, branded hashtag and display it on all materials. Second, launch a 'best photo' contest on Instagram, requiring participants to use that official hashtag. Third, host a live Q&A session on Twitter with a speaker, also using the hashtag to aggregate questions. Finally, to engage the professional audience, run interactive polls on LinkedIn related to conference themes and cross-promote them using the same hashtag to unify the campaign.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Please synthesize the information you've provided about potential AV vendors. Generate a summary table that lists each of the four companies\u2014Streamline Productions, Lumina Designs, ConnectAV Solutions, and Starlight Events\u2014along with their specific area of expertise and primary contact email.",
+    "answer": "Of course. Here is a summary of the four AV vendors we've discussed:\n- Company: Streamline Productions\n  - Expertise: Extensive experience with large-scale hybrid events\n  - Contact: contact@streamlineprod.com\n- Company: Lumina Designs\n  - Expertise: Creative and immersive stage lighting\n  - Contact: info@luminadesigns.net\n- Company: ConnectAV Solutions\n  - Expertise: All-in-one package with a proprietary streaming platform\n  - Contact: sales@connectav.com\n- Company: Starlight Events\n  - Expertise: Budget-friendly option, suitable for smaller-scale events\n  - Contact: quotes@starlightevents.co",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "You mentioned four icebreaker ideas for my events. Can you please summarize them and provide a ranking from easiest to most difficult to implement for a crowd of 200 people, based on the logistical requirements you described?",
+    "answer": "Certainly. Here is a summary of the four icebreaker suggestions, ranked from easiest to most difficult to implement for your 200-person event:\n1. Conversation Starter Cards: The easiest, as they only require printing and placing on tables with no staff needed.\n2. Color-Coded Badges: Easy, with the main effort being pre-event printing. No active management is needed during the event.\n3. Human Bingo: Moderately difficult, as it requires printing cards and a dedicated staff member to manage the activity.\n4. Speed-Networking: The most difficult due to its high logistical needs, including significant space, a timing system, and multiple staff members to direct attendees.",
+    "category": "assistant_facts_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "Please synthesize the four cost-saving recommendations you just provided\u2014regarding the venue, catering, signage, and staffing\u2014into a concise 'Scrappy Event Plan' outline that I can share with my team.",
+    "answer": "Here is the 'Scrappy Event Plan' outline: 1. Venue: Partner with a local co-working space to secure the location for free. 2. Catering: Source catering from a popular local food truck to save on costs. 3. Signage: Utilize digital signage and projectors instead of expensive printed banners. 4. Staffing: Recruit internal employee volunteers to manage event-day tasks instead of hiring temporary staff.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "How should Maya structure her post-event survey to effectively gather feedback, considering the recommended question types and logical flow?",
+    "answer": "To structure an effective post-event survey, Maya should start with a Net Promoter Score (NPS) question to gauge overall satisfaction, followed by open-ended questions to capture detailed feedback on the best and worst parts of the event. Next, she should include multiple-choice questions to assess the quality of specific sessions, and conclude with a demographic question to segment the responses for deeper analysis.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Based on our conversation, what is the complete, synthesized profile for the 'Data-Driven Decision Maker' persona, combining the criteria for job title, industry, past event attendance, and current product usage?",
+    "answer": "The 'Data-Driven Decision Maker' persona is a Director or Manager-level professional from the Technology, Finance, or Business Consulting industries. This individual has a history of attending analytics or ROI-themed webinars and workshops and is an active user of your CRM's advanced analytics dashboards or custom reporting features.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Based on the four solutions you mentioned, which one provides the easiest access for external vendors, and which is best for integrated, real-time collaboration for my internal team? Also, which two options are not well-suited for sharing dynamic, event-specific documents with external partners?",
+    "answer": "Google Drive offers the easiest access for external vendors. SharePoint is the best option for real-time internal team collaboration due to its deep integration with Microsoft 365. The two options not well-suited for sharing dynamic documents externally are the company Wiki, which is typically restricted to internal employees, and Asana, where sharing only specific files with vendors without project access is complicated.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Can you summarize the distinct atmosphere each entertainment option would create for our executive guests, considering the jazz trio, magician, wine tasting, and tech speaker?",
+    "answer": "The jazz trio would create a sophisticated and relaxed atmosphere, ideal for networking and conversation. The close-up magician would add an element of surprise and engagement, perfect for breaking the ice and sparking interactions. The wine tasting guided by a sommelier would offer a refined and educational experience, encouraging discussion and appreciation of fine wines. Finally, the keynote from a local tech celebrity would provide an inspiring and forward-thinking environment, aligning with the interests of tech-savvy executives.",
+    "category": "assistant_facts_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "I have my quarterly review briefing coming up. Based on our previous discussions, can you synthesize the four key public speaking tips you gave me into a simple, step-by-step pre-presentation checklist?",
+    "answer": "Of course. Here is a consolidated pre-presentation ritual: 1. First, structure your presentation with a clear beginning, middle, and end. 2. As you build your deck, focus on using impactful visuals rather than dense text on your slides. 3. Then, record yourself practicing to identify and correct any nervous habits. 4. Finally, right before you present, adopt a 'power pose' for a minute to boost your confidence.",
+    "category": "assistant_facts_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "Could you please consolidate the four temporary staffing agencies we discussed into a single list? For each one, please state its name and its primary specialty.",
+    "answer": "Certainly. The four agencies are: Pinnacle Placements, which specializes in corporate events; TechFlex Staffing, known for its tech-savvy staff; Global Connect Temps, which provides multilingual staff; and EventEase Solutions, which is a good budget-friendly option.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Based on your suggestions for a speaker management workflow, please outline the complete 60-day timeline. Specifically, when should I set up the portal, schedule the prep calls, distribute the briefing document, and have the on-site liaison begin their role?",
+    "answer": "The timeline starts 60 days before the event by setting up the centralized speaker portal and sending login details. At the 30-day pre-event mark, you should schedule the series of prep calls. The detailed 'day-of' briefing document should be sent out one week before the event. Finally, the on-site liaison's primary role begins on the day of the event itself.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Can you provide a detailed comparison of the four event apps you reviewed, focusing on their key differentiators, and recommend one that best aligns with my priority of integrating deeply with our CRM for effective lead tracking?",
+    "answer": "Based on your priority of integrating deeply with your CRM for effective lead tracking, App D is the most suitable choice as it offers the deepest CRM integration, which is crucial for tracking lead data efficiently. While App A excels in networking features, App B in customization, and App C in user interface simplicity, App D's CRM integration aligns best with your needs.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Okay, that's all very helpful. To create my master budget spreadsheet, could you please provide a consolidated summary listing the four main event budget categories we just discussed, along with three to four specific line item examples for each category?",
+    "answer": "Here is the consolidated summary for your budget spreadsheet:\n1.  **Venue & Catering**: Includes line items such as the main venue rental fee, food and beverage costs, liability insurance, and any necessary special event permits.\n2.  **Marketing & Promotion**: Covers expenses like digital advertising spend, the email marketing platform subscription, costs for printed materials like signage, and any public relations fees.\n3.  **Technology & AV**: Consists of costs for audio-visual equipment rental (mics, projectors), dedicated event Wi-Fi access, and the license fee for the event registration platform.\n4.  **Staffing & Speakers**: Accounts for speaker fees and honorariums, travel and accommodation expenses for key personnel, and wages for on-site temporary staff.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Based on our discussion, can you provide a consolidated summary of the four key crisis scenarios we identified and the single most critical communication channel you recommended for each one?",
+    "answer": "The four scenarios are: 1) A major speaker cancellation, which is best communicated via direct email to attendees. 2) A technology or power failure, which requires using the on-site PA system for announcements. 3) A health and safety incident, where the priority channel is communication through on-site staff and liaisons with emergency services. 4) Negative social media backlash, which should be addressed directly on the social media platform where it is occurring.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Based on the four best practices we just discussed, can you synthesize them into a formal, step-by-step Standard Operating Procedure for managing our event swag inventory?",
+    "answer": "Here is a formal SOP for Swag Inventory Management: \n1. Physical Organization: All swag items must be stored in dedicated, clearly labeled bins for easy identification and retrieval. \n2. Digital Tracking: Maintain a master inventory spreadsheet that serves as the single source of truth, tracking item names and current quantities. \n3. Proactive Reordering: For popular items, establish a minimum stock level, or 're-order point,' within the spreadsheet to trigger a new purchase order before stock is depleted. \n4. Quarterly Audit: Conduct a full physical inventory count at the end of each quarter to reconcile the spreadsheet with the physical stock and ensure data accuracy.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Can you provide a detailed summary of the four local printers you recommended, highlighting the unique advantage of each to help me decide which one best suits our diverse event signage needs?",
+    "answer": "The four local printers each have a distinct advantage: one offers rush printing for last-minute needs, another specializes in sustainable materials for eco-friendly options, a third has an easy-to-use online ordering portal for convenience, and the last one provided the best quote for large format banners, making them cost-effective for bigger projects.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Can you synthesize your four suggestions into a comprehensive 'Sales-Marketing Alignment Plan'? Please structure the plan by outlining the specific actions to take before, during, and after an event.",
+    "answer": "The Sales-Marketing Alignment Plan involves three stages. Before the event, invite sales reps to planning meetings and provide them with pre-written email templates for their clients. During the event, use a dedicated Slack channel to pass hot leads to sales in real-time. After the event, co-host a debrief session with sales to review lead quality and plan improvements.",
+    "category": "assistant_facts_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "Can you provide a detailed comparison of the production complexity and audience interaction potential for a single-track webinar, a multi-track virtual conference, an interactive workshop, and an 'ask me anything' session with an executive?",
+    "answer": "A single-track webinar is the simplest to produce, with minimal technical requirements and moderate audience interaction through Q&A. A multi-track virtual conference is more complex, requiring coordination across multiple sessions and platforms, but offers diverse interaction opportunities through breakout sessions. An interactive workshop demands high production complexity due to its need for real-time engagement tools and active participation, providing the highest level of audience interaction. An 'ask me anything' session with an executive is relatively simple to produce, focusing on direct interaction, but requires careful moderation to manage questions effectively.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "How can I effectively integrate VLOOKUP, PivotTables, Conditional Formatting, and SUMIFS to create a comprehensive and dynamic event budget dashboard that allows for detailed analysis and tracking of expenses?",
+    "answer": "To create a comprehensive event budget dashboard, start by using VLOOKUP to merge attendee lists with budget data, ensuring all relevant information is in one place. Then, use PivotTables to summarize and categorize expenses, providing a clear overview of spending across different categories. Apply Conditional Formatting to highlight any variances or anomalies in your budget, making it easy to spot areas that need attention. Finally, use SUMIFS to calculate detailed costs for specific criteria, such as total expenses for a particular event or vendor, allowing for precise budget tracking and analysis.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Based on the options you've laid out, can you synthesize a comparative summary of the four transportation methods\u2014luxury coach, executive vans, ride-sharing, and public transit\u2014evaluating each one across the dimensions of cost, scalability, and attendee convenience?",
+    "answer": "The luxury coach bus is a high-cost option with high scalability but medium convenience due to its fixed schedule. Executive vans offer a medium cost and high convenience with flexible trips, but have low scalability. A ride-sharing partnership has a variable cost, excellent scalability, and the highest on-demand convenience. Finally, public transit is the lowest cost and has very high scalability, but it offers the lowest convenience for attendees.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Please consolidate your four recommendations\u2014the newsletter, LinkedIn, the PCMA association, and the podcast\u2014into a weekly professional development plan, specifying the task and day for each activity from Monday through Friday.",
+    "answer": "Here is a consolidated weekly plan: On Monday, spend 15 minutes reading the 'Event MB' newsletter. On Tuesday, listen to the 'Event Tech Titans' podcast during your commute. On Thursday, dedicate 15 minutes to engaging with posts from key industry leaders on LinkedIn. Finally, on Friday, use your PCMA membership to review their weekly digest for relevant articles and upcoming webinars.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Can you summarize the four 'surprise and delight' ideas you suggested for the conference and rank them by their budget impact, from the least to the most expensive?",
+    "answer": "The four 'surprise and delight' ideas are: a high-end coffee bar with baristas, a professional headshot station, a surprise musical performance during a break, and a 'relaxation lounge' with massage chairs. Ranked by budget impact from low to high: the professional headshot station is the least expensive, followed by the high-end coffee bar, then the surprise musical performance, and the 'relaxation lounge' with massage chairs is the most expensive.",
+    "category": "assistant_facts_evidence",
+    "recall": 0.5,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 2
+    }
+  },
+  {
+    "question": "How can I summarize my key achievements, including the virtual event transition, improved lead conversion, new project management template, and high survey feedback, into a concise performance review statement?",
+    "answer": "In my performance review, I can highlight my successful transition of a major event to a virtual format, which maintained engagement and attendance. Additionally, I achieved a 15% improvement in lead conversion from events by leveraging CRM data. I also implemented a new event project management template that streamlined processes, and I received a positive feedback score of 92% on post-event surveys, reflecting high attendee satisfaction.",
+    "category": "assistant_facts_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "Can you provide a detailed summary of the four key training methods you recommended for managing Buster's energy, so I can share them with a friend?",
+    "answer": "The four key training methods for managing Buster's energy include crate training to provide calm time, using 'bully sticks' to satisfy his chewing needs, employing positive reinforcement with a clicker to teach commands, and enrolling him in a puppy socialization class in Ballard to improve his social skills.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "I'm heading to my pottery class on Tuesday. Can you synthesize the four key techniques you gave me for centering clay\u2014specifically regarding my grip, water use, pressure direction, and body stability\u2014into a single, step-by-step mental checklist I can use at the wheel?",
+    "answer": "Certainly. Here is a synthesized checklist for centering clay:\n1. **Stability:** Brace your arms or elbows against your legs to create a stable, non-wobbling base.\n2. **Lubrication:** Keep the clay consistently slick with water, but don't let a puddle form.\n3. **Grip:** Use a firm yet relaxed grip to control the clay without excess tension.\n4. **Pressure:** Apply force simultaneously inwards toward the center and downwards onto the wheel.",
+    "category": "assistant_facts_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "You previously recommended four places for me to visit in Ballard. Can you summarize those four spots and tell me which day, Saturday or Sunday, you'd suggest for each one this upcoming weekend?",
+    "answer": "I recommend visiting the Ballard Locks, the Nordic Museum, and 'The Anchor & Grin' coffee shop on Saturday. The Ballard Farmers Market is the best option for Sunday, as it only operates on that day.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Can you provide a detailed comparison of Peru, Portugal, New Zealand, and Japan for my next solo backpacking trip, focusing on budget, primary activities, ease of travel, and safety?",
+    "answer": "For your solo backpacking trip, here's a detailed comparison: Peru offers a budget-friendly experience with rich historical sites like Machu Picchu and diverse hiking opportunities. Portugal is known for its affordability, stunning coastlines, and vibrant cities like Lisbon, making it easy to travel around. New Zealand is perfect for adventure sports enthusiasts, offering activities like bungee jumping and hiking in a safe environment, though it can be more expensive. Japan provides a unique cultural experience with excellent safety and efficient public transportation, but it might be pricier than other destinations.",
+    "category": "assistant_facts_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "Can you provide a detailed shopping list of the four organizational items you recommended for my new apartment, specifying which area each item is intended for?",
+    "answer": "The shopping list for your apartment includes: shelf dividers for your closet, a wall-mounted pot rack for your kitchen, under-bed storage containers for seasonal items, and a cable management box for your desk.",
+    "category": "assistant_facts_evidence",
+    "recall": 0.5,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 2
+    }
+  },
+  {
+    "question": "Taking the four dog-friendly places in Ballard you just told me about\u2014the cafe with 'puppuccinos', the park with an off-leash area, the hardware store that allows dogs inside, and the brewery with a patio\u2014can you synthesize them into a logical 'Perfect Saturday with Buster' itinerary for me?",
+    "answer": "Certainly! Here is a potential itinerary for a perfect Saturday in Ballard with Buster: Start your morning at The Ballard Grind for a coffee and a 'puppuccino' for Buster. Afterwards, head to Golden Gardens Park to let him run and play in the off-leash area. In the afternoon, you can run errands at Ballard Hardware, since they allow dogs inside. To finish the day, you can both relax on the dog-friendly patio at Reuben's Brews.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Can you please summarize the four suppliers you mentioned for my pottery hobby? For each one, tell me its name and the specific category of supplies it's best for.",
+    "answer": "The four suppliers are: Art Pro Supplies for basic tools and starter kits, Georgetown Clay Arts for unique glazes, BulkCeramics.com for buying clay in bulk, and The Fremont Potters Guild for secondhand equipment.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Can you explain precisely how your four suggestions\u2014pottery, meditation, walks with Buster, and a pre-sleep no-screen rule\u2014collectively address the creative, mental, physical, and restorative aspects needed for a balanced wellness routine to prevent burnout?",
+    "answer": "The four practices create a balanced routine by targeting different aspects of your well-being. Your Tuesday pottery class provides a necessary creative and tactile outlet, contrasting with your logical work. The morning meditation builds mental resilience to manage daily stress. The daily walks with Buster ensure you get consistent light physical activity and a chance to disconnect from work. Finally, the no-screens rule before bed is crucial for neurological restoration by improving your sleep quality.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "You gave me four suggestions for my balcony garden soil: peat moss, perlite, worm castings, and compost. Can you combine all four of these recommendations into a single, step-by-step recipe for the perfect potting mix, including the proportions and application method for each component?",
+    "answer": "To create the potting mix, combine 6 parts peat moss, 2 parts perlite, and 1 part worm castings. Mix these three ingredients thoroughly. After potting your plants in this mixture, apply a one-inch layer of compost on top as a top-dressing.",
+    "category": "assistant_facts_evidence",
+    "recall": 0.5,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 2
+    }
+  },
+  {
+    "question": "Can you remind me of the four Southeast Asian dishes you suggested and advise which ones would be the simplest to prepare for a dinner party of six guests?",
+    "answer": "The four Southeast Asian dishes I suggested are Vietnamese Pho, Thai Green Curry, Pad Thai, and Mango Sticky Rice. For a dinner party of six, Pad Thai and Mango Sticky Rice would be the easiest to prepare, as they require fewer ingredients and less cooking time compared to Pho and Green Curry.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Can you provide a detailed comparison of the four dog walking options in Ballard, focusing on their cost, flexibility, and reliability?",
+    "answer": "To compare the four dog walking options: Rover offers a wide range of prices depending on the walker, with high flexibility due to its app-based scheduling, and generally reliable service based on user reviews. The local independent business tends to be more expensive but offers personalized service and high reliability, with flexible scheduling options. The neighborhood teenager is the most affordable option, but reliability may vary, and flexibility depends on their school schedule. Lastly, the doggy daycare with pick-up services is moderately priced, offers reliable care, and has fixed scheduling options, which might be less flexible.",
+    "category": "assistant_facts_evidence",
+    "recall": 0.5,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 2
+    }
+  },
+  {
+    "question": "Can you list the four books you recommended and explain how each one aligns with my interests in solo travel, craftsmanship, finding calm, and local settings?",
+    "answer": "The four books recommended for you are: a novel about a woman who travels solo, which resonates with your transformative backpacking experience in Southeast Asia; a non-fiction book on the philosophy of craftsmanship, aligning with your pottery hobby and appreciation for creating balance and functionality; a popular psychology book about finding calm, which supports your search for structure and calm in both personal and professional life; and a lighthearted mystery series set in Seattle, offering a familiar and enjoyable backdrop given your current residence in Ballard.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Can you provide a shopping list of the four pet-safe plants you recommended, along with a key care tip for each, ensuring they are suitable for a calm environment and safe for dogs like Buster?",
+    "answer": "The shopping list for pet-safe plants includes: 1) Spider Plant - Water moderately and ensure indirect sunlight; 2) Haworthia - Allow the soil to dry out between waterings and place in bright, indirect light; 3) Boston Fern - Keep the soil moist and provide high humidity with indirect light; 4) Orchid - Water weekly and place in a spot with filtered light. These plants are non-toxic to dogs and will help maintain a calm atmosphere in your home.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Can you evaluate the social interaction opportunities and stress-relief benefits of the yoga studio, climbing gym, running club, and HIIT gym in Ballard for someone with a desk job?",
+    "answer": "The yoga studio offers a calming environment with evening classes that help unwind after a stressful day, fostering a sense of community through shared mindfulness practices. The climbing gym provides a social atmosphere with opportunities for teamwork and problem-solving, which can be a fun and engaging way to relieve stress. The running club meets on weekends, offering a chance to socialize and enjoy the outdoors, which can be refreshing and stress-relieving. The HIIT gym provides high-intensity workouts that are great for stress relief and building camaraderie through group classes, but may be more physically demanding.",
+    "category": "assistant_facts_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "You suggested four different places for me to find furniture. Can you organize them into the most efficient geographical shopping route, starting from my apartment in Ballard and moving progressively outward?",
+    "answer": "Starting from your apartment in Ballard, the most logical route would be: first, the Ballard Consignment Store since it's in your neighborhood. Next, head east to the thrift stores in Fremont. After that, check Facebook Marketplace listings in nearby North Seattle neighborhoods like Greenwood. Finally, make the longer trip south to the IKEA in Renton for any remaining big items.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Can you detail the four puzzle toys you recommended for Buster and explain how each one uniquely stimulates him?",
+    "answer": "The four puzzle toys recommended for Buster are: a classic Kong toy, which provides mental stimulation by allowing him to work for his peanut butter treat; a snuffle mat, which engages his natural foraging instincts by hiding treats among the fabric; an interactive treat-dispensing ball, which encourages physical activity and problem-solving as he rolls it around to release treats; and a wooden puzzle with sliders, which challenges his cognitive skills as he figures out how to move the pieces to access the hidden treats.",
+    "category": "assistant_facts_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "Can you provide a step-by-step guide for making my homemade pizza dough using all the tips you've given me?",
+    "answer": "To make your homemade pizza dough, start by using '00' flour for a crispier crust. Measure your ingredients precisely with a kitchen scale. Allow the dough to cold-ferment in the fridge for 48 hours to enhance the flavor. Finally, preheat your pizza stone for at least an hour before baking.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Can you provide a detailed comparison of the four weekend trip ideas, focusing on the driving time from Ballard and the primary activities available at each destination?",
+    "answer": "The San Juan Islands are approximately a 2-hour drive from Ballard, including a ferry ride, and offer whale watching and a quiet retreat. Leavenworth is about a 2-hour drive and provides a Bavarian-themed town experience. The Olympic Peninsula is around a 3-hour drive, ideal for rainforest hikes. Portland is about a 3-hour drive and is known for its vibrant food scene. Each destination offers a unique experience based on the primary activities available.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "How do the ergonomic chair, monitor stand, plant, and noise-cancelling headset collectively enhance productivity and create a calming atmosphere in your home office?",
+    "answer": "The ergonomic chair supports your back, reducing strain during long work hours, while the monitor stand elevates your screen to eye level, promoting better posture. The plant improves air quality, contributing to a healthier environment, and the noise-cancelling headset minimizes distractions, allowing for focused work. Together, these elements create a balanced workspace that enhances both productivity and calmness.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Can you provide a detailed summary of the four volunteer opportunities and explain how each one specifically utilizes my event planning skills?",
+    "answer": "The four volunteer opportunities each leverage your event planning skills in unique ways: organizing a fundraiser for a local animal shelter allows you to use your experience from the arts foundation to plan engaging events; coordinating a community cleanup day in Ballard taps into your logistical skills to manage resources and volunteers effectively; helping with the Seattle International Film Festival connects to your college experience, allowing you to manage complex schedules and venues; and assisting with logistics for a local charity run involves your ability to handle last-minute changes and ensure smooth operations.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Can you summarize how the four items we discussed\u2014the essential oil, the weighted blanket, the music subscription, and the smart bulbs\u2014could be combined into a 'Decompression Kit' and explain how each one targets a different sensory pathway to create a calming environment?",
+    "answer": "Yes. The 'Decompression Kit' would create a comprehensively calming atmosphere by engaging multiple senses. The Aura Cacia Lavender Essential Oil uses aromatherapy for your sense of smell to promote relaxation. For your sense of touch, the Bearaby weighted blanket provides deep pressure stimulation to reduce anxiety. The Primephonic music subscription offers a soothing auditory experience for your sense of hearing. Finally, the Philips Hue smart bulbs control your sense of sight by creating a warm, dim light that signals your brain to wind down.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "You mentioned four different vets in Ballard that might be good for Buster. Can you create a single summary list that includes the name of each clinic and its unique feature?",
+    "answer": "Here is a summary of the four veterinarians: 1. Sunset Hill Veterinary Clinic offers extended evening hours. 2. Ballard Animal Hospital specializes in terrier breeds. 3. Nordic Pet Clinic has an in-house lab for quick diagnostic results. 4. Fremont Veterinary Clinic is recommended for its gentle approach with anxious dogs.",
+    "category": "assistant_facts_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "How can I create a consistent set of four matching mugs in my pottery class using the tips provided?",
+    "answer": "To create a consistent set of four matching mugs, first weigh out equal amounts of clay for each mug to ensure uniformity. Then, use a ruler to check the height and width of each mug to maintain consistent dimensions. Make all the handles at the same time to ensure they match, and finally, apply the same number of coats of glaze on each mug for a uniform finish.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Okay, I like those four meal prep ideas you gave me. Can you organize them into a weekly lunch schedule for Monday through Thursday?",
+    "answer": "Of course. Here is a simple lunch schedule based on my suggestions: on Monday, you can have the quinoa salad with roasted vegetables; on Tuesday, the chicken and avocado wraps; on Wednesday, the lentil soup; and on Thursday, the Greek yogurt bowl with nuts and berries.",
+    "category": "assistant_facts_evidence",
+    "recall": 0.5,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 2
+    }
+  },
+  {
+    "question": "Could you please summarize the four Vietnamese restaurants you mentioned? I need the name of each one, its neighborhood, and its specific specialty.",
+    "answer": "Certainly. The four recommendations were: Pho Bac S\u00fap Shop in the International District for authentic pho, Saigon Deli on Capitol Hill for Banh Mi sandwiches, Tamarind Tree in South Seattle for family-style dishes, and Ba Bar downtown for modern fusion.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Based on our conversation, please synthesize the four key components we discussed\u2014the specific equipment, the behavioral method, the reinforcement strategy, and the ideal starting environment\u2014into a unified, step-by-step plan for training Buster to walk without pulling.",
+    "answer": "First, fit Buster with a front-clip harness. Then, begin training in a low-distraction environment like your quiet street. While walking, use the 'stop and go' method by immediately stopping whenever he pulls. The moment the leash goes slack, reward him with a treat to positively reinforce the correct behavior before you start walking again.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "How can the four financial apps I recommended be used together to create a comprehensive strategy for managing your savings, budget, investments, and subscriptions?",
+    "answer": "To effectively manage your finances, you can use the automatic savings app to ensure regular contributions to your savings account without manual intervention. The detailed budget tracking app will help you categorize and monitor your spending, allowing you to adjust your budget as needed. The investment monitoring app provides insights into your portfolio's performance, helping you make informed decisions about your investments. Finally, the subscription tracking app keeps tabs on all your recurring expenses, ensuring you are aware of and can manage your subscriptions efficiently. Together, these apps provide a holistic view of your financial health, enabling you to optimize your savings, spending, investments, and recurring expenses.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Based on what you've told me, can you summarize the best use for each of the four clay types\u2014stoneware, porcelain, earthenware, and terracotta\u2014and then rank them from most to least difficult to work with on the pottery wheel?",
+    "answer": "Of course. For best use: Stoneware is for durable, functional items like mugs; Porcelain is for fine, delicate pieces; Earthenware is for decorative sculptures; and Terracotta is for outdoor planters. The difficulty ranking from most to least difficult on the wheel is: Porcelain, Stoneware, Terracotta, and Earthenware.",
+    "category": "assistant_facts_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "You gave me four separate tips for improving my sleep. Could you synthesize all four of them into a single, cohesive evening routine I can follow?",
+    "answer": "Of course. Here is a simple routine based on the four tips: First, commit to a consistent bedtime each night as part of your new schedule. As you prepare for bed, make your room completely dark by drawing your blackout curtains. For a final relaxing step, use a guided sleep meditation app to help quiet your mind. Remember that this evening routine will be most effective if you also adhere to the daytime advice of avoiding caffeine after 2 PM.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Can you list the four herbs you recommended for my balcony garden and provide a key care tip for each, specifically focusing on their sunlight and watering needs?",
+    "answer": "The four herbs recommended for your balcony garden are mint, basil, rosemary, and chives. Mint should be grown in its own pot and requires regular watering but can tolerate partial shade. Basil needs full sunlight and should be watered regularly to keep the soil moist. Rosemary prefers full sun and should be watered sparingly, allowing the soil to dry out between waterings. Chives thrive in full sun and need consistent moisture, but be careful not to overwater.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Can you list the four podcasts you recommended for my walks with Buster and explain how each aligns with my interests and background?",
+    "answer": "The four podcasts I recommended are: 1) A project management podcast, which aligns with your strategic and detail-oriented approach to event planning; 2) A travel podcast about adventurous women, reflecting your formative backpacking experience in Southeast Asia; 3) A comedy podcast to help you unwind, considering your high-pressure job and need for relaxation; and 4) A storytelling podcast reminiscent of your initial interest in journalism, which connects to your background in communications.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Okay, that's all great advice. Could you please consolidate those four recommendations into a single, summarized list for me called the 'Seattle Winter Survival Kit'?",
+    "answer": "Of course. Here is the 'Seattle Winter Survival Kit' list: 1. A pair of waterproof boots. 2. A high-quality rain jacket with a hood. 3. A 'happy lamp' for light therapy. 4. Waterproofing spray for other shoes and bags.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Based on the four Ballard coffee shops you've told me about, can you create a quick guide for me? I need to know which one is best for getting serious work done, which is ideal for quiet reading, which has the standout pastries for a casual meetup, and which one you said has the absolute best espresso.",
+    "answer": "For serious work, I recommend Anchor & Chain Coffee. For quiet reading, The Reading Nook Cafe is the ideal spot. For standout pastries, you should go to Ballard Bakeshop. And for the best espresso, The Daily Grind is the place to visit.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Based on the four methods you suggested for fixing my wobbly pot, can you create a summary that maps each specific technique to its correct stage in the pottery process, either 'leather-hard' or 'post-bisque firing'?",
+    "answer": "The four methods are applied at two different stages. At the leather-hard stage, you can either trim the base on the wheel, use a Surform tool to shave it down, or add small clay feet. The fourth method, sanding the base on a flat surface, should only be done after the pot has been bisque-fired.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Can you provide a detailed comparison of the four walking spots you mentioned based on their popularity, crowd levels, and leash requirements for dogs?",
+    "answer": "Discovery Park is generally popular but offers vast spaces where you might find less crowded areas; dogs must be leashed. Green Lake is very popular and can be crowded, especially on weekends, with leash requirements for dogs. Shilshole Bay Marina is less crowded, offering a more relaxed walk, and dogs need to be leashed. The Burke-Gilman Trail is popular among cyclists and joggers, so it can be busy, and dogs must be leashed.",
+    "category": "assistant_facts_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "Can you create a comprehensive 'Care Card' for my ceramic pieces that includes all necessary handling and maintenance instructions?",
+    "answer": "To care for your ceramic pieces, ensure they are hand-washed only, avoid sudden temperature changes to prevent cracking, do not use them in the microwave if they have a metallic glaze, and regularly check for any hairline cracks over time.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Okay, that's all very helpful. Can you create a single, prioritized shopping list for me? Please list the four grooming tools you mentioned for Buster in order of most to least important, based on how frequently I'll need to use them.",
+    "answer": "Of course! Here is the prioritized shopping list for Buster's grooming needs, from most to least frequently used: 1. Slicker Brush, 2. Nail Clipper with safety guard, 3. Gentle Dog-Specific Shampoo, 4. Deshedding Tool.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Can you summarize the four main benefits of my move to Ballard, considering the aspects of cost, environment, recreation, and community that we discussed?",
+    "answer": "The four main benefits of your move to Ballard are: lower rent for more space, a quieter neighborhood for better sleep, proximity to parks like Golden Gardens for recreation with Buster, and a stronger sense of local community.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Can you provide a detailed comparison of the Subaru Outback, Toyota Prius, Honda CR-V, and Chevy Bolt based on their cargo space for pottery supplies and their suitability for navigating Seattle's city streets?",
+    "answer": "The Subaru Outback offers the most cargo space, making it ideal for transporting pottery supplies, and its all-wheel drive is great for Seattle's varied terrain. The Toyota Prius, while more fuel-efficient, has less cargo space but is excellent for city driving due to its compact size. The Honda CR-V provides a balance with good cargo space and versatility for both city and occasional off-road driving. The Chevy Bolt, being all-electric, is perfect for sustainability-minded city driving, though its cargo space is more limited compared to the Outback and CR-V.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Can you provide a detailed comparison of the four birthday party ideas in Ballard based on their cost per person and how weather-dependent each option is?",
+    "answer": "The brewery tour costs approximately $30 per person and is not weather-dependent as it takes place indoors. The private group class at the pottery studio is $50 per person and also indoors, making it weather-independent. Renting a sailboat for an evening on the Sound costs about $100 per person and is highly weather-dependent, as it requires calm weather conditions. Hosting a bonfire at Golden Gardens Park is the most affordable at $10 per person, but it is weather-dependent, as rain or high winds could disrupt the event.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Based on the cleaning advice you provided for my apartment and dog, can you synthesize it all into a comprehensive schedule? Please outline the daily task, the weekly chores, and the recurring long-term appointment I need to remember.",
+    "answer": "Certainly. Here is a synthesized schedule: perform a quick cleanup with a cordless vacuum daily. On a weekly basis, wash both the couch cover and the paw-cleaning mat. Finally, remember to book a recurring professional grooming appointment for Buster every 4 to 6 weeks.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Over our chats, you've mentioned a few different bakeries here in Ballard. Can you please consolidate that for me? I need a list of the four bakeries you recommended and the specific specialty item each one is known for.",
+    "answer": "Based on our previous conversations, here are the four Ballard bakeries and their specialties: P\u00e2tisserie Le R\u00eave is known for croissants, Ballard Bread Co. for its sourdough, Sk\u00e5l & Fika for Scandinavian pastries, and The Cake Canvas for custom cakes.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "How can I create a 'Cozy Apartment Makeover' shopping list by combining the suggested items for making my apartment cozier for winter?",
+    "answer": "To create a 'Cozy Apartment Makeover' shopping list, include a chunky knit blanket for the sofa, a set of warm-toned throw pillows, string lights for ambiance, and a plush rug for the living room.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "How can I organize my travel memory box to best capture the essence of my Southeast Asia trip, considering the suggested categories of items?",
+    "answer": "To create a travel memory box that captures the essence of your Southeast Asia trip, start by organizing the physical mementos like ticket stubs in a section that represents the journey's timeline. Include a printed journal entry of a key memory, such as your experience in Hanoi, to add a personal narrative. Add a small vial of sand from a Thai beach to symbolize the serene moments of your trip. Finally, include a USB drive with all your photos to digitally preserve the visual memories. This combination ensures a comprehensive and meaningful representation of your travels.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Can you provide a comprehensive Pardot lead nurturing framework by integrating the ideal entry criteria, content mapping for each funnel stage, re-engagement triggers for stalled leads, and clear exit conditions for sales hand-off?",
+    "answer": "To create a comprehensive Pardot lead nurturing framework, start by establishing entry criteria based on specific web behaviors like page visits and form submissions. Next, map content assets to each funnel stage, ensuring alignment with lead interests and engagement levels. Implement re-engagement triggers for stalled leads, such as personalized emails or special offers, to reignite interest. Finally, define clear exit conditions for sales hand-off, such as reaching a lead score threshold or expressing purchase intent, to ensure a seamless transition to the sales team.",
+    "category": "assistant_facts_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "Can you summarize the four A/B test variables you recommended for improving email performance and explain the specific marketing principle each one is designed to validate?",
+    "answer": "The four A/B test variables are: 1) Personalized subject lines using merge fields, which test the principle of personalization to increase open rates. 2) Call-to-action button color (orange vs. blue), which tests the impact of color psychology on click-through rates. 3) Send time (morning vs. afternoon), which evaluates the effect of timing on engagement. 4) Sender's name (company vs. individual), which examines the influence of sender identity on recipient trust and response.",
+    "category": "assistant_facts_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "What are the four key performance indicators I should include in the executive-level marketing dashboard, and how do they collectively demonstrate our marketing department's impact on revenue?",
+    "answer": "The four key performance indicators to include are Marketing Qualified Lead (MQL) velocity, lead source ROI, campaign influence on the sales pipeline, and conversion rates for key landing pages. Together, they provide a comprehensive view of how efficiently leads are being processed, the effectiveness of different marketing channels, the impact of marketing campaigns on sales, and the success of landing pages in converting visitors into leads, thus illustrating the overall impact of the marketing department on revenue generation.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "I'm drafting the technical spec for this integration now. Can you provide a summary that explains how your four recommendations\u2014the middleware platform, OAuth 2.0, the data mapping strategy, and the error logging service\u2014work together to create a single, robust, and complete solution?",
+    "answer": "The four components form a complete and robust solution by addressing distinct layers of the integration. The middleware platform provides the core data transfer pipeline between the systems. OAuth 2.0 secures this pipeline by managing authentication and authorization without exposing credentials. The data mapping strategy ensures data integrity by accurately translating information, including custom objects. Finally, the error logging service makes the entire system resilient by providing real-time monitoring and enabling rapid troubleshooting of any failures.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Can you consolidate the four separate lead score decay rules we've discussed into a single, comprehensive data hygiene policy? I need a summary that specifies the actions for general inactivity, low-value engagements, email unsubscribes, and out-of-office replies.",
+    "answer": "The consolidated data hygiene policy is as follows: A lead's score is reduced by 25 points after 60 days of inactivity. A minor decay of 5 points is applied for low-value interactions, such as a soft email bounce. If a lead unsubscribes, their score is immediately reset to zero. Finally, all score decay is temporarily paused for any lead when an out-of-office auto-reply is detected.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Considering my past chaotic job experience, what are the four structural elements you recommended to ensure a freelance marketing project is organized and efficient?",
+    "answer": "The four structural elements recommended are: creating a detailed statement of work (SOW), using a project management tool for task tracking, setting up automated weekly progress reports for the client, and establishing a clear communication cadence.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Based on the four techniques you just outlined, what is the precise, unified strategy for my new hyper-targeted campaign? I need to know the specific criteria for website behavior, the engagement score threshold, the exact job roles to target, and the specific geographic region to focus on.",
+    "answer": "To create your hyper-targeted list, first, create a dynamic list of prospects who have visited both the 'Advanced Python Integration' and 'Enterprise Pricing' pages in the last 30 days. Second, use an automation rule to tag only those prospects who also have an engagement score of 100 or more with 'Hyper-Target Q3'. Third, further segment this list to include only individuals with job titles matching the regex pattern `(Data Scientist|Analytics Manager|Head of BI)`. Finally, filter this group for prospects located in Colorado, Utah, or Arizona to create your final audience for the Mountain West regional campaign.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Can you synthesize the four specific remote work strategies we've discussed\u2014time-blocking for deep work, setting a 6 PM offline status, automating weekly reports, and taking a dedicated tech-free lunch\u2014into a practical, step-by-step daily routine?",
+    "answer": "A practical daily routine would start with a 2-3 hour time-blocked session in the morning for deep work. Around midday, you should take a full hour for a completely tech-free lunch break, stepping away from your desk. The automation of your repetitive weekly reports is what frees up the time to make these deep work blocks effective. Finally, at 6 PM sharp, you should log off completely and set your status on team channels to 'offline' to protect your evenings.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Can you provide a detailed comparative summary of HubSpot, Marketo, Pardot, and ActiveCampaign, focusing on their primary strengths and the ideal user profiles for each platform?",
+    "answer": "HubSpot is known for its user-friendly interface, making it ideal for teams that prioritize ease of use and quick onboarding. Marketo offers powerful features and complexity, suitable for large enterprises needing advanced customization. Pardot excels in Salesforce integration, perfect for businesses already using Salesforce CRM. ActiveCampaign is strong with smaller businesses due to its affordability and robust email marketing capabilities.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Can you outline a cohesive four-stage content funnel strategy, detailing the specific content types recommended for each stage of the customer journey?",
+    "answer": "The cohesive four-stage content funnel strategy includes top-funnel blog posts for awareness, mid-funnel webinars for consideration, bottom-funnel case studies for decision-making, and post-sale implementation guides for retention.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "How can I effectively summarize my impact in terms of automation, optimization, efficiency, and technical implementation for my performance review, using the specific achievements in MQL increase, email open rates, time saved with Python, and tool integration?",
+    "answer": "To effectively summarize your impact, highlight the 25% increase in MQLs due to your new nurture program, the 15% improvement in email open rates from A/B testing, the 5 hours saved weekly by automating reports with Python, and the seamless integration of a new marketing tool that enhanced team productivity.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "How do statistical significance in A/B testing, cohort analysis for user retention, attribution modeling, and customer lifetime value calculation collectively provide a comprehensive view of marketing effectiveness, and why is each component essential for a holistic understanding?",
+    "answer": "Statistical significance in A/B testing ensures that marketing changes are based on reliable data, cohort analysis helps track user retention over time, attribution modeling clarifies the impact of different marketing touchpoints, and customer lifetime value calculation provides insight into the long-term value of customers. Together, these components offer a comprehensive view by validating marketing strategies, understanding customer behavior, evaluating marketing channels, and assessing long-term profitability.",
+    "category": "assistant_facts_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "Can you create a summary comparing the four certifications we discussed? For each one, please state its primary strategic focus\u2014whether it's deepening specialization, platform diversification, top-of-funnel analytics, or future-proofing technical skills\u2014and name the core competency it validates.",
+    "answer": "The Salesforce Certified Pardot Specialist focuses on deepening your current specialization by validating your expertise in designing lead nurturing journeys. The Marketo Certified Expert is for platform diversification, validating your competency in marketing automation on a different platform. The Google Analytics qualification centers on top-of-funnel analytics, validating your skills in web performance measurement. Finally, a Python certificate is for future-proofing your technical skills by validating your competency in custom data analysis.",
+    "category": "assistant_facts_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Who is the primary contact for Quantum Solutions?",
+    "answer": "The primary contact for Quantum Solutions is the CEO, David Chen.",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "What time is the follow-up call with Apex Digital scheduled for?",
+    "answer": "The follow-up call with Apex Digital is scheduled for Monday at 10 AM.",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "What is the CRM status for NextGen Innovations?",
+    "answer": "The CRM status for NextGen Innovations is 'On Hold - Q3'.",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "What is my sales quota?",
+    "answer": "Your sales quota is $22,000.",
+    "category": "changing_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "What is my assigned lead-generation territory?",
+    "answer": "New England Financial Services",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Who is the audience for the Starlight Enterprises demo?",
+    "answer": "The audience for the Starlight Enterprises demo is the CTO, with a focus on security.",
+    "category": "changing_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "For my lead generation calls, which script version do I need to use?",
+    "answer": "You need to use call script Version 3.5.",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Who is the key decision-maker for the Pioneer Corp deal?",
+    "answer": "While the Director of Procurement manages the selection process and the Head of IT holds significant technical influence, the final decision requires budget approval directly from the CFO.",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "What is the structure of my performance bonus?",
+    "answer": "The performance bonus is based on a team-based structure that considers the entire department's performance.",
+    "category": "changing_evidence",
+    "recall": 0.5,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 2
+    }
+  },
+  {
+    "question": "What is the schedule for our team sales meeting?",
+    "answer": "The team sales meeting has been replaced by a daily 15-minute stand-up held at 8:45 AM.",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "What is the prospect's budget for the SaaS solution?",
+    "answer": "$6k/quarter",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "What is the purchasing decision timeline for Silverlight Inc.?",
+    "answer": "After a successful demo, they are fast-tracking the process and aim to make a final decision by the end of the month.",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "My colleague is asking for a laptop recommendation. What's the model of the work laptop I'm using?",
+    "answer": "Your work laptop is a Microsoft Surface Book.",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "I'm updating my spreadsheet for the John Miller lead. What is the designated contact number for him?",
+    "answer": "The designated contact number for John Miller is his assistant Sarah's line, which is 555-0104.",
+    "category": "changing_evidence",
+    "recall": 0.5,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 2
+    }
+  },
+  {
+    "question": "What is the status of the Titan Holdings contract?",
+    "answer": "The Titan Holdings contract is currently awaiting signature.",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "For the final Quantum Dynamics presentation, what is the main value proposition I need to focus on?",
+    "answer": "The main value proposition to focus on is the platform's scalability to support their growth and its robust security protocols, as these were the primary concerns raised by their CTO.",
+    "category": "changing_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "What are the location details for the InnovateLeads client demo?",
+    "answer": "The demo is a virtual meeting. The correct link is `innovateleads.webex.com/meet/alex.chen/987654321`.",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Regarding the predictive lead scoring functionality at InnovateLeads, what is its official product name?",
+    "answer": "The predictive lead scoring functionality is officially named 'Predictive Insights' and is offered as a standalone add-on.",
+    "category": "changing_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "Who is the person I am assigned to mentor?",
+    "answer": "You are assigned to mentor Leo, the summer intern.",
+    "category": "changing_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "What is my assignment for the upcoming QBR presentation?",
+    "answer": "You are responsible for presenting the 'Enterprise Accounts' section by yourself.",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "What platform are we supposed to use for internal team messaging?",
+    "answer": "The company has standardized on Slack as the permanent platform for all internal communications.",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "For my job at InnovateLeads, what is the office attendance requirement?",
+    "answer": "For your specific sales team, your manager has set the requirement to be in the office one day a week, on Wednesdays.",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "To schedule a meeting with Mr. Harrison at Apex Corp, who is the point of contact?",
+    "answer": "You need to go through his permanent executive assistant, Maria, who has taken over all scheduling responsibilities.",
+    "category": "changing_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "What is my primary source of leads?",
+    "answer": "Your primary source of leads is the Cold-Calling List Beta, which is part of a new internal pilot program.",
+    "category": "changing_evidence",
+    "recall": 0.5,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 2
+    }
+  },
+  {
+    "question": "Regarding my performance targets, what is the key daily metric for my calling activities?",
+    "answer": "Your key daily metric is to have 20 meaningful conversations logged in the CRM each day.",
+    "category": "changing_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "For the Project Phoenix Kickoff, who is scheduled to attend the meeting with me?",
+    "answer": "Based on the final update, you are attending the Project Phoenix Kickoff by yourself. The strategy was changed for you to handle the initial meeting alone.",
+    "category": "changing_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "What industry does this lead belong to?",
+    "answer": "Blockchain-based logistics payment solutions",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "What is the standard contract length for new clients?",
+    "answer": "The standard contract length for new clients is 24 months, with an available discount for the first year.",
+    "category": "changing_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "What is the confirmed activity and location for the team-building event?",
+    "answer": "The finalized team-building event is a virtual escape room, and participants will join from home.",
+    "category": "changing_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "My CRM is acting up again and I can't log my call outcomes. How do I get technical support for this?",
+    "answer": "You need to contact Kevin, the dedicated tech support agent for the sales team, directly for any issues.",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "What software is used to store my call recordings?",
+    "answer": "Your call recordings are stored using Chorus.ai.",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Who approves my expense reports?",
+    "answer": "Your direct manager, Sarah Jenkins, is currently the one who approves your expense reports.",
+    "category": "changing_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "I'm on a call and the prospect is asking about our competitive discount. What's the standard procedure I should follow?",
+    "answer": "The current procedure is to price match an official, written quote from a direct competitor. The previous policy of offering a set percentage discount is no longer in effect.",
+    "category": "changing_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "What is the key performance indicator I am evaluated on?",
+    "answer": "Customer lifetime value for the accounts Alex brings in.",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Who is my collaborator on the proposal?",
+    "answer": "Kevin",
+    "category": "changing_evidence",
+    "recall": 0.5,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 2
+    }
+  },
+  {
+    "question": "What is the status of my vacation request?",
+    "answer": "Your vacation request for the first week of September is approved.",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "I just won the top performer award for the quarter. What is the prize for that?",
+    "answer": "Due to recent budget cuts, the prize is now a formal plaque and recognition in the company-wide email.",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "What type of food does Cooper eat?",
+    "answer": "Brand A Beef Recipe",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "For the oak writing desk I'm restoring, what wood stain am I using?",
+    "answer": "You are using the 'Red Mahogany' wood stain for the oak writing desk.",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "My friend is getting into coffee and asked me what brewer I use. What is it?",
+    "answer": "Based on your conversations, you are currently using a French press because it's the most convenient for your morning routine.",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "My mom is asking about my travel plans. Where am I going for my vacation?",
+    "answer": "You are doing a solo road trip through the U.S. National Parks in the Southwest.",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "What is the purpose of the spare room in Alex's townhouse?",
+    "answer": "The spare room in Alex's townhouse is used for his furniture restoration hobby.",
+    "category": "changing_evidence",
+    "recall": 0.5,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 2
+    }
+  },
+  {
+    "question": "I'm filling out a survey about local services and need to list my utilities. Who is my internet provider?",
+    "answer": "Your internet service provider is Starlink.",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "What hardware am I using for the desk?",
+    "answer": "You decided to restore and use the original brass handles to keep the desk authentic.",
+    "category": "changing_evidence",
+    "recall": 0.5,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 2
+    }
+  },
+  {
+    "question": "A friend invited me to go work out, but I can't remember my current status. Do I have a gym membership?",
+    "answer": "No, you do not have a gym membership. After trying CrossFit and the Community Center, you decided to cancel your last membership and work out at home in your garage instead.",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "On which day is my sofa scheduled to be delivered?",
+    "answer": "Saturday",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "I'm at the hardware store getting rollers and drop cloths. I need to confirm the paint color for the living room, what is it?",
+    "answer": "You decided to paint the living room 'Beige'.",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "What training class is Cooper enrolled in?",
+    "answer": "Cooper is enrolled in a 'Scent Work' class on Saturday afternoons.",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "What is my favorite pho restaurant?",
+    "answer": "Pho 75",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "When do I need to take out the trash?",
+    "answer": "You need to take out the trash on Tuesday night, as the pickup is on Wednesday mornings.",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "My colleague asked for a recommendation. What is the name of the meal service I use?",
+    "answer": "You are using a pre-made healthy meal service called Factor.",
+    "category": "changing_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "A friend is visiting and asked to connect to my Wi-Fi. What's the password?",
+    "answer": "The Wi-Fi password is OakDeskProject_2023.",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Who is my car insurance provider?",
+    "answer": "Your car insurance provider is Suburban Mutual.",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Where do I usually find old furniture?",
+    "answer": "County Line Flea Market",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "What news sources do I follow?",
+    "answer": "You currently don't have any print or digital news subscriptions. You follow the news by listening to NPR and BBC news podcasts.",
+    "category": "changing_evidence",
+    "recall": 0.5,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 2
+    }
+  },
+  {
+    "question": "I need to call about Cooper's prescription, what is the name of his veterinarian's office?",
+    "answer": "Cooper's veterinarian is Oakwood Animal Wellness Center.",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "What is my plan for the weekend?",
+    "answer": "You are spending the weekend visiting with your parents, who called to say they would be stopping by.",
+    "category": "changing_evidence",
+    "recall": 0.5,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 2
+    }
+  },
+  {
+    "question": "I'm at the hardware store now, what finish am I getting for the oak desk project?",
+    "answer": "You are getting a hardwax oil finish. You decided it was the best compromise, offering modern durability for daily use while still looking great.",
+    "category": "changing_evidence",
+    "recall": 0.5,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 2
+    }
+  },
+  {
+    "question": "Who is my electricity provider?",
+    "answer": "Your primary electricity provider is your own solar panel system, with Constellation as the backup supplier.",
+    "category": "changing_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "Who is responsible for my lawn care?",
+    "answer": "You are. After ProCut Landscapers raised their prices, you cancelled the service and decided to handle the lawn care yourself.",
+    "category": "changing_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "A friend asked me for a coffee recommendation. What brand of coffee beans do I buy?",
+    "answer": "You buy coffee beans from a local roaster called Red Rooster Coffee.",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "I want to recommend a podcast to a coworker. What's the one I listen to?",
+    "answer": "You listen to 'The Wood Whisperer'.",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Who is my emergency contact?",
+    "answer": "Your emergency contact is your mother.",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "How is my phone's morning alarm configured?",
+    "answer": "You are using the 'WakeUp Radio' app, which is set to stream the 'Classic Rock Hits' station. A feature is enabled for the DJ, 'Rockin' Rick', to give a weather update after the first song. If the stream fails, a backup 'Buzzer' sound will play.",
+    "category": "changing_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "For my tax forms, which organization receives my monthly charitable donation?",
+    "answer": "Your monthly charitable donation goes to the Bayside Beagle Rescue.",
+    "category": "changing_evidence",
+    "recall": 0.5,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 2
+    }
+  },
+  {
+    "question": "My friend wants to bring his dog to meet up with us. Remind me, what's the name of the park that Cooper and I go to?",
+    "answer": "Freedom Park",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "I'm heading out and need to grab my keys. Where did I decide to keep them?",
+    "answer": "You decided to attach a Tile tracker to your keys and just leave them in the pocket of your leather jacket.",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "My friend is buying a round and asked what my preference is. Based on our conversations, what style of beer should he get for me?",
+    "answer": "You prefer Belgian-style wheat beers.",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "What type of flooring is in the living room?",
+    "answer": "Hardwood floors",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "My mom asked if I need a winter coat for my birthday. What is my winter coat?",
+    "answer": "Your winter coat is a high-end technical parka, which you chose because it is very warm but not bulky.",
+    "category": "changing_evidence",
+    "recall": 0.5,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 2
+    }
+  },
+  {
+    "question": "What tool do I use for managing my personal finances?",
+    "answer": "You use a custom, color-coded spreadsheet for managing your personal finances.",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Where is the spare key for my car?",
+    "answer": "You have a new SUV, and its valet key is located in your wallet.",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "My neighbor is watching Cooper and watering my plants next week while I'm on a work trip. I'm making a list for them\u2014what plant is in the living room?",
+    "answer": "There is a large ZZ plant in the living room.",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Who is my 'In Case of Emergency' contact for my job?",
+    "answer": "Your 'In Case of Emergency' contact for your job is your sister, Emily.",
+    "category": "changing_evidence",
+    "recall": 0.5,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 2
+    }
+  },
+  {
+    "question": "What type of vacation does Alex prefer?",
+    "answer": "A solo backpacking trip in the Sierra Nevadas.",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "What is the project I am working on in my garage?",
+    "answer": "You are building a set of bookshelves.",
+    "category": "changing_evidence",
+    "recall": 0.5,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 2
+    }
+  },
+  {
+    "question": "Who is the owner of ticket #CZ-7891?",
+    "answer": "David is the owner of ticket #CZ-7891.",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "What is the status of ticket #AB-1234?",
+    "answer": "Resolved",
+    "category": "changing_evidence",
+    "recall": 0.25,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 1
+    }
+  },
+  {
+    "question": "Who is the point of contact for the Evergreen Corp issue?",
+    "answer": "Jessica Ray is the point of contact for the Evergreen Corp issue.",
+    "category": "changing_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "When is our weekly Tier 1 team sync?",
+    "answer": "The weekly Tier 1 team sync is now permanently scheduled for Wednesdays at 11 AM.",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "To confirm my schedule for the month, which weekends am I assigned for on-call duty?",
+    "answer": "Based on the most recent updates, you are scheduled for on-call duty on the third and fourth weekends of the month.",
+    "category": "changing_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "What is my primary performance goal for Q3?",
+    "answer": "Your primary performance goal for Q3 is to author 5 new, in-depth Knowledge Base articles for the most common support issues.",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "Who is leading the CRM dashboard update project?",
+    "answer": "Anna is leading the project. She has returned from leave and took over leadership from Chloe to see the project through to its final deployment.",
+    "category": "changing_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "I'm documenting the software used for a new support case. What is the version of our remote assistance tool?",
+    "answer": "The team is using SupportTool v3.1.",
+    "category": "changing_evidence",
+    "recall": 0.5,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 2
+    }
+  },
+  {
+    "question": "What is my assigned VPN profile?",
+    "answer": "The assigned VPN profile is 'Global-Standard'.",
+    "category": "changing_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "What is the title of the knowledge base article I'm writing?",
+    "answer": "The title of the knowledge base article is 'KB0072: Resolving Single Sign-On (SSO) Authentication Failures'.",
+    "category": "changing_evidence",
+    "recall": 0.25,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 1
+    }
+  },
+  {
+    "question": "I need to set my alarm for my shift tomorrow, just want to double-check. What are my work hours?",
+    "answer": "Your new permanent work hours are from 8 AM to 4 PM.",
+    "category": "changing_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "Who approves my expense reports?",
+    "answer": "According to the latest company policy for Tier 1 staff, your expense reports are approved by the centralized 'Finance-Ops' team.",
+    "category": "changing_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "What is the status of my internal application for the Tier 2 Engineer role?",
+    "answer": "The status of your application for the Tier 2 Engineer role is 'Application On Hold'.",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "I'm submitting an IT ticket and the form requires my hardware details. What is the model of my company laptop?",
+    "answer": "Your company laptop is a Dell Latitude 7430.",
+    "category": "changing_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "I'm writing a cross-departmental email and need to reference my group. What is the official name of my team?",
+    "answer": "The official name of your team is Core Product Support.",
+    "category": "changing_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "My system password just expired and I need to set a new one. Can you remind me of the password requirements?",
+    "answer": "Your new password must be at least 16 characters long and include at least one uppercase letter, one number, and one special character.",
+    "category": "changing_evidence",
+    "recall": 0.25,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 1
+    }
+  },
+  {
+    "question": "I need to fill out a form for HR regarding the mentorship program. Who is my mentor?",
+    "answer": "Your mentor is Kenji.",
+    "category": "changing_evidence",
+    "recall": 0.5,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 2
+    }
+  },
+  {
+    "question": "For a ticket involving a network connectivity complaint, what is the designated troubleshooting procedure?",
+    "answer": "The designated troubleshooting procedure is 'Procedure B rev. 3'.",
+    "category": "changing_evidence",
+    "recall": 0.25,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 1
+    }
+  },
+  {
+    "question": "I'm creating my monthly budget spreadsheet, what amount should I enter for my student loan payment?",
+    "answer": "Your monthly student loan payment is $315.",
+    "category": "changing_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "What is the purpose and amount for my savings plan?",
+    "answer": "The savings plan is to pay off a high-interest credit card, and the target amount is $3,500.",
+    "category": "changing_evidence",
+    "recall": 0.5,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 2
+    }
+  },
+  {
+    "question": "What video streaming service am I paying for?",
+    "answer": "You are paying for a subscription to Nebula.",
+    "category": "changing_evidence",
+    "recall": 1.0,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 4
+    }
+  },
+  {
+    "question": "I'm filling out a security form that requires my mobile carrier for identity verification. What is my cell phone provider?",
+    "answer": "Mint Mobile.",
+    "category": "changing_evidence",
+    "recall": 0.75,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 3
+    }
+  },
+  {
+    "question": "I'm selecting a motherboard for the new gaming PC. Which graphics card am I building around?",
+    "answer": "You are building the PC around a used Nvidia RTX 3080 that you are purchasing from a former colleague.",
+    "category": "changing_evidence",
+    "recall": 0.5,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 2
+    }
+  },
+  {
+    "question": "What are my plans for the weekend?",
+    "answer": "I plan to stay home and finish building my PC this weekend.",
+    "category": "changing_evidence",
+    "recall": 0.5,
+    "details": {
+      "retrieved_nodes": 25,
+      "evidence_count": 4,
+      "found": 2
+    }
+  }
+]

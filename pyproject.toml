@@ -1,4 +1,4 @@
-# pyproject.toml — MemoryKG package configuration (PEP 621)
+# pyproject.toml -- MemoryKG package configuration (PEP 621)
 #
 # Author: Eric G. Suchanek, PhD
 #
@@ -83,8 +83,8 @@ dependencies = [
     "torch>=2.5.1",
     "transformers>=5.5.0,<6",
     # `[sqlite-vec]` only, deliberately not `[semantic]`. That extra bundles
-    # numpy, rich, sentence-transformers, torch, transformers and sqlite-vec —
-    # all of which are already declared directly above — plus `lancedb`, which
+    # numpy, rich, sentence-transformers, torch, transformers and sqlite-vec --
+    # all of which are already declared directly above -- plus `lancedb`, which
     # was the last thing pulling the retired backend into a clean install.
     "kgmodule-utils[sqlite-vec]>=0.18.0",
 ]
@@ -101,11 +101,10 @@ viz = [
 #   pip install 'ftree-kg @ git+https://github.com/Flux-Frontiers/ftree_kg.git'
 #   pip install 'agent-kg @ git+https://github.com/Flux-Frontiers/agent_kg.git'
 
-# An `all` aggregate extra used to sit here. Beside the three viz packages it
-# re-listed every dev tool by name, so the wheel advertised them as installable
-# regardless of where the dev dependencies themselves lived — the defect that
-# survived doc_kg's and Metabo_kg's group migrations, and one the manifest
-# cannot show you. Retired: `viz` is the only feature extra.
+# Do not add an `all` aggregate extra. One used to sit here, re-listing every
+# dev tool by name alongside the three viz packages, so the wheel advertised
+# them as installable regardless of where the dev dependencies actually lived.
+# `viz` is the only feature extra.
 
 # ---------------------------------------------------------------------------
 # Dev tooling (Poetry group, not a PEP 621 extra)
@@ -132,12 +131,11 @@ ruff = ">=0.4.0,<0.16"
 # `dockg` and `pycodekg` MCP servers, which need those CLIs on PATH. Without a
 # declaration a fresh clone gets dead MCP servers and no hint why.
 #
-# A Poetry group rather than [project.optional-dependencies] on purpose. Groups
-# are maintainer-facing: locked and installable, but NOT written into the
-# wheel's metadata -- so no published extra acquires a sibling package, and
-# `pip install memory-kg[...]` is unaffected. An extra would put sibling KG
-# packages into the published dependency graph, which is what couples their
-# resolution together.
+# This is deliberately a Poetry group, not a [project.optional-dependencies]
+# extra. A group is maintainer-facing: locked and installable, but never
+# written into the wheel's metadata. `pip install memory-kg[...]` stays
+# unaffected, because an extra would instead put sibling KG packages into the
+# published dependency graph and couple their resolution together.
 #
 #   poetry install --with kg      # get the dockg / pycodekg CLIs into .venv/bin
 #   poetry install                # default: group is optional, skipped
@@ -193,13 +191,13 @@ select = [
 ignore = [
     "E501",     # line-too-long (formatter handles)
     "RUF001",   # ambiguous unicode in strings (en-dashes are intentional)
-    "RUF002",   # ambiguous unicode in docstrings (e.g. "1–6" ranges)
+    "RUF002",   # ambiguous unicode in docstrings (for example, "1–6" ranges)
     "SIM113",   # enumerate-for-loop (manual counter is occasionally clearer)
     "PLW0603",  # global-statement (MCP server uses an intentional module singleton)
 ]
 
 [tool.ruff.lint.per-file-ignores]
-# Benchmarks, scripts, and tests are research/eval/glue code — looser rules.
+# Benchmarks, scripts, and tests are research/eval/glue code -- looser rules.
 "benchmarks/**"     = ["B", "SIM", "PERF", "FURB", "PLW", "RET", "C4", "RUF005", "RUF059", "E402"]
 "scripts/**"        = ["B", "SIM", "PERF", "FURB", "PLW", "RET", "C4", "RUF005"]
 "tests/**"          = ["B", "SIM", "PERF", "FURB", "PLW", "RET", "RUF059"]
@@ -214,7 +212,7 @@ root = ["src"]
 unresolved-import = "ignore"
 # Whether a `ty: ignore` is *needed* depends on what happens to be installed.
 # The suppressions on the tqdm monkey-patching in index.py are load-bearing when
-# tqdm resolves and dead when it does not — tqdm reaches this package only as a
+# tqdm resolves and dead when it does not -- tqdm reaches this package only as a
 # transitive of sentence-transformers, so both states are reachable. Deleting
 # them to satisfy one install would break `ty` for the other. Mirrors doc-kg.
 unused-ignore-comment = "ignore"
