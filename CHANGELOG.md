@@ -7,13 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
+## [0.8.0] - 2026-08-23
 
 ### Changed
 
-### Removed
+- **Dev tooling moves from a `dev` extra to an optional Poetry group**, joining
+  the `kg` group already here. It can no longer be `pip install`ed and no
+  longer ships in the wheel. Install with `poetry install --with dev`.
+- **The `all` aggregate extra is removed.** Beside the three viz packages it
+  re-listed every dev tool by name, so the wheel advertised them as
+  installable regardless of where the dev dependencies actually lived.
+- `kgmodule-utils` floor raised 0.12.1 -> 0.18.0, `doc-kg` floor raised to
+  0.22.0 (both direct dependencies); `pycode-kg` floor raised to 0.23.1 in
+  the `kg` group.
 
 ### Fixed
+
+- **`install-hooks`-generated pre-commit template:** `MEMORYKG_SKIP_SNAPSHOT`
+  no longer also skips ruff, ty, and pytest — it now gates only the snapshot
+  step. The per-commit snapshot itself is opt-in via `MEMORYKG_SNAPSHOT=1`,
+  default off.
+- **`install-hooks`-generated pre-commit template:** hook entries call
+  `.venv/bin/<tool>` directly instead of `poetry run`, which could silently
+  resolve against an inherited `VIRTUAL_ENV` from a different repo.
+- `app.py` explicitly imports `streamlit.components.v1` instead of relying on
+  it being pulled in incidentally elsewhere in the import graph.
 
 ## [0.7.0] - 2026-08-02
 

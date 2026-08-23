@@ -1,66 +1,45 @@
-# Release Notes — v0.7.0
+# Release Notes — v0.8.0
 
-> Released: 2026-08-02
+> Released: 2026-08-23
 
-MemoryKG's vector store moves from LanceDB to sqlite-vec. A knowledge graph is now two
-files instead of a file and a directory tree — `.memorykg/graph.sqlite` alongside
-`.memorykg/vectors.sqlite` — and `lancedb` leaves the dependency tree entirely, taking
-`pyarrow` and the `lance-namespace` packages with it. This is a **breaking** change: the
-constructor parameters and the CLI flag are renamed with no fallback, and existing vector
-stores must be rebuilt. Retrieval quality is unchanged, and this release carries the
-evidence for that claim across four public benchmarks.
+This release trims MemoryKG's packaging surface and fixes three bugs that shipped
+in 0.7.0 and later: two in the pre-commit hook template `install-hooks` installs
+into consuming repos, and one in the Streamlit demo app.
 
 ## What changed
 
-**The vector store is a file now.** `MemoryKG(lancedb_dir=…)` becomes
-`MemoryKG(vectors_path=…)`, `SemanticIndex` loses its LanceDB-only `table` parameter, and
-`--lancedb PATH` becomes `--vectors PATH` on every command that took it. Raw `_distance`
-values roughly halve, because the old LanceDB table was created without an explicit metric
-and silently defaulted to squared L2 where sqlite-vec uses cosine. Ranking is unaffected —
-on normalised embeddings the two are a monotonic transform of one another, and nothing in
-the codebase derives a score from the distance.
+**Dev tooling is no longer pip-installable.** The `dev` extra becomes an optional
+Poetry group, joining the `kg` group already there — install it with
+`poetry install --with dev` rather than `pip install memory-kg[dev]`. The `all`
+aggregate extra is removed for the same reason: beside the three viz packages it
+re-listed every dev tool by name, so the wheel advertised them as installable
+regardless of where the dependencies actually lived. This is a **breaking** change
+for anyone installing either extra.
 
-**Parity is measured, not asserted.** All four benchmark suites were re-run on the new
-backend and diffed per item against the LanceDB-era results. LongMemEval reproduces
-identically across all 500 questions, including the provenance chunk behind each retrieved
-session. LoCoMo reproduces avg recall 0.981 across 1,986 questions. ConvoMem holds at 0.963
-tier-1 recall over 1,897 items, and MemBench at 87.7% over 1,100 items, with every
-per-category figure intact. The MemBench graph rebuilt on sqlite-vec matches the old build
-node for node and edge for edge.
+**Dependency floors move up.** `kgmodule-utils` rises from 0.12.1 to 0.18.0 and
+`doc-kg` to 0.22.0, both direct dependencies; `pycode-kg` rises to 0.23.1 in the
+`kg` group.
 
-**Retrieval is now reproducible across processes.** Chasing the handful of rows that did
-differ in those parity runs turned up a bug that predated the migration by four months:
-graph expansion iterated a `set`, so when several seeds reached the same node, which one
-claimed it depended on Python's per-process string hash randomisation. That choice feeds
-the ranking key, so the result tail reordered between runs and a different node fell off
-the `max_nodes` cut. Two runs of identical code against an identical index could differ on
-4 of 1,100 benchmark items while average recall moved by 0.001 — invisible in aggregate,
-and enough to make backend parity unfalsifiable. Expansion now traverses in sorted order.
+**The installed pre-commit hook had two bugs.** `MEMORYKG_SKIP_SNAPSHOT` was meant
+to skip only the per-commit snapshot step, but it sat above the quality-check
+invocation and silently skipped ruff, ty, and pytest along with it — now it gates
+only the snapshot, and the snapshot itself is opt-in via `MEMORYKG_SNAPSHOT=1`
+(default off). Separately, hook entries called tools through `poetry run`, which
+resolves against whichever environment the calling shell advertises; an inherited
+`VIRTUAL_ENV` from a different repo could silently redirect a hook to the wrong
+tool. Entries now call `.venv/bin/<tool>` directly.
 
-**The benchmark runners work again.** The rename broke all five of them, and nothing
-caught it: they are not imported by the package and no test touched them. They are fixed
-and now pinned by static guards that run in milliseconds without a corpus, a model, or a
-network. Release metadata gained similar guards, after the version bump left several
-declaration sites still reading the old number.
+**A Streamlit import relied on load order.** `app.py` called
+`st.components.v1.html()` after only `import streamlit as st` — importing a
+package doesn't bind its submodules, so this worked only because something else
+in the import graph happened to pull `streamlit.components` in first. The import
+is now explicit.
 
 ## Upgrading
 
-Delete the old vector store and rebuild — there is no conversion step, since vectors are
-derived data:
-
-```bash
-rm -rf .memorykg/lancedb
-memorykg build-index --repo <corpus>
-```
-
-Then update any code passing `lancedb_dir=` to `vectors_path=`, and any scripts passing
-`--lancedb` to `--vectors`. The environment variable is `MEMORYKG_VECTORS`. Note that
-`vectors_path` names a **file**: code that did `mkdir -p` on the old directory path will
-create a directory where the database belongs, and `sqlite3.connect` then fails.
-
-Nothing needs re-tuning. Distances changed scale but not order, so thresholds derived from
-ranks are unaffected; if you persisted raw `_distance` values, they are no longer
-comparable to ones recorded before this release.
+If you install this package with `[dev]` or `[all]`, switch to
+`poetry install --with dev`. Everything else in this release is additive or
+internal; no other action is needed.
 
 ---
 
