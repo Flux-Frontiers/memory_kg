@@ -481,11 +481,19 @@ class MemoryKG:
     def build_graph(self, *, wipe: bool = False) -> BuildStats:
         """Corpus parsing → SQLite only.
 
+        Streams parsed nodes/edges into the store as each file finishes parsing,
+        rather than holding the full corpus in memory before writing — the parse
+        and write phases together never need more than one batch's worth of nodes
+        resident at once, regardless of corpus size.
+
         :param wipe: Clear existing graph before writing.
         :return: :class:`BuildStats` (``indexed_rows`` will be ``None``).
         """
-        nodes, edges = self.graph.extract(force=wipe).result()
-        self.store.write(nodes, edges, wipe=wipe)
+        if wipe:
+            self.store.clear()
+        self.graph.extract_streaming(
+            on_batch=lambda nodes, edges: self.store.write(nodes, edges, wipe=False)
+        )
         s = self.store.stats()
         return BuildStats(
             corpus_root=str(self.corpus_root),

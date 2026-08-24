@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`MemoryKG.build_graph()` streams parsed nodes/edges into SQLite instead of
+  holding the full corpus in memory before writing.** `parse_corpus()` gained an
+  optional `on_batch` callback that flushes every ~5,000 pending nodes as files
+  finish parsing, and `DocGraph.extract_streaming()` wires it into the build
+  path. For LongMemEval-scale corpora (~500k+ nodes), Phase 1 previously held
+  every `DocNode`/`DocEdge` in memory as one pair of Python lists for the
+  entire parse before a single bulk write; peak memory now scales with the
+  batch size, not the corpus. `parse_corpus()`'s default (non-streaming)
+  behavior is unchanged for existing callers.
+- **`GraphStore._upsert_nodes`/`_upsert_edges` commit in batches of 5,000**
+  instead of one `executemany()` plus one `commit()` over the entire list.
+  This bounds peak memory during the write itself (previously a second full
+  copy of the corpus, flattened into row tuples) and applies to every caller,
+  not just the new streaming path — including `semantic_builder.py`'s
+  `dict_values` inputs.
+
 ## [0.8.0] - 2026-08-23
 
 ### Changed

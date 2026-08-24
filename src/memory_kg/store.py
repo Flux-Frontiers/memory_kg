@@ -111,6 +111,12 @@ class ProvMeta:
         return f"ProvMeta(best_hop={self.best_hop}, via_seed={self.via_seed!r})"
 
 
+# Rows per upsert transaction. Bounds peak memory to one batch's worth of
+# flattened row tuples, and keeps a single huge write from holding one
+# multi-hour transaction open (WAL growth, no progress checkpoints).
+_UPSERT_BATCH_SIZE = 5000
+
+
 # ---------------------------------------------------------------------------
 # GraphStore
 # ---------------------------------------------------------------------------
@@ -196,61 +202,71 @@ class GraphStore:
         self._upsert_edges(edges)
 
     def _upsert_nodes(self, nodes: Iterable[DocNode]) -> None:
-        """Upsert node rows into the ``nodes`` table."""
-        rows = [
-            (
-                n.id,
-                n.kind,
-                n.name,
-                n.title,
-                n.file_path,
-                n.char_start,
-                n.char_end,
-                n.heading_level,
-                n.text,
+        """Upsert node rows into the ``nodes`` table, committing in batches."""
+        node_list = nodes if isinstance(nodes, list) else list(nodes)
+        for start in range(0, len(node_list), _UPSERT_BATCH_SIZE):
+            batch = node_list[start : start + _UPSERT_BATCH_SIZE]
+            rows = [
+                (
+                    n.id,
+                    n.kind,
+                    n.name,
+                    n.title,
+                    n.file_path,
+                    n.char_start,
+                    n.char_end,
+                    n.heading_level,
+                    n.text,
+                )
+                for n in batch
+            ]
+            self.con.executemany(
+                """
+                INSERT INTO nodes
+                  (id, kind, name, title, file_path, char_start, char_end, heading_level, text)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(id) DO UPDATE SET
+                  kind=excluded.kind,
+                  name=excluded.name,
+                  title=excluded.title,
+                  file_path=excluded.file_path,
+                  char_start=excluded.char_start,
+                  char_end=excluded.char_end,
+                  heading_level=excluded.heading_level,
+                  text=excluded.text
+                """,
+                rows,
             )
-            for n in nodes
-        ]
-        self.con.executemany(
-            """
-            INSERT INTO nodes
-              (id, kind, name, title, file_path, char_start, char_end, heading_level, text)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(id) DO UPDATE SET
-              kind=excluded.kind,
-              name=excluded.name,
-              title=excluded.title,
-              file_path=excluded.file_path,
-              char_start=excluded.char_start,
-              char_end=excluded.char_end,
-              heading_level=excluded.heading_level,
-              text=excluded.text
-            """,
-            rows,
-        )
-        self.con.commit()
+            self.con.commit()
 
     def _upsert_edges(self, edges: Iterable[DocEdge]) -> None:
-        """Upsert edge rows into the ``edges`` table."""
-        rows = [
-            (
-                e.src,
-                e.rel,
-                e.dst,
-                (json.dumps(e.evidence, ensure_ascii=False) if e.evidence is not None else None),
+        """Upsert edge rows into the ``edges`` table, committing in batches."""
+        edge_list = edges if isinstance(edges, list) else list(edges)
+        for start in range(0, len(edge_list), _UPSERT_BATCH_SIZE):
+            batch = edge_list[start : start + _UPSERT_BATCH_SIZE]
+            rows = [
+                (
+                    e.src,
+                    e.rel,
+                    e.dst,
+                    (
+                        json.dumps(e.evidence, ensure_ascii=False)
+                        if e.evidence is not None
+                        else None
+                    ),
+                )
+                for e in batch
+            ]
+            self.con.executemany(
+                """
+                INSERT INTO edges (src, rel, dst, evidence)
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(src, rel, dst) DO UPDATE SET
+                  evidence=excluded.evidence
+                """,
+                rows,
             )
-            for e in edges
-        ]
-        self.con.executemany(
-            """
-            INSERT INTO edges (src, rel, dst, evidence)
-            VALUES (?, ?, ?, ?)
-            ON CONFLICT(src, rel, dst) DO UPDATE SET
-              evidence=excluded.evidence
-            """,
-            rows,
-        )
-        self.con.commit()
+            self.con.commit()
 
     # ------------------------------------------------------------------
     # Read — single node

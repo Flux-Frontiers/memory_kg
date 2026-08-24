@@ -37,6 +37,7 @@ from __future__ import annotations
 import os
 import re
 import threading
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from pathlib import Path
@@ -260,12 +261,14 @@ def parse_corpus(
     topic_threshold: float = 0.2,
     topics_file: str | None = None,
     n_workers: int = 8,
+    on_batch: Callable[[list[DocNode], list[DocEdge]], None] | None = None,
+    stream_batch_size: int = 5000,
 ) -> tuple[list[DocNode], list[DocEdge]]:
     """Extract a document knowledge graph from a corpus directory.
 
     This function is:
     - Deterministic (same files → same graph, modulo embedding similarity)
-    - Side-effect free (no writes)
+    - Side-effect free (no writes), unless *on_batch* is given
 
     For each text file the pipeline is:
 
@@ -295,6 +298,15 @@ def parse_corpus(
     :param cooccur_window: Reserved for future windowed co-occurrence expansion.
     :param topic_threshold: Topic confidence threshold in [0, 1].
     :param topics_file: Optional topics catalog (JSON/YAML).
+    :param on_batch: When given, parsed nodes/edges are flushed to this callback in
+        parsing-completion order instead of being accumulated in memory — for corpora
+        too large to hold in full (LongMemEval-scale). The returned tuple is then
+        always ``([], [])``. Shared nodes (topic/entity/keyword) that recur across
+        batches are deduplicated within a batch the same way as the non-streaming
+        path (first parse wins); a caller upserting each batch determines which
+        batch's version survives for a node that spans more than one.
+    :param stream_batch_size: Approximate number of pending nodes buffered before
+        each flush to *on_batch*. Ignored when *on_batch* is ``None``.
     :return: ``(nodes, edges)`` tuple.
     """
     from memory_kg.chunker import chunker_for  # pylint: disable=import-outside-toplevel
@@ -557,6 +569,28 @@ def parse_corpus(
     # -----------------------------------------------------------------------
     nodes: dict[str, DocNode] = {}
     edges: dict[tuple[str, str, str], DocEdge] = {}
+    pending_nodes: dict[str, DocNode] = {}
+    pending_edges: dict[tuple[str, str, str], DocEdge] = {}
+
+    def _flush_pending() -> None:
+        if on_batch is not None and pending_nodes:
+            on_batch(list(pending_nodes.values()), list(pending_edges.values()))
+            pending_nodes.clear()
+            pending_edges.clear()
+
+    def _merge(
+        local_nodes: dict[str, DocNode], local_edges: dict[tuple[str, str, str], DocEdge]
+    ) -> None:
+        # File-specific nodes (document/section/chunk) never collide.
+        # Shared nodes (topic/entity/keyword) use setdefault so the
+        # first writer wins — values are identical across files.
+        target_nodes = pending_nodes if on_batch is not None else nodes
+        target_edges = pending_edges if on_batch is not None else edges
+        for k, v in local_nodes.items():
+            target_nodes.setdefault(k, v)
+        target_edges.update(local_edges)
+        if on_batch is not None and len(pending_nodes) >= stream_batch_size:
+            _flush_pending()
 
     # A shared embedder wraps one torch model, which is NOT safe for concurrent
     # encode() calls across threads — doing so corrupts the native heap ("pointer
@@ -573,19 +607,16 @@ def parse_corpus(
                 task = prog.add_task("  Parsing", total=len(futures))
                 for fut in as_completed(futures):
                     local_nodes, local_edges = fut.result()
-                    # File-specific nodes (document/section/chunk) never collide.
-                    # Shared nodes (topic/entity/keyword) use setdefault so the
-                    # first writer wins — values are identical across files.
-                    for k, v in local_nodes.items():
-                        nodes.setdefault(k, v)
-                    edges.update(local_edges)
+                    _merge(local_nodes, local_edges)
                     prog.advance(task)
         else:
             for fut in as_completed(futures):
                 local_nodes, local_edges = fut.result()
-                for k, v in local_nodes.items():
-                    nodes.setdefault(k, v)
-                edges.update(local_edges)
+                _merge(local_nodes, local_edges)
+
+    if on_batch is not None:
+        _flush_pending()
+        return [], []
 
     return list(nodes.values()), list(edges.values())
 
