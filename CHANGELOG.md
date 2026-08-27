@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Two-phase build: `precompute_embeddings()` -> `build_from_cache()`.** The
+  expensive half of a build (model inference) can now be paid once into a
+  streaming JSONL cache and the cheap half (writing vectors) re-run from it as
+  often as needed. `SemanticIndex.precompute_embeddings()` routes by device --
+  MPS/CUDA takes a single-process stream that reuses the caller's already
+  loaded embedder (a GPU cannot fan out across spawn workers, and a second
+  model load on MPS is a SIGBUS), CPU goes through
+  `CorpusEmbedder.embed_to_cache()` from `kgmodule-utils`, which is both
+  multi-process and shard-bounded. `SemanticIndex.build_from_cache()` reads the
+  cache back a batch at a time and upserts with no model inference at all.
+  Rows are written and read line by line, so neither phase holds the corpus in
+  RAM. `MemoryKG.build_embeddings()` / `MemoryKG.build_index_from_cache()`
+  expose this on the API, and three CLI commands expose it on the command line:
+  `build-embeddings`, `build-index-from-cache`, and `build-two-phase`
+  (`--keep-cache` reuses an existing cache instead of re-embedding).
+  This is the format `doc_kg` already reads and writes; MemoryKG had never
+  adopted it, so an interrupted index build re-paid the entire embedding cost.
+  Verified bit-for-bit identical to the one-pass `build()` -- same rows, same
+  metadata, same search ranking and distances.
+  Caches must be `.jsonl` or `.jsonl.gz`; a whole-file `.json` cache is
+  rejected rather than silently loading a corpus into memory.
+
+### Fixed
+
+- **GPU allocator caches are now released each batch during `build()`.** The
+  MPS allocator caches freed blocks and never returns them, so a long embed
+  grew unbounded ("other allocations") until the machine swapped -- the
+  LongMemEval-S rebuild (528k+ nodes) had to be killed twice for running the
+  machine hot. `_mps_cache_evictor()` resolves the eviction callable once
+  (importing torch per batch would itself be a cost) and the build loop calls
+  it after each write. `doc_kg` has done this since 0.16.x; MemoryKG never
+  picked it up.
+
 ### Changed
 
 - **`MemoryKG.build_graph()` streams parsed nodes/edges into SQLite instead of

@@ -542,6 +542,94 @@ class MemoryKG:
             similar_edges_added=idx_stats.get("similar_edges_added"),
         )
 
+    def build_embeddings(
+        self,
+        out: Path | str | None = None,
+        *,
+        n_workers: int | None = None,
+        batch_size: int = 128,
+        device: str | None = None,
+        quiet: bool = False,
+    ) -> Path:
+        """Embed all nodes into a JSONL cache, writing nothing to the vector store.
+
+        Phase 1 of the two-phase build.  The graph must already exist — run
+        :meth:`build_graph` first.  Pair with :meth:`build_index_from_cache`, which
+        turns the cache into a vector index without re-running the model, so an
+        interrupted or repeated index build no longer re-pays the embedding cost.
+
+        :param out: Output path for the cache. Defaults to
+            ``<db_path parent>/embeddings.jsonl``. Must be ``.jsonl``/``.jsonl.gz``.
+        :param n_workers: Worker processes for CPU embedding (default: CPU count / 2).
+        :param batch_size: Per-batch embedding size.
+        :param device: Embedding device (``"cpu"``/``"mps"``/``"cuda"``); ``None``
+            resolves via ``KG_EMBED_DEVICE`` then auto-detect.
+        :param quiet: Suppress progress output.
+        :return: Path to the written cache file.
+        """
+        if out is None:
+            out = self.db_path.parent / "embeddings.jsonl"
+        return self.index.precompute_embeddings(
+            self.store,
+            Path(out),
+            n_workers=n_workers,
+            batch_size=batch_size,
+            device=device,
+            quiet=quiet,
+        )
+
+    def build_index_from_cache(
+        self,
+        cache_path: Path | str,
+        *,
+        wipe: bool = False,
+        batch_size: int = 4096,
+        discover_similar: bool = True,
+        similar_k: int = 5,
+        similarity_edge_threshold: float = 0.85,
+        similar_max_degree: int = 0,
+        quiet: bool = False,
+    ) -> BuildStats:
+        """Build the vector index from a pre-computed embedding cache.
+
+        Phase 2 of the two-phase build: no model inference at all — vectors are
+        read from *cache_path* and upserted directly.  Use :meth:`build_embeddings`
+        to produce the cache.
+
+        :param cache_path: Path to the JSONL embedding cache.
+        :param wipe: Delete existing vectors before indexing.
+        :param batch_size: Vector-store write batch size.
+        :param discover_similar: Run SIMILAR_TO edge discovery after indexing.
+        :param similar_k: Max SIMILAR_TO out-edges per chunk (top-k by score).
+        :param similarity_edge_threshold: Minimum cosine similarity for a SIMILAR_TO edge.
+        :param similar_max_degree: Hard per-node degree cap for SIMILAR_TO edges (0 = no cap).
+        :param quiet: Suppress progress output.
+        :return: :class:`BuildStats`.
+        """
+        idx_stats = self.index.build_from_cache(
+            self.store,
+            Path(cache_path),
+            wipe=wipe,
+            batch_size=batch_size,
+            discover_similar=discover_similar,
+            similar_k=similar_k,
+            similarity_edge_threshold=similarity_edge_threshold,
+            similar_max_degree=similar_max_degree,
+            quiet=quiet,
+        )
+        s = self.store.stats()
+        return BuildStats(
+            corpus_root=str(self.corpus_root),
+            db_path=str(self.db_path),
+            total_nodes=s["total_nodes"],
+            total_edges=s["total_edges"],
+            node_counts=s["node_counts"],
+            edge_counts=s["edge_counts"],
+            indexed_rows=idx_stats["indexed_rows"],
+            index_dim=idx_stats["dim"],
+            similar_edges_added=idx_stats.get("similar_edges_added"),
+        )
+
     # ------------------------------------------------------------------
     # Query
     # ------------------------------------------------------------------
