@@ -90,6 +90,24 @@ at k=20, hop=1 and diffed per item against the checked-in LanceDB results:
 | 4 | 300 | 0.8425 | 0.8417 | 3 |
 | **All** | **1,897** | **0.8865** | **0.8868** | 7 |
 
+Re-run again on 2026-08-26 at `9754508`, after the streaming-parse refactor (`c7e61ad`)
+landed in the build path:
+
+| Tier | Items | sqlite-vec (Aug 23) | HEAD (Aug 26) | Delta |
+|---|--:|--:|--:|--:|
+| 1 | 500 | 0.9627 | **0.9630** | +0.03 pp |
+| 2 | 597 | 0.8861 | **0.8860** | -0.01 pp |
+| 3 | 500 | 0.8387 | **0.8390** | +0.03 pp |
+| 4 | 300 | 0.8417 | **0.8420** | +0.03 pp |
+| **All** | **1,897** | **0.8868** | **0.8869** | +0.02 pp |
+
+Tier 1 reproduces per category as well as on the headline — User 0.990, Assistant 0.990,
+Abstention 0.950, Preferences 0.960, Implicit 0.923, 479/500 perfect, every figure
+identical to April. Tier 2 likewise (477/597 perfect, all six categories unchanged), and
+tier 4's perfect count holds at 181/300. Movement is confined to tiers 3-4 and never
+exceeds 0.006 on a category, which is inside the same runner nondeterminism described
+below. The streaming-parse refactor is value-neutral.
+
 Tiers 1 and 2 are identical row for row — same recall, same `found`, same `retrieved_nodes`
 on every question. Tier-1 per-category recall reproduces exactly (0.990 / 0.990 / 0.950 /
 0.923 / 0.960, 479/500 perfect), so the 96.3% result and the +3.4 pp margin over MemPal hold.

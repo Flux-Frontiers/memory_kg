@@ -13,17 +13,17 @@
 
 ## TL;DR
 
-MemoryKG achieves **100% retrieval recall on the ConvoMem benchmark — every evidence message found, on every question, across 17,463 items** spanning six evidence categories and four evidence tiers (1–4 messages). No LLM, no API key, no cloud inference at any stage. This is the largest non-LLM evaluation on ConvoMem reported. Full write-up: [`benchmarks/convomem/convomem_article.pdf`](benchmarks/convomem/convomem_article.pdf).
+MemoryKG achieves **96.3% tier-1 retrieval recall on the ConvoMem benchmark at k=20** (500 tier-1 items; 88.7% averaged across all 1,897 items spanning tiers 1–4), exceeding MemPal's published 92.9% tier-1 baseline by +3.4 pp. No LLM, no API key, no cloud inference at any stage. Full write-up: [`benchmarks/convomem/convomem_article.pdf`](benchmarks/convomem/convomem_article.pdf).
 
 Recall is measured by substring containment in the top-10 retrieved nodes: an evidence message counts as found if its text appears verbatim in (or contains) any retrieved node — lenient toward retrieval, but it cannot be fooled by paraphrase.
 
-On the LongMemEval-S benchmark, MemoryKG is **tied for the top LLM-free score** — 98.4% Recall@5, 99.4% Recall@10, 0.943 NDCG@10. It matches MemoryPalace's best LLM-free results (hybrid v4 held-out and hybrid v2) and beats every other LLM-free baseline. Three LLM-augmented systems rank higher at R@5 (MemoryPalace v4 + Haiku at 100%, MemoryPalace v3 + Haiku rerank at 99.4%, Supermemory ASMR at ~99%); MemoryKG narrows that gap without paying the inference cost. Full write-up: [`benchmarks/longmemeval/longmemeval_article.pdf`](benchmarks/longmemeval/longmemeval_article.pdf).
+On the LongMemEval-S benchmark, MemoryKG scores **98.2% Recall@5, 99.2% Recall@10, 0.954 NDCG@10** with zero inference (re-verified 2026-08-26). Against MemoryPalace hybrid v2 — the best LLM-free configuration either system has — it wins at depth (NDCG@10 0.954 vs 0.934, R@10 99.2% vs 99.0%) and trails by 0.2 pp at R@5 (98.2% vs 98.4%). LLM-augmented systems still rank higher at R@5 (MemoryPalace v4 + Haiku at 100%, v3 + Haiku rerank at 99.4%, Supermemory ASMR at ~99%); MemoryKG closes most of that gap without paying the inference cost. Full write-up: [`benchmarks/longmemeval/longmemeval_article.pdf`](benchmarks/longmemeval/longmemeval_article.pdf).
 
 | System | LongMemEval R@5 | LLM at query time | Cost / query |
 |---|--:|---|--:|
 | MemoryPalace hybrid v4 + Haiku (500q) | 100% | Yes (Claude Haiku) | $$ |
 | MemoryPalace hybrid v4 held-out (450q) | 98.4% | None | $0 |
-| **MemoryKG (this work)** | **98.4%** | **None** | **$0** |
+| **MemoryKG (this work)** | **98.2%** | **None** | **$0** |
 | MemoryPalace hybrid v3 + Haiku rerank | 99.4% | Yes (Claude Haiku) | $$ |
 | Supermemory ASMR | ~99% | Yes (undisclosed) | $$ |
 | MemoryPalace hybrid v2 | 98.4% | None | $0 |
@@ -154,7 +154,7 @@ See [docs/cli-reference.md](docs/cli-reference.md) for every flag.
 
 ## Reproducing the Benchmarks
 
-### LongMemEval-S — 98.4% R@5, 99.4% R@10
+### LongMemEval-S — 98.2% R@5, 99.2% R@10
 
 Full write-up: [`benchmarks/longmemeval/longmemeval_article.pdf`](benchmarks/longmemeval/longmemeval_article.pdf)
 
@@ -167,7 +167,9 @@ mkdir -p /tmp/longmemeval-data
 curl -fsSL -o /tmp/longmemeval-data/longmemeval_s_cleaned.json \
   https://huggingface.co/datasets/xiaowu0162/longmemeval-cleaned/resolve/main/longmemeval_s_cleaned.json
 
-# 3. Build the corpus + KG (BGE-small-en-v1.5, heading chunks)
+# 3. Build the corpus + KG (BGE-small-en-v1.5, heading chunks).
+#    Parse -> SQLite, embed -> JSONL cache, index from cache; --keep-cache
+#    resumes an interrupted build without re-embedding.
 poetry run python3 benchmarks/longmemeval/longmemeval_memkg.py prepare \
   /tmp/longmemeval-data/longmemeval_s_cleaned.json \
   --wipe --chunk-strategy heading
@@ -175,12 +177,13 @@ poetry run python3 benchmarks/longmemeval/longmemeval_memkg.py prepare \
 # 4. Run evaluation (haystack filter and k=50 are now defaults)
 poetry run python3 benchmarks/longmemeval/longmemeval_memkg.py run \
   /tmp/longmemeval-data/longmemeval_s_cleaned.json \
-  --out benchmarks/longmemeval/results_bge_haystack.jsonl
+  --out benchmarks/longmemeval/results_20260826_bge_haystack.jsonl
 
-# Expected: R@5=98.4%  R@10=99.4%  NDCG@10=0.943  Misses@10=3
+# Expected: R@1=90.4%  R@5=98.2%  R@10=99.2%
+#           recall_all@10=98.8%  NDCG@10=0.954  misses@10=4/500
 ```
 
-### ConvoMem — 100% Recall Across 17,463 Items
+### ConvoMem — 96.3% Tier-1 Recall Across 1,897 Items
 
 Full write-up: [`benchmarks/convomem/convomem_article.pdf`](benchmarks/convomem/convomem_article.pdf)
 
@@ -191,7 +194,7 @@ poetry run python3 benchmarks/convomem/convomem_bench.py --limit 1000 --tier 2
 poetry run python3 benchmarks/convomem/convomem_bench.py --limit 1000 --tier 3
 poetry run python3 benchmarks/convomem/convomem_bench.py --limit 1000 --tier 4
 
-# Expected: 100% retrieval recall on every category × tier (17,463 items, ~20 min)
+# Expected: 96.3% tier-1 recall@20 (500 items); 88.7% averaged across all 1,897 items in tiers 1-4 (~20 min)
 ```
 
 **Hardware tested:** Apple M5 Max MacBook Pro, 64 GB RAM. Also runs on CUDA and pure CPU (`MEMORYKG_DEVICE=cpu`).
@@ -209,9 +212,10 @@ poetry run python3 benchmarks/convomem/convomem_bench.py --limit 1000 --tier 4
 | [docs/MCP.md](docs/MCP.md) | MCP server setup (Claude Code, Copilot, Claude Desktop, Cline) |
 | [docs/CHEATSHEET.md](docs/CHEATSHEET.md) | MCP tool query patterns and examples |
 | [docs/SNAPSHOTS.md](docs/SNAPSHOTS.md) | Snapshot workflow and diff guide |
-| [benchmarks/BENCHMARKS.md](benchmarks/BENCHMARKS.md) | Full LongMemEval progression (75.8% → 98.4%), recall_all analysis, integrity notes |
-| [benchmarks/longmemeval/longmemeval_article.pdf](benchmarks/longmemeval/longmemeval_article.pdf) | LongMemEval-S report (PDF): 98.4% R@5, 99.4% R@10, 0.943 NDCG@10 |
-| [benchmarks/convomem/convomem_article.pdf](benchmarks/convomem/convomem_article.pdf) | ConvoMem report (PDF): 100% retrieval recall across 17,463 items |
+| [benchmarks/RESULTS_SUMMARY.md](benchmarks/RESULTS_SUMMARY.md) | **Canonical LongMemEval-S numbers** (2026-08-26 re-run), MemPalace head-to-head, progression |
+| [benchmarks/BENCHMARKS.md](benchmarks/BENCHMARKS.md) | Full LongMemEval progression (75.8% → 98.2%), recall_all analysis, integrity notes |
+| [benchmarks/longmemeval/longmemeval_article.pdf](benchmarks/longmemeval/longmemeval_article.pdf) | LongMemEval-S report (PDF): 99.2% R@10, 100% R@30, 0.954 NDCG@10 (2026-08-26 re-run) |
+| [benchmarks/convomem/convomem_article.pdf](benchmarks/convomem/convomem_article.pdf) | ConvoMem report (PDF): 96.3% tier-1 retrieval recall across 1,897 items |
 
 ---
 
