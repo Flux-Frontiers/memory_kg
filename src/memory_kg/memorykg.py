@@ -86,6 +86,19 @@ _TIMESTAMP_LINE_RE = re.compile(r"^timestamp:\s*(\S+)\s*$", re.MULTILINE)
 _PIPE_TIMESTAMP_RE = re.compile(r"(\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2})?)?)\s*\|")
 
 
+def _entry_point(stamp: str, recorded_at: str | None) -> dict[str, str]:
+    """The contract for a single entry stamp, as a point in time.
+
+    :param stamp: A timestamp lifted from a pipe-delimited entry line.
+    :param recorded_at: The document's recorded time, carried through.
+    :return: The contract keys, or ``{}`` if the stamp will not parse.
+    """
+    try:
+        return temporal_metadata(occurred_start=stamp, recorded_at=recorded_at)
+    except (ValueError, TypeError):
+        return {}
+
+
 def _chunk_temporal(text: str, fallback: dict[str, str]) -> dict[str, str]:
     """Derive a chunk's own temporal contract from its text.
 
@@ -483,6 +496,12 @@ def parse_corpus(
 
         chunks = chunker.chunk(raw_text, file_path=file_path)
 
+        # A diary reads forward: text after a date belongs to that date until the
+        # next one appears. The chunker splits mid-entry, so most chunks carry no
+        # stamp of their own -- 11,184 of 14,477 in the Pepys corpus. Inheriting
+        # the *document's* span instead would hand each of them the whole
+        # diary's decade, and every one would then match every time window.
+        open_entry: dict[str, str] = {}
         prev_chunk_id: str | None = None
         prev_section_slug: str | None = None
         global_chunk_idx = 0
@@ -495,6 +514,14 @@ def parse_corpus(
             char_start = chunk_info.get("char_start", 0)
             char_end = chunk_info.get("char_end", len(text))
             references = chunk_info.get("references", [])
+
+            # Advance the open entry to the last stamp this chunk contains, so
+            # the chunks that follow inherit the entry they actually belong to.
+            stamps = _PIPE_TIMESTAMP_RE.findall(text or "")
+            if stamps:
+                carried = _entry_point(max(stamps), doc_temporal.get("recorded_at"))
+                if carried:
+                    open_entry = carried
 
             if section_title:
                 slug = slugify(section_title)
@@ -532,7 +559,7 @@ def parse_corpus(
                 char_end=char_end,
                 heading_level=None,
                 text=text,
-                metadata=_chunk_temporal(text, doc_temporal),
+                metadata=_chunk_temporal(text, open_entry or doc_temporal),
             )
 
             local_edges[(parent_id, "CONTAINS", chunk_id)] = DocEdge(

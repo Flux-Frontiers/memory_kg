@@ -362,3 +362,89 @@ class TestRealCorpusEndToEnd:
         nodes, _ = parse_corpus(self._corpus(tmp_path))
         doc = next(n for n in nodes if n.kind == "document")
         assert doc.metadata["recorded_at"].startswith("2025-06")
+
+
+_PEPYS = Path("/home/user/corpus_pepys/data/pepys_clean.txt")
+
+
+@pytest.mark.skipif(not _PEPYS.exists(), reason="corpus_pepys data not present")
+class TestAgainstRealPepysCorpus:
+    """The real diary, in the real format, at real scale.
+
+    Every earlier version of these tests passed against text I invented, and
+    two separate bugs survived that. Both only appeared here:
+
+    1. The chunker normalises whitespace, so a line-anchored pattern found one
+       stamp per chunk instead of all of them.
+    2. Most chunks carry no stamp at all — 11,184 of 14,477 — because chunking
+       splits mid-entry. Falling back to the *document's* span handed each of
+       them the diary's whole decade, so 11,190 nodes matched a five-day
+       window.
+    """
+
+    @pytest.fixture(scope="class")
+    def parsed(self, tmp_path_factory):
+        import shutil
+
+        from memory_kg.memorykg import parse_corpus
+
+        d = tmp_path_factory.mktemp("pepys")
+        shutil.copy(_PEPYS, d / "pepys.txt")
+        nodes, _ = parse_corpus(d)
+        return nodes
+
+    def _dated(self, nodes, kind=None):
+        out = []
+        for n in nodes:
+            if kind and n.kind != kind:
+                continue
+            s = read_span(n.metadata)
+            if s and s.start:
+                out.append((n, s))
+        return out
+
+    def test_the_whole_decade_is_covered(self, parsed):
+        years = {s.start.year for _, s in self._dated(parsed)}
+        assert years >= set(range(1660, 1670))
+
+    def test_no_single_year_swamps_the_rest(self, parsed):
+        """The fallback bug piled 11,547 of 14,478 nodes onto 1660 alone — 80%.
+
+        A ratio test against the smallest year would be wrong: the diary starts
+        in April 1660 and ends in May 1669, so both end years are legitimately
+        thin. What the bug actually looked like was one year holding most of
+        the corpus.
+        """
+        import collections
+
+        dated = self._dated(parsed)
+        years = collections.Counter(s.start.year for _, s in dated)
+        biggest = max(years.values()) / len(dated)
+        assert biggest < 0.30, f"one year holds {biggest:.0%} of dated nodes"
+
+    def test_chunks_are_points_not_decade_wide_intervals(self, parsed):
+        """A chunk inheriting the document span would cover 1660-1669."""
+        wide = [
+            n.id for n, s in self._dated(parsed, "chunk") if s.end and (s.end - s.start).days > 366
+        ]
+        assert not wide, f"{len(wide)} chunks span more than a year"
+
+    def test_the_great_fire_is_findable(self, parsed):
+        """2-6 September 1666 should return the fire, and little else."""
+        hits = [
+            (n, s)
+            for n, s in self._dated(parsed, "chunk")
+            if s.overlaps("1666-09-02", "1666-09-06")
+        ]
+        assert 0 < len(hits) < 500, f"{len(hits)} hits — a window this narrow should be tight"
+        blob = " ".join((n.text or "").lower() for n, _ in hits)
+        assert "fire" in blob
+
+    def test_a_quiet_window_returns_far_fewer_than_the_fire(self, parsed):
+        """Sanity that the window is doing work, not matching everything."""
+
+        def count(a, b):
+            return sum(1 for _, s in self._dated(parsed, "chunk") if s.overlaps(a, b))
+
+        assert count("1666-09-02", "1666-09-06") > 0
+        assert count("1699-01-01", "1699-12-31") == 0

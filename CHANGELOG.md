@@ -44,6 +44,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   Frontmatter is retained as a fallback for corpora that do use it.
 
+- **Chunks with no stamp inherit the entry they belong to, not the document.**
+  Found by running the real Pepys diary rather than an invented file. Chunking
+  splits mid-entry, so most chunks carry no timestamp — **11,184 of 14,477** in
+  that corpus. They fell back to the document's contract, which had just become
+  the span of its whole content: the diary's entire decade. Every one of them
+  then matched every window, and a five-day query returned **11,190 nodes**
+  headed by 1660 content.
+
+  A diary reads forward: text after a date belongs to that date until the next
+  one. The chunk loop now carries the open entry and hands it to the chunks
+  that follow. The same five-day query — 2–6 September 1666 — now returns
+  **54 chunks**, and they are the Great Fire: Pepys woken at his window, Jane
+  reporting three hundred houses burned, Fish-street alight.
+
+  Year coverage went from 11,547 of 14,478 nodes piled on 1660 to an even
+  spread across 1660–1669.
+
+  Pinned by regression tests that run against `corpus_pepys` when it is present
+  and skip cleanly when it is not.
+
 ### Added
 
 - **Temporal memory: documents carry `occurred_start` and `recorded_at`.**
