@@ -11,6 +11,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > `poetry.lock` still resolves 0.13.2 and cannot follow until the version is on
 > PyPI. One `poetry lock` after the release clears it.
 
+### Fixed
+
+- **Memory dates are read per entry, from the format corpora actually use.**
+  The first version of this parsed YAML frontmatter `timestamp:` — DiaryKG's
+  convention, assumed to transfer. It does not. personal_agent's
+  `DiaryTransformer` writes one pipe-delimited entry per line:
+
+  ```
+  2024-01-15T10:30 | social | Reflection | On 2024-01-15T10:30, ...
+  ```
+
+  So on a real corpus `occurred_start` never fired, every node fell back to the
+  file's mtime, and a file spanning a year collapsed to the single moment it
+  was written out. The mechanism was right and the extraction was aimed at the
+  wrong format — it passed its tests because those tests fed it frontmatter
+  that no real corpus contains.
+
+  `_chunk_temporal()` now reads the stamps inside a chunk's own text: earliest
+  becomes `occurred_start`, latest `occurred_end` where they differ, so a chunk
+  covering several entries reads as the interval it actually spans. Document
+  nodes are dated by their content the same way, so a file of 2024 memories
+  written out in 2025 no longer lands on the timeline in 2025 — `recorded_at`
+  still records that it did.
+
+  **The pattern is deliberately not line-anchored.** The chunker normalises
+  whitespace, so by the time a chunk exists its entries sit on one line; an
+  anchored pattern found only the first stamp and silently dated a year of
+  memories to its opening entry. The `|` immediately after the stamp is what
+  keeps it specific — a bare date in prose (`On 2024-03-02, ...`) has no pipe
+  and does not match.
+
+  Frontmatter is retained as a fallback for corpora that do use it.
+
 ### Added
 
 - **Temporal memory: documents carry `occurred_start` and `recorded_at`.**

@@ -245,3 +245,120 @@ class TestReadPathsAgree:
         node = store.node("doc:x.md")
         store.close()
         assert node["metadata"] == {}
+
+
+class TestPipeDelimitedEntries:
+    """The format real memory corpora actually arrive in.
+
+    personal_agent's `DiaryTransformer` writes one pipe-delimited entry per
+    line, each with its own timestamp::
+
+        2024-01-15T10:30 | social | Reflection | On 2024-01-15T10:30, ...
+
+    Not YAML frontmatter. The first version of this module parsed frontmatter
+    only, so on a real corpus `occurred_start` never fired and every chunk in a
+    file spanning a year was stamped with the file's mtime — one point for
+    twelve months of memories, which is why it did not help.
+    """
+
+    def _entries(self):
+        return [
+            f"2024-{m}-{d}T10:30 | {c} | Reflection | On 2024-{m}-{d}, entry about {c}."
+            for m, d, c in [
+                ("01", "15", "social"),
+                ("03", "02", "work"),
+                ("06", "21", "hobbies"),
+                ("11", "09", "health"),
+            ]
+        ]
+
+    def _fallback(self):
+        return {"recorded_at": "2025-06-15T15:06:40+00:00"}
+
+    def test_a_single_entry_is_dated_by_its_stamp(self):
+        from memory_kg.memorykg import _chunk_temporal
+
+        out = _chunk_temporal(self._entries()[0], self._fallback())
+        assert out["occurred_start"].startswith("2024-01-15")
+
+    def test_a_chunk_spanning_entries_becomes_an_interval(self):
+        from memory_kg.memorykg import _chunk_temporal
+
+        out = _chunk_temporal(" ".join(self._entries()), self._fallback())
+        assert out["occurred_start"].startswith("2024-01-15")
+        assert out["occurred_end"].startswith("2024-11-09")
+
+    def test_timestamps_are_found_after_whitespace_normalisation(self):
+        """The chunker collapses newlines, so entries arrive on ONE line.
+
+        A line-anchored pattern finds only the first stamp and silently dates a
+        year of memories to its opening entry. That was a real bug.
+        """
+        from memory_kg.memorykg import _PIPE_TIMESTAMP_RE
+
+        one_line = " ".join(self._entries())
+        assert len(_PIPE_TIMESTAMP_RE.findall(one_line)) == 4
+
+    def test_a_bare_date_in_prose_is_not_mistaken_for_a_stamp(self):
+        """`On 2024-01-15, ...` has no pipe after it and must not match."""
+        from memory_kg.memorykg import _PIPE_TIMESTAMP_RE
+
+        found = _PIPE_TIMESTAMP_RE.findall(
+            "2024-01-15T10:30 | social | Reflection | On 2024-03-02, a later date in prose."
+        )
+        assert found == ["2024-01-15T10:30"]
+
+    def test_recorded_at_survives_alongside_the_entry_dates(self):
+        from memory_kg.memorykg import _chunk_temporal
+
+        out = _chunk_temporal(" ".join(self._entries()), self._fallback())
+        assert out["recorded_at"].startswith("2025-06-15")
+
+    def test_text_without_stamps_falls_back_to_the_document(self):
+        from memory_kg.memorykg import _chunk_temporal
+
+        assert _chunk_temporal("ordinary prose", self._fallback()) == self._fallback()
+
+
+class TestRealCorpusEndToEnd:
+    """A whole multi-month file, parsed the way the builder parses it."""
+
+    def _corpus(self, tmp_path):
+        import os
+
+        lines = [
+            f"2024-{m}-{d}T10:30 | {c} | Reflection | On 2024-{m}-{d}, entry about {c}."
+            for m, d, c in [("01", "15", "a"), ("06", "21", "b"), ("11", "09", "c")]
+        ]
+        f = tmp_path / "memories.md"
+        f.write_text("\n\n".join(lines) + "\n", encoding="utf-8")
+        os.utime(f, (1750000000, 1750000000))  # written 2025-06
+        return tmp_path
+
+    def _dated(self, tmp_path):
+        from memory_kg.memorykg import parse_corpus
+
+        nodes, _ = parse_corpus(self._corpus(tmp_path))
+        return {n.kind: read_span(n.metadata) for n in nodes if read_span(n.metadata)}
+
+    def test_document_and_chunk_are_dated_by_content(self, tmp_path):
+        spans = self._dated(tmp_path)
+        for kind in ("document", "chunk"):
+            assert spans[kind].start.year == 2024, kind
+
+    def test_a_mid_range_window_matches(self, tmp_path):
+        """June is inside the span but is neither endpoint."""
+        spans = self._dated(tmp_path)
+        assert spans["chunk"].overlaps("2024-06-01", "2024-06-30")
+
+    def test_the_write_year_does_not_match(self, tmp_path):
+        """The file was written in 2025; its memories are not from 2025."""
+        spans = self._dated(tmp_path)
+        assert not spans["chunk"].overlaps("2025-01-01", "2025-12-31")
+
+    def test_recorded_at_still_records_the_write(self, tmp_path):
+        from memory_kg.memorykg import parse_corpus
+
+        nodes, _ = parse_corpus(self._corpus(tmp_path))
+        doc = next(n for n in nodes if n.kind == "document")
+        assert doc.metadata["recorded_at"].startswith("2025-06")

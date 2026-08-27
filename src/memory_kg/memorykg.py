@@ -64,10 +64,61 @@ from memory_kg.topics import TopicExtractor
 # ============================================================================
 
 
-#: A ``timestamp:`` line in a document's YAML frontmatter -- the convention
-#: DiaryKG's corpora use and personal_agent's DiaryTransformer emits.
+#: A ``timestamp:`` line in a document's YAML frontmatter -- DiaryKG's corpus
+#: convention.
 _FM_TIMESTAMP_RE = re.compile(r"^---\n(.*?)\n---", re.DOTALL)
 _TIMESTAMP_LINE_RE = re.compile(r"^timestamp:\s*(\S+)\s*$", re.MULTILINE)
+
+#: The leading timestamp of a pipe-delimited memory line, which is what
+#: personal_agent's ``DiaryTransformer`` actually emits::
+#:
+#:     2024-01-15T10:30 | social | Reflection | On 2024-01-15T10:30, ...
+#:
+#: This, not frontmatter, is the format real memory corpora arrive in. A single
+#: such file spans months, so the date belongs to the *line* -- and therefore to
+#: the chunk containing it -- not to the file.
+#: Deliberately NOT anchored to line starts. The chunker normalises whitespace,
+#: so by the time a chunk exists its entries sit on one line -- an anchored
+#: pattern finds only the first timestamp in the chunk and silently dates a
+#: year of memories to its opening entry. The ``|`` immediately after the
+#: stamp is what makes this specific: a bare date inside prose ("On 2024-01-15,
+#: ...") is not followed by a pipe and does not match.
+_PIPE_TIMESTAMP_RE = re.compile(r"(\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2})?)?)\s*\|")
+
+
+def _chunk_temporal(text: str, fallback: dict[str, str]) -> dict[str, str]:
+    """Derive a chunk's own temporal contract from its text.
+
+    A memory corpus file is not one memory. `DiaryTransformer` writes one
+    pipe-delimited entry per line, each carrying its own timestamp, so a file
+    covering a year holds a year's worth of distinct dates. Stamping every
+    chunk with the *document's* date collapses that to a single point and makes
+    a timeline useless -- which is exactly what it did before this.
+
+    The chunk's ``occurred_start`` is the earliest timestamp appearing in it,
+    and ``occurred_end`` the latest when they differ, so a chunk spanning
+    several entries reads as the interval it actually covers.
+
+    :param text: The chunk's text.
+    :param fallback: The document-level contract, used when the chunk carries
+        no parseable timestamp of its own.
+    :return: The contract keys for this chunk.
+    """
+    stamps = _PIPE_TIMESTAMP_RE.findall(text or "")
+    if not stamps:
+        return dict(fallback)
+
+    ordered = sorted(stamps)
+    first, last = ordered[0], ordered[-1]
+    try:
+        out = temporal_metadata(
+            occurred_start=first,
+            occurred_end=last if last != first else None,
+            recorded_at=fallback.get("recorded_at"),
+        )
+    except (ValueError, TypeError):
+        return dict(fallback)
+    return out or dict(fallback)
 
 
 def _document_temporal(path: Path, raw_text: str) -> dict[str, str]:
@@ -407,11 +458,16 @@ def parse_corpus(
         topic_extractor = _get_topic_extractor()
 
         doc_title = _extract_doc_title(raw_text, abs_path)
-        # When this memory was written down. MemoryKG parses no dates out of a
-        # document's text, so it cannot say when the remembered thing happened
-        # -- only `recorded_at` is honest here, and the contract reads a
-        # recorded-only node as datable by that.
+        # The document-level date: frontmatter `timestamp:` if the corpus uses
+        # DiaryKG's convention, else the file's mtime as `recorded_at`. Chunks
+        # override this with their own line timestamps where they have them --
+        # see `_chunk_temporal`, which is what real DiaryTransformer corpora
+        # need, since one file spans months.
         doc_temporal = _document_temporal(abs_path, raw_text)
+        # A memory file's own span is the span of the entries inside it. Without
+        # this the document node carries only its mtime, so a file of 2024
+        # memories written out in 2025 lands on the timeline in 2025.
+        doc_temporal = _chunk_temporal(raw_text, doc_temporal)
         local_nodes[doc_id] = DocNode(
             id=doc_id,
             kind="document",
@@ -455,7 +511,7 @@ def parse_corpus(
                         char_end=char_end,
                         heading_level=section_level,
                         text=None,
-                        metadata=dict(doc_temporal),
+                        metadata=_chunk_temporal(text, doc_temporal),
                     )
                     local_edges[(doc_id, "CONTAINS", sec_id)] = DocEdge(
                         src=doc_id, rel="CONTAINS", dst=sec_id
@@ -476,7 +532,7 @@ def parse_corpus(
                 char_end=char_end,
                 heading_level=None,
                 text=text,
-                metadata=dict(doc_temporal),
+                metadata=_chunk_temporal(text, doc_temporal),
             )
 
             local_edges[(parent_id, "CONTAINS", chunk_id)] = DocEdge(
