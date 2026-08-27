@@ -46,7 +46,7 @@ packages = [{ include = "memory_kg", from = "src" }]
 # ---------------------------------------------------------------------------
 [project]
 name = "memory-kg"
-version = "0.7.0"
+version = "0.8.0"
 description = "A tool to build a semantically searchable knowledge graph from memories"
 readme = "README.md"
 license = "Elastic-2.0"
@@ -145,7 +145,7 @@ ruff = ">=0.4.0,<0.16"
 optional = true
 
 [tool.poetry.group.kg.dependencies]
-doc-kg = ">=0.21.2"
+doc-kg = ">=0.22.0"
 pycode-kg = ">=0.23.1"
 
 [project.urls]
