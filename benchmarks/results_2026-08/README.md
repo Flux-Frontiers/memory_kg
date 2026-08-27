@@ -171,17 +171,21 @@ poetry run python benchmarks/longmemeval/longmemeval_memkg.py run \
 
 ## Outstanding
 
-- **ConvoMem can silently shrink its own denominator.** It is the only benchmark here that
-  fetches its corpus over the network at run time; the other three read from checked-in
-  `data/` directories. `discover_files()` catches *every* exception and returns `[]`, so a
-  rate limit, timeout, or outage on a category that genuinely exists drops it from the run
-  with nothing but a printed warning — and the reported recall is then an average over a
-  smaller, differently-composed set. On this run three such warnings appeared and all three
-  were legitimate (tier 4 really has only User/Assistant/Changing Facts), which is exactly
-  what makes the failure mode dangerous: the benign case and the corrupting case look
-  identical. Fix is small — assert the known per-tier totals (500 / 597 / 500 / 300) and
-  fail loudly on a mismatch instead of averaging over whatever arrived. Filed, not done.
-- **`BENCHMARKS.md`** describes the progression as ending at 98.4%; it should end at 98.2%.
+Nothing known. The two items previously listed here are done:
+
+- **ConvoMem could silently shrink its own denominator** — fixed. It is the only benchmark
+  that fetches its corpus over the network at run time, and `discover_files()` caught
+  *every* exception and returned `[]`, so a rate limit on a category that genuinely exists
+  would drop it and average recall over a smaller set, with only a printed warning. The
+  benign case (tier 4 really does lack three categories) and the corrupting case were
+  indistinguishable in the output. `convomem_bench.py` now carries a `TIER_ITEM_COUNTS`
+  manifest and refuses to report a number when the loaded set does not match it — in either
+  direction, since an unexpected category inflates the denominator just as a missing one
+  deflates it. Verified against the live dataset: all four tiers load to exactly
+  500 / 597 / 500 / 300. 17 tests in `tests/test_convomem_manifest.py`.
+- **The benchmark index doc** quoted stale LongMemEval figures and `README.md` linked to a
+  `benchmarks/BENCHMARKS.md` that does not exist. Both fixed; the link now points at
+  `benchmarks/README.md`, which is where that content actually lives.
 
 Closed by this re-run: the ConvoMem README claim (corrected to 96.3% / 1,897 items in four
 places), the LongMemEval-S run and its number dispute, the gap where LoCoMo, MemBench and

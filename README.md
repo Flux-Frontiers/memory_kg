@@ -213,7 +213,7 @@ poetry run python3 benchmarks/convomem/convomem_bench.py --limit 1000 --tier 4
 | [docs/CHEATSHEET.md](docs/CHEATSHEET.md) | MCP tool query patterns and examples |
 | [docs/SNAPSHOTS.md](docs/SNAPSHOTS.md) | Snapshot workflow and diff guide |
 | [benchmarks/RESULTS_SUMMARY.md](benchmarks/RESULTS_SUMMARY.md) | **Canonical LongMemEval-S numbers** (2026-08-26 re-run), MemPalace head-to-head, progression |
-| [benchmarks/BENCHMARKS.md](benchmarks/BENCHMARKS.md) | Full LongMemEval progression (75.8% → 98.2%), recall_all analysis, integrity notes |
+| [benchmarks/README.md](benchmarks/README.md) | All four benchmarks at a glance, task descriptions, reproduce commands |
 | [benchmarks/longmemeval/longmemeval_article.pdf](benchmarks/longmemeval/longmemeval_article.pdf) | LongMemEval-S report (PDF): 99.2% R@10, 100% R@30, 0.954 NDCG@10 (2026-08-26 re-run) |
 | [benchmarks/convomem/convomem_article.pdf](benchmarks/convomem/convomem_article.pdf) | ConvoMem report (PDF): 96.3% tier-1 retrieval recall across 1,897 items |
 
