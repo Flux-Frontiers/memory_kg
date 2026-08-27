@@ -38,11 +38,13 @@ import os
 import re
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Literal, cast
+from typing import Any, Literal, cast
 
 from kg_utils.embed import DEFAULT_MODEL as DEFAULT_MODEL
+from kg_utils.temporal import temporal_metadata
 
 from memory_kg.relations import (
     cooccur_pairs,
@@ -62,6 +64,120 @@ from memory_kg.topics import TopicExtractor
 # ============================================================================
 
 
+#: A ``timestamp:`` line in a document's YAML frontmatter -- DiaryKG's corpus
+#: convention.
+_FM_TIMESTAMP_RE = re.compile(r"^---\n(.*?)\n---", re.DOTALL)
+_TIMESTAMP_LINE_RE = re.compile(r"^timestamp:\s*(\S+)\s*$", re.MULTILINE)
+
+#: The leading timestamp of a pipe-delimited memory line, which is what
+#: personal_agent's ``DiaryTransformer`` actually emits::
+#:
+#:     2024-01-15T10:30 | social | Reflection | On 2024-01-15T10:30, ...
+#:
+#: This, not frontmatter, is the format real memory corpora arrive in. A single
+#: such file spans months, so the date belongs to the *line* -- and therefore to
+#: the chunk containing it -- not to the file.
+#: Deliberately NOT anchored to line starts. The chunker normalises whitespace,
+#: so by the time a chunk exists its entries sit on one line -- an anchored
+#: pattern finds only the first timestamp in the chunk and silently dates a
+#: year of memories to its opening entry. The ``|`` immediately after the
+#: stamp is what makes this specific: a bare date inside prose ("On 2024-01-15,
+#: ...") is not followed by a pipe and does not match.
+_PIPE_TIMESTAMP_RE = re.compile(r"(\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2})?)?)\s*\|")
+
+
+def _entry_point(stamp: str, recorded_at: str | None) -> dict[str, str]:
+    """The contract for a single entry stamp, as a point in time.
+
+    :param stamp: A timestamp lifted from a pipe-delimited entry line.
+    :param recorded_at: The document's recorded time, carried through.
+    :return: The contract keys, or ``{}`` if the stamp will not parse.
+    """
+    try:
+        return temporal_metadata(occurred_start=stamp, recorded_at=recorded_at)
+    except (ValueError, TypeError):
+        return {}
+
+
+def _chunk_temporal(text: str, fallback: dict[str, str]) -> dict[str, str]:
+    """Derive a chunk's own temporal contract from its text.
+
+    A memory corpus file is not one memory. `DiaryTransformer` writes one
+    pipe-delimited entry per line, each carrying its own timestamp, so a file
+    covering a year holds a year's worth of distinct dates. Stamping every
+    chunk with the *document's* date collapses that to a single point and makes
+    a timeline useless -- which is exactly what it did before this.
+
+    The chunk's ``occurred_start`` is the earliest timestamp appearing in it,
+    and ``occurred_end`` the latest when they differ, so a chunk spanning
+    several entries reads as the interval it actually covers.
+
+    :param text: The chunk's text.
+    :param fallback: The document-level contract, used when the chunk carries
+        no parseable timestamp of its own.
+    :return: The contract keys for this chunk.
+    """
+    stamps = _PIPE_TIMESTAMP_RE.findall(text or "")
+    if not stamps:
+        return dict(fallback)
+
+    ordered = sorted(stamps)
+    first, last = ordered[0], ordered[-1]
+    try:
+        out = temporal_metadata(
+            occurred_start=first,
+            occurred_end=last if last != first else None,
+            recorded_at=fallback.get("recorded_at"),
+        )
+    except (ValueError, TypeError):
+        return dict(fallback)
+    return out or dict(fallback)
+
+
+def _document_temporal(path: Path, raw_text: str) -> dict[str, str]:
+    """Derive the shared temporal contract for one memory document.
+
+    Keeps *occurred* and *recorded* apart, which is the whole point for memory:
+    a note written tonight about last Tuesday happened on Tuesday and was
+    recorded tonight, and a timeline that files it under tonight is wrong about
+    it. The same distinction Hindsight draws with its own
+    ``occurred_start``/``occurred_end`` fields.
+
+    - ``occurred_start`` -- the document's own ``timestamp:`` frontmatter, when
+      it has one. Precision is preserved, so a memory dated only by year stays
+      a year.
+    - ``recorded_at`` -- the file's modification time, always available, which
+      says when the memory was written down and claims nothing about when the
+      remembered thing happened.
+
+    A document with no frontmatter date gets ``recorded_at`` alone; the
+    contract still treats such a node as datable, by that.
+
+    :param path: Absolute path to the source document.
+    :param raw_text: The document's full text, for frontmatter.
+    :return: The contract keys, or ``{}`` when neither source yields a date.
+    """
+    occurred: str | None = None
+    block = _FM_TIMESTAMP_RE.match(raw_text)
+    if block and (line := _TIMESTAMP_LINE_RE.search(block.group(1))):
+        occurred = line.group(1)
+
+    try:
+        mtime = datetime.fromtimestamp(path.stat().st_mtime, tz=UTC)
+    except (OSError, ValueError, OverflowError):
+        mtime = None
+
+    try:
+        return temporal_metadata(occurred_start=occurred, recorded_at=mtime)
+    except (ValueError, TypeError):
+        # An unparseable frontmatter date must not cost the document its
+        # recorded time, nor fail a corpus build.
+        try:
+            return temporal_metadata(recorded_at=mtime)
+        except (ValueError, TypeError):
+            return {}
+
+
 @dataclass(frozen=True)
 class DocNode:
     """
@@ -78,6 +194,9 @@ class DocNode:
     :param char_end: End character offset
     :param heading_level: Markdown heading level (1–6) for section nodes; None otherwise
     :param text: Raw text content of this node
+    :param metadata: Domain-specific extension data, persisted as JSON. Carries
+                     the :mod:`kg_utils.temporal` contract keys for dated
+                     corpora; ``{}`` when a node has none.
     """
 
     id: str
@@ -89,6 +208,7 @@ class DocNode:
     char_end: int | None
     heading_level: int | None
     text: str | None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -351,6 +471,16 @@ def parse_corpus(
         topic_extractor = _get_topic_extractor()
 
         doc_title = _extract_doc_title(raw_text, abs_path)
+        # The document-level date: frontmatter `timestamp:` if the corpus uses
+        # DiaryKG's convention, else the file's mtime as `recorded_at`. Chunks
+        # override this with their own line timestamps where they have them --
+        # see `_chunk_temporal`, which is what real DiaryTransformer corpora
+        # need, since one file spans months.
+        doc_temporal = _document_temporal(abs_path, raw_text)
+        # A memory file's own span is the span of the entries inside it. Without
+        # this the document node carries only its mtime, so a file of 2024
+        # memories written out in 2025 lands on the timeline in 2025.
+        doc_temporal = _chunk_temporal(raw_text, doc_temporal)
         local_nodes[doc_id] = DocNode(
             id=doc_id,
             kind="document",
@@ -361,10 +491,17 @@ def parse_corpus(
             char_end=len(raw_text),
             heading_level=None,
             text=raw_text[:512],
+            metadata=dict(doc_temporal),
         )
 
         chunks = chunker.chunk(raw_text, file_path=file_path)
 
+        # A diary reads forward: text after a date belongs to that date until the
+        # next one appears. The chunker splits mid-entry, so most chunks carry no
+        # stamp of their own -- 11,184 of 14,477 in the Pepys corpus. Inheriting
+        # the *document's* span instead would hand each of them the whole
+        # diary's decade, and every one would then match every time window.
+        open_entry: dict[str, str] = {}
         prev_chunk_id: str | None = None
         prev_section_slug: str | None = None
         global_chunk_idx = 0
@@ -377,6 +514,14 @@ def parse_corpus(
             char_start = chunk_info.get("char_start", 0)
             char_end = chunk_info.get("char_end", len(text))
             references = chunk_info.get("references", [])
+
+            # Advance the open entry to the last stamp this chunk contains, so
+            # the chunks that follow inherit the entry they actually belong to.
+            stamps = _PIPE_TIMESTAMP_RE.findall(text or "")
+            if stamps:
+                carried = _entry_point(max(stamps), doc_temporal.get("recorded_at"))
+                if carried:
+                    open_entry = carried
 
             if section_title:
                 slug = slugify(section_title)
@@ -393,6 +538,7 @@ def parse_corpus(
                         char_end=char_end,
                         heading_level=section_level,
                         text=None,
+                        metadata=_chunk_temporal(text, doc_temporal),
                     )
                     local_edges[(doc_id, "CONTAINS", sec_id)] = DocEdge(
                         src=doc_id, rel="CONTAINS", dst=sec_id
@@ -413,6 +559,7 @@ def parse_corpus(
                 char_end=char_end,
                 heading_level=None,
                 text=text,
+                metadata=_chunk_temporal(text, open_entry or doc_temporal),
             )
 
             local_edges[(parent_id, "CONTAINS", chunk_id)] = DocEdge(

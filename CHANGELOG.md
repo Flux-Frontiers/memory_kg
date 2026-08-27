@@ -7,6 +7,114 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Memory dates are read per entry, from the format corpora actually use.**
+  The first version of this parsed YAML frontmatter `timestamp:` — DiaryKG's
+  convention, assumed to transfer. It does not. personal_agent's
+  `DiaryTransformer` writes one pipe-delimited entry per line:
+
+  ```
+  2024-01-15T10:30 | social | Reflection | On 2024-01-15T10:30, ...
+  ```
+
+  So on a real corpus `occurred_start` never fired, every node fell back to the
+  file's mtime, and a file spanning a year collapsed to the single moment it
+  was written out. The mechanism was right and the extraction was aimed at the
+  wrong format — it passed its tests because those tests fed it frontmatter
+  that no real corpus contains.
+
+  `_chunk_temporal()` now reads the stamps inside a chunk's own text: earliest
+  becomes `occurred_start`, latest `occurred_end` where they differ, so a chunk
+  covering several entries reads as the interval it actually spans. Document
+  nodes are dated by their content the same way, so a file of 2024 memories
+  written out in 2025 no longer lands on the timeline in 2025 — `recorded_at`
+  still records that it did.
+
+  **The pattern is deliberately not line-anchored.** The chunker normalises
+  whitespace, so by the time a chunk exists its entries sit on one line; an
+  anchored pattern found only the first stamp and silently dated a year of
+  memories to its opening entry. The `|` immediately after the stamp is what
+  keeps it specific — a bare date in prose (`On 2024-03-02, ...`) has no pipe
+  and does not match.
+
+  Frontmatter is retained as a fallback for corpora that do use it.
+
+- **Chunks with no stamp inherit the entry they belong to, not the document.**
+  Found by running the real Pepys diary rather than an invented file. Chunking
+  splits mid-entry, so most chunks carry no timestamp — **11,184 of 14,477** in
+  that corpus. They fell back to the document's contract, which had just become
+  the span of its whole content: the diary's entire decade. Every one of them
+  then matched every window, and a five-day query returned **11,190 nodes**
+  headed by 1660 content.
+
+  A diary reads forward: text after a date belongs to that date until the next
+  one. The chunk loop now carries the open entry and hands it to the chunks
+  that follow. The same five-day query — 2–6 September 1666 — now returns
+  **54 chunks**, and they are the Great Fire: Pepys woken at his window, Jane
+  reporting three hundred houses burned, Fish-street alight.
+
+  Year coverage went from 11,547 of 14,478 nodes piled on 1660 to an even
+  spread across 1660–1669.
+
+  Pinned by regression tests that run against `corpus_pepys` when it is present
+  and skip cleanly when it is not.
+
+### Added
+
+- **Temporal memory: documents carry `occurred_start` and `recorded_at`.**
+  This is where the shared `kg_utils.temporal` contract earns its keep for
+  personal-agent work — real temporal memory handling without a large backend.
+  Hindsight draws the same distinction with its own `occurred_start` /
+  `occurred_end` fields, and personal_agent's `DiaryTransformer` already writes
+  to them, so a MemoryKG index speaking this vocabulary is a lightweight
+  substitute for that part of it.
+
+  The distinction is the whole point. A note written tonight about last Tuesday
+  *happened* on Tuesday and was *recorded* tonight; a timeline that files it
+  under tonight is wrong about it. So:
+
+  - `occurred_start` — the document's own `timestamp:` frontmatter, the
+    convention DiaryKG's corpora use. Precision is preserved, so a memory dated
+    only by year stays a year.
+  - `recorded_at` — the file's modification time, always available, saying when
+    the memory was written down and claiming nothing about when the remembered
+    thing happened.
+
+  A document with no frontmatter date gets `recorded_at` alone, and is still
+  datable: the contract falls back to it, so undated notes are filtered and
+  ordered rather than dropped. An unparseable frontmatter date costs the
+  document its `occurred_start` but never its recorded time, and never fails a
+  build.
+
+  Documents, sections and chunks are all stamped, because a federated query
+  hits chunks — an undated chunk drops out of a time-scoped query even when its
+  document is dated.
+
+- **One column list drives every node read.** `_NODE_COLUMNS` is now the single
+  source of truth: all three `SELECT`s interpolate it and `_row_to_node` builds
+  its dict by zipping against it, so a column cannot reach some read paths and
+  not others.
+
+  That failure is silent by construction — a `SELECT` omitting a column yields
+  a node dict missing that key, and a missing `metadata` key reads as "this
+  node is undated" rather than raising. It is how an unselected column reached
+  three of ftree_kg's query paths and one of doc_kg's.
+
+  Guarded by tests asserting `node()`, `query_nodes()` and `iter_nodes()`
+  return identical key sets, that every declared column is a key, and that
+  `metadata` carries its value through all three rather than merely existing.
+
+- **`DocNode.metadata`, persisted.** MemoryKG's store is its own copy of the
+  node schema and had no column for extension data. Added, along with the three
+  hand-written `SELECT`s that feed the single `_row_to_node` mapper — all three,
+  since a missed one reads as "undated" rather than failing.
+
+  **No in-place migration.** A MemoryKG index is rebuilt from its corpus, so an
+  older database is replaced rather than altered. Querying one before
+  rebuilding fails loudly on the missing column, which is the signal to rebuild.
+
+
 ## [0.8.0] - 2026-08-23
 
 ### Changed
