@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Two-phase index build: embed to a JSONL cache, then index from it.** The
+  embedding pass and the index write are separately resumable, so a failure in
+  the second does not throw away hours of the first.
+- **`parse_corpus(on_batch=...)` streams into SQLite instead of buffering the
+  whole corpus.** For corpora too large to hold in memory (LongMemEval-scale),
+  parsed nodes and edges are flushed to the callback in parsing-completion
+  order and the return value is `([], [])`. Shared nodes (topic/entity/keyword)
+  dedupe within a batch exactly as the non-streaming path does; for a node
+  spanning batches, the caller's upsert order decides which version survives.
+- **Upserts commit in batches of 5000** (`_UPSERT_BATCH_SIZE`), bounding peak
+  memory to one batch of row tuples and stopping a single large write from
+  holding one multi-hour transaction open.
+- **ConvoMem runs refuse to start over a partial download.** A truncated corpus
+  previously produced a complete-looking score against fewer questions.
+
+### Changed
+
+- **2026-08 sqlite-vec retest: every published benchmark number is corrected.**
+  See `benchmarks/RESULTS_SUMMARY.md` and `benchmarks/results_2026-08/`.
+- **Raw per-question result records are no longer tracked.** The `.md`
+  summaries and the charts they embed stay; the JSON/JSONL behind them are
+  regenerable and cost roughly 50k lines of history per retest. Runs from
+  before 2026-08 remain tracked -- untracking those is a separate decision.
+
 ### Fixed
 
 - **Memory dates are read per entry, from the format corpora actually use.**

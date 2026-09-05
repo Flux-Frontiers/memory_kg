@@ -60,6 +60,48 @@ CATEGORIES = {
     "implicit_connection_evidence": "Implicit Connections",
 }
 
+#: Full-size item counts per (tier, category), as published in
+#: ``BENCHMARKS_CONVOMEM.md``. A category absent from a tier's map genuinely does
+#: not exist upstream at that evidence depth -- tier 3 has no Preferences, and
+#: tier 4 has only User/Assistant/Changing Facts.
+#:
+#: This manifest exists because the corpus is fetched over the network at run
+#: time and ``discover_files`` returns ``[]`` on *any* failure. Without it, a rate
+#: limit or timeout on a category that really does exist silently drops that
+#: category, and the reported recall becomes an average over a smaller,
+#: differently-composed set -- indistinguishable in the output from the benign
+#: case of a category that was never there. Dropping tier-1 Preferences (R=0.960,
+#: below the tier mean) would move the headline *up*.
+TIER_ITEM_COUNTS: dict[int, dict[str, int]] = {
+    1: {
+        "user_evidence": 100,
+        "assistant_facts_evidence": 100,
+        "abstention_evidence": 100,
+        "preference_evidence": 100,
+        "implicit_connection_evidence": 100,
+    },
+    2: {
+        "user_evidence": 100,
+        "assistant_facts_evidence": 100,
+        "changing_evidence": 100,
+        "abstention_evidence": 100,
+        "preference_evidence": 97,
+        "implicit_connection_evidence": 100,
+    },
+    3: {
+        "user_evidence": 100,
+        "assistant_facts_evidence": 100,
+        "changing_evidence": 100,
+        "abstention_evidence": 100,
+        "implicit_connection_evidence": 100,
+    },
+    4: {
+        "user_evidence": 100,
+        "assistant_facts_evidence": 100,
+        "changing_evidence": 100,
+    },
+}
+
 
 # =============================================================================
 # DATA LOADING
@@ -115,14 +157,47 @@ def discover_files(category, cache_dir, tier: int = 1):
         return []
 
 
+def expected_counts(categories, limit, tier: int) -> dict[str, int]:
+    """Return the item count each *category* must yield at *tier*, given *limit*.
+
+    Categories that genuinely do not exist at this tier are omitted, so callers
+    can tell "absent upstream" apart from "failed to fetch".
+
+    :param categories: Category keys requested by the caller.
+    :param limit: Per-category cap from the CLI.
+    :param tier: Evidence tier (1-4).
+    :return: Mapping of category key to required item count.
+    """
+    known = TIER_ITEM_COUNTS.get(tier, {})
+    return {c: min(limit, known[c]) for c in categories if c in known}
+
+
 def load_evidence_items(categories, limit, cache_dir, tier: int = 1):
-    """Load evidence items from specified categories."""
+    """Load evidence items from specified categories.
+
+    Verifies the loaded set against :data:`TIER_ITEM_COUNTS` and raises rather
+    than quietly averaging recall over whatever happened to download. See that
+    constant for why.
+
+    :raises RuntimeError: If a category that exists at this tier yields no files,
+        or if any category returns fewer items than the tier manifest requires.
+    """
+    expected = expected_counts(categories, limit, tier)
     all_items = []
+    loaded: dict[str, int] = {}
 
     for category in categories:
         files = discover_files(category, cache_dir, tier=tier)
         if not files:
-            print(f"  Skipping {category} — no files found")
+            if category in expected:
+                raise RuntimeError(
+                    f"{CATEGORIES.get(category, category)} ({category}) exists at tier {tier} "
+                    f"but no files could be listed — expected {expected[category]} items. "
+                    "This is a fetch failure, not an empty category; the corpus is downloaded "
+                    "from HuggingFace at run time. Retry, or check network access. Refusing to "
+                    "report recall over an incomplete set."
+                )
+            print(f"  Skipping {category} — not present at tier {tier}")
             continue
 
         items_for_cat = []
@@ -135,8 +210,24 @@ def load_evidence_items(categories, limit, cache_dir, tier: int = 1):
                     item["_category_key"] = category
                     items_for_cat.append(item)
 
-        all_items.extend(items_for_cat[:limit])
-        print(f"  {CATEGORIES.get(category, category)}: {len(items_for_cat[:limit])} items loaded")
+        got = items_for_cat[:limit]
+        all_items.extend(got)
+        loaded[category] = len(got)
+        print(f"  {CATEGORIES.get(category, category)}: {len(got)} items loaded")
+
+    # Guard both directions. A short count shrinks the recall denominator; an
+    # unexpected category grows it. Either way the reported number is no longer
+    # over the set the published figures describe.
+    mismatch = {c: (loaded.get(c, 0), n) for c, n in expected.items() if loaded.get(c, 0) != n}
+    mismatch.update({c: (n, 0) for c, n in loaded.items() if c not in expected})
+    if mismatch:
+        detail = ", ".join(f"{c}: got {g}, expected {e}" for c, (g, e) in sorted(mismatch.items()))
+        raise RuntimeError(
+            f"tier {tier} item counts do not match the manifest ({detail}). "
+            "This changes the recall denominator; refusing to report a number over a "
+            "set that is not the one the published figures describe. If the upstream "
+            "dataset genuinely changed, update TIER_ITEM_COUNTS deliberately."
+        )
 
     return all_items
 

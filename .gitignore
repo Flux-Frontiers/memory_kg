@@ -228,6 +228,14 @@ benchmarks/locomobench/data/
 benchmarks/convomem/*.aux
 benchmarks/convomem/*.log
 benchmarks/convomem/*.out
+# Raw per-question result records. The .md summaries and the charts they embed
+# ARE tracked -- these are the 5k-line-per-run JSON/JSONL behind them, which are
+# regenerable from a benchmark run and cost ~50k lines of history per retest.
+# Note the pre-2026-08 runs are already tracked and stay so; untracking those is
+# a separate decision.
+benchmarks/convomem/results_*.json
+benchmarks/*/results/*.jsonl
+benchmarks/results_*/**/*.jsonl
 
 # Large asset files (> 1MB)
 assets/*-1024x1024.png

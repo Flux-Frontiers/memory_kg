@@ -226,3 +226,52 @@ def test_store_context_manager(tmp_path):
     with GraphStore(db) as store:
         store.write(_make_nodes(), _make_edges(), wipe=True)
         assert store.stats()["total_nodes"] == 3
+
+
+def test_store_write_batches_across_multiple_commits(tmp_path, monkeypatch):
+    """A node/edge count larger than the batch size must still all persist."""
+    monkeypatch.setattr("memory_kg.store._UPSERT_BATCH_SIZE", 2)
+    db = tmp_path / "test.sqlite"
+    store = GraphStore(db)
+
+    nodes = [
+        DocNode(
+            id=f"doc:file{i}.md",
+            kind="document",
+            name=f"file{i}",
+            title=f"File {i}",
+            file_path=f"file{i}.md",
+            char_start=0,
+            char_end=10,
+            heading_level=None,
+            text="text",
+        )
+        for i in range(5)
+    ]
+    edges = [
+        DocEdge(src=nodes[i].id, rel="REFERENCES", dst=nodes[(i + 1) % 5].id) for i in range(5)
+    ]
+
+    store.write(nodes, edges, wipe=True)
+    s = store.stats()
+    assert s["total_nodes"] == 5
+    assert s["total_edges"] == 5
+    store.close()
+
+
+def test_store_write_accepts_dict_values(tmp_path, monkeypatch):
+    """semantic_builder.py hands _upsert_nodes/_upsert_edges dict_values, not lists."""
+    monkeypatch.setattr("memory_kg.store._UPSERT_BATCH_SIZE", 2)
+    db = tmp_path / "test.sqlite"
+    store = GraphStore(db)
+
+    nodes_by_id = {n.id: n for n in _make_nodes()}
+    edges_by_key = {(e.src, e.rel, e.dst): e for e in _make_edges()}
+
+    store._upsert_nodes(nodes_by_id.values())
+    store._upsert_edges(edges_by_key.values())
+
+    s = store.stats()
+    assert s["total_nodes"] == 3
+    assert s["total_edges"] == 3
+    store.close()
