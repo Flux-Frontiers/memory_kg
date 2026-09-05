@@ -86,7 +86,7 @@ dependencies = [
     # numpy, rich, sentence-transformers, torch, transformers and sqlite-vec --
     # all of which are already declared directly above -- plus `lancedb`, which
     # was the last thing pulling the retired backend into a clean install.
-    "kgmodule-utils[sqlite-vec]>=0.18.0",
+    "kgmodule-utils[sqlite-vec]>=0.19.0",
 ]
 
 [project.optional-dependencies]
