@@ -26,6 +26,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **The Pepys corpus tests now actually run.** `tests/test_temporal.py` pinned
+  the corpus to one hardcoded absolute path that exists on no machine, so its
+  five tests skipped everywhere -- locally and in CI -- while reading as
+  covered. These are the tests that caught both real dating bugs (the
+  line-anchored stamp pattern, and chunks inheriting the document's whole
+  decade). The corpus is now located via `MEMORYKG_PEPYS_CORPUS` or a
+  `corpus_pepys` clone beside this repo, and skips only when genuinely absent.
+
 - **A custom embedder is no longer silently ignored on CPU.**
   `precompute_embeddings()` routes GPU work in-process and CPU work across
   spawn workers. A worker can be handed a model *name*, never an embedder

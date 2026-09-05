@@ -364,10 +364,33 @@ class TestRealCorpusEndToEnd:
         assert doc.metadata["recorded_at"].startswith("2025-06")
 
 
-_PEPYS = Path("/home/user/corpus_pepys/data/pepys_clean.txt")
+def _find_pepys() -> Path | None:
+    """Locate the real Pepys corpus, or return ``None``.
+
+    Checked in order: ``MEMORYKG_PEPYS_CORPUS``, then a ``corpus_pepys`` clone
+    sitting beside this repo, which is where the fleet keeps it.
+
+    This used to be one hardcoded absolute path that existed on no machine, so
+    the class below skipped everywhere -- locally and in CI -- while reading as
+    covered. These are the tests that caught both real dating bugs; they are
+    worth actually running.
+    """
+    override = os.environ.get("MEMORYKG_PEPYS_CORPUS")
+    if override:
+        candidate = Path(override).expanduser()
+        return candidate if candidate.exists() else None
+
+    sibling = Path(__file__).resolve().parents[2] / "corpus_pepys" / "data" / "pepys_clean.txt"
+    return sibling if sibling.exists() else None
 
 
-@pytest.mark.skipif(not _PEPYS.exists(), reason="corpus_pepys data not present")
+_PEPYS = _find_pepys()
+
+
+@pytest.mark.skipif(
+    _PEPYS is None,
+    reason="corpus_pepys not found; set MEMORYKG_PEPYS_CORPUS or clone it beside this repo",
+)
 class TestAgainstRealPepysCorpus:
     """The real diary, in the real format, at real scale.
 
