@@ -472,7 +472,9 @@ class SemanticIndex:
         :param n_workers: Worker processes for the CPU path (default: CPU count / 2).
         :param batch_size: Per-batch embedding size.
         :param device: Embedding device (``"cpu"``/``"mps"``/``"cuda"``); ``None``
-            resolves via ``KG_EMBED_DEVICE`` then auto-detect.
+            resolves via ``KG_EMBED_DEVICE`` then auto-detect. An embedder with
+            no ``model_name`` takes the in-process path whatever the device says,
+            since a worker process cannot be given the object itself.
         :param quiet: Suppress progress output.
         :raises ValueError: If *out* is not a JSONL path.
         :return: Path to the written cache (*out*).
@@ -486,7 +488,14 @@ class SemanticIndex:
 
         from kg_utils.embedder import resolve_device  # pylint: disable=import-outside-toplevel
 
-        if resolve_device(device) in {"mps", "cuda"}:
+        # A spawn worker can be handed a model *name*, never an embedder object,
+        # so the parallel path can only reproduce an embedder it can name. An
+        # embedder without ``model_name`` -- a test stub, or any custom
+        # implementation -- would otherwise fall through to DEFAULT_MODEL and
+        # silently embed with a model the caller did not ask for, at a different
+        # dimension. Take the in-process path instead.
+        nameable = getattr(self.embedder, "model_name", None)
+        if resolve_device(device) in {"mps", "cuda"} or not nameable:
             return self._precompute_embeddings_jsonl_stream(
                 store, out, batch_size=batch_size, quiet=quiet
             )

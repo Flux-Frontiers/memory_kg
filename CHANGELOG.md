@@ -24,6 +24,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **ConvoMem runs refuse to start over a partial download.** A truncated corpus
   previously produced a complete-looking score against fewer questions.
 
+### Fixed
+
+- **A custom embedder is no longer silently ignored on CPU.**
+  `precompute_embeddings()` routes GPU work in-process and CPU work across
+  spawn workers. A worker can be handed a model *name*, never an embedder
+  object, so the CPU path reloaded by name -- and an embedder with no
+  `model_name` fell back to `DEFAULT_MODEL`. The caller got a different model at
+  a different dimension with nothing raised. An unnameable embedder now takes
+  the in-process path whatever the device says.
+
+  This only ever failed off a GPU machine, which is why it took CI to surface
+  it: on an MPS or CUDA box the GPU branch reuses the caller's embedder and the
+  bug is unreachable.
+
 ### Changed
 
 - **2026-08 sqlite-vec retest: every published benchmark number is corrected.**

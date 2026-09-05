@@ -175,7 +175,11 @@ class TestBuildFromCache:
 
 
 class TestDeviceRouting:
-    """A GPU can't fan out across spawn workers; CPU should."""
+    """A GPU can't fan out across spawn workers; CPU should -- if it can.
+
+    "If it can" is the whole rule: a worker process is handed a model *name*,
+    never an embedder object, so only a nameable embedder can fan out.
+    """
 
     def test_gpu_takes_the_single_process_stream(self, index, store, tmp_path, monkeypatch):
         monkeypatch.setattr("kg_utils.embedder.resolve_device", lambda _d: "mps")
@@ -190,6 +194,8 @@ class TestDeviceRouting:
 
     def test_cpu_takes_the_multi_process_stream(self, index, store, tmp_path, monkeypatch):
         monkeypatch.setattr("kg_utils.embedder.resolve_device", lambda _d: "cpu")
+        # Nameable, so a worker can reload it by name.
+        index.embedder.model_name = "sentence-transformers/all-MiniLM-L6-v2"
         called = {}
         monkeypatch.setattr(
             SemanticIndex,
@@ -198,3 +204,35 @@ class TestDeviceRouting:
         )
         index.precompute_embeddings(store, tmp_path / "e.jsonl", quiet=True)
         assert called == {"cpu": True}
+
+    def test_an_unnameable_embedder_stays_in_process_on_cpu(
+        self, index, store, tmp_path, monkeypatch
+    ):
+        """Otherwise the caller's embedder is silently swapped for DEFAULT_MODEL.
+
+        A spawn worker cannot receive the object, so the parallel path would
+        reload by name -- and with no ``model_name`` to use, that name is
+        DEFAULT_MODEL: a different model at a different dimension than the one
+        the caller passed in, with nothing raised.
+        """
+        monkeypatch.setattr("kg_utils.embedder.resolve_device", lambda _d: "cpu")
+        assert getattr(index.embedder, "model_name", None) is None
+        called = {}
+        monkeypatch.setattr(
+            SemanticIndex,
+            "_precompute_embeddings_jsonl_stream",
+            lambda self, *a, **kw: called.setdefault("in_process", True),
+        )
+        index.precompute_embeddings(store, tmp_path / "e.jsonl", quiet=True)
+        assert called == {"in_process": True}
+
+    def test_the_cache_carries_the_injected_embedders_dimension_on_cpu(
+        self, index, store, tmp_path, monkeypatch
+    ):
+        """End-to-end guard for the same thing, without mocking the write path."""
+        monkeypatch.setattr("kg_utils.embedder.resolve_device", lambda _d: "cpu")
+        meta, rows = _read_cache(
+            index.precompute_embeddings(store, tmp_path / "e.jsonl", quiet=True)
+        )
+        assert meta["dim"] == StubEmbedder.dim
+        assert len(rows[0]["vector"]) == StubEmbedder.dim
