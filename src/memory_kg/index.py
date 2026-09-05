@@ -26,14 +26,17 @@ Author: Eric G. Suchanek, PhD
 from __future__ import annotations
 
 import contextlib
+import gzip
+import json
 import logging
 import os
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TextIO, cast
 
-from kg_utils.embed import resolve_model_path
+from kg_utils.embed import DEFAULT_MODEL, resolve_model_path
 from kg_utils.embedder import Embedder, SentenceTransformerEmbedder
 from kg_utils.vector_backend import SqliteVecBackend
 from rich.console import Console
@@ -178,6 +181,39 @@ class SeedHit:
 # ---------------------------------------------------------------------------
 
 _DEFAULT_KINDS = ("document", "section", "chunk", "topic", "entity", "keyword")
+
+
+def _is_jsonl_cache(path: Path) -> bool:
+    """Return ``True`` when *path* names a streaming JSONL embedding cache."""
+    return path.suffix == ".jsonl" or path.name.endswith(".jsonl.gz")
+
+
+def _open_text_auto(path: Path, mode: str) -> TextIO:
+    """Open *path* as text, transparently gzipping when it ends in ``.gz``."""
+    if path.suffix == ".gz":
+        return cast(TextIO, gzip.open(path, mode, encoding="utf-8"))
+    return cast(TextIO, open(path, mode, encoding="utf-8"))
+
+
+def _mps_cache_evictor() -> Callable[[], None] | None:
+    """Return a callable that releases cached GPU blocks, or ``None`` when N/A.
+
+    The MPS allocator caches freed blocks and never returns them to the system,
+    so a long streaming embed grows unbounded ("other allocations") until the
+    machine swaps or the run is killed.  Calling the returned evictor once per
+    batch keeps GPU memory flat.  Returns ``None`` on CPU-only machines and when
+    torch is unavailable, so callers can skip the per-batch call entirely.
+    """
+    try:
+        import torch  # pylint: disable=import-outside-toplevel
+
+        if torch.cuda.is_available():
+            return torch.cuda.empty_cache
+        if hasattr(torch, "mps") and torch.backends.mps.is_available():
+            return torch.mps.empty_cache
+    except Exception:
+        return None
+    return None
 
 
 class SemanticIndex:
@@ -326,6 +362,11 @@ class SemanticIndex:
         else:
             _progress_ctx = contextlib.nullcontext()
 
+        # A long GPU embed otherwise grows unbounded: the allocator caches freed
+        # blocks and never returns them.  Resolved once — the check itself imports
+        # torch, so it must not run per batch.
+        evict_gpu_cache = _mps_cache_evictor()
+
         with _progress_ctx as prog:
             task_id = prog.add_task("  Embedding", total=n_total) if prog is not None else None
             # Stream nodes in encode_batch_size pages — never hold all node dicts in
@@ -368,6 +409,8 @@ class SemanticIndex:
                     indexed += backend.upsert(pending_rows, batch_size=write_batch_size)
                     pending_rows = []
 
+                if evict_gpu_cache is not None:
+                    evict_gpu_cache()
                 if prog is not None and task_id is not None:
                     prog.advance(task_id, len(enc_nodes))
 
@@ -391,6 +434,337 @@ class SemanticIndex:
             "indexed_rows": indexed,
             "dim": self.embedder.dim,
             "model_name": getattr(self.embedder, "model_name", repr(self.embedder)),
+            "vectors_path": str(self.vectors_path),
+            "kinds": list(self.index_kinds),
+            "similar_edges_added": similar_edges_added,
+        }
+
+    # ------------------------------------------------------------------
+    # Two-phase build: precompute embeddings → build index from cache
+    # ------------------------------------------------------------------
+
+    def precompute_embeddings(
+        self,
+        store: GraphStore,
+        out: Path,
+        *,
+        n_workers: int | None = None,
+        batch_size: int = 128,
+        device: str | None = None,
+        quiet: bool = False,
+    ) -> Path:
+        """Embed all index nodes into a JSONL cache, writing no vectors to the store.
+
+        Pure embedding pass — the expensive half of :meth:`build`, separated so it
+        can be paid once and reused.  Call :meth:`build_from_cache` afterwards to
+        populate the vector index from the saved file without re-running the model.
+
+        Routes by device.  A GPU cannot fan out across spawn workers, so MPS/CUDA
+        takes the single-process stream, which also reuses the caller's already
+        loaded embedder rather than loading a second copy (an MPS double-load is a
+        SIGBUS).  CPU takes ``CorpusEmbedder.embed_to_cache``, which is both
+        multi-process and bounded: peak memory scales with shard size, not corpus
+        size.  Either way vectors are flushed to disk as they are produced, so a
+        528k-node corpus never accumulates in RAM.
+
+        :param store: Source :class:`~memory_kg.store.GraphStore`.
+        :param out: Output path; must be ``.jsonl`` or ``.jsonl.gz``.
+        :param n_workers: Worker processes for the CPU path (default: CPU count / 2).
+        :param batch_size: Per-batch embedding size.
+        :param device: Embedding device (``"cpu"``/``"mps"``/``"cuda"``); ``None``
+            resolves via ``KG_EMBED_DEVICE`` then auto-detect. An embedder with
+            no ``model_name`` takes the in-process path whatever the device says,
+            since a worker process cannot be given the object itself.
+        :param quiet: Suppress progress output.
+        :raises ValueError: If *out* is not a JSONL path.
+        :return: Path to the written cache (*out*).
+        """
+        if not _is_jsonl_cache(out):
+            raise ValueError(
+                f"embedding cache must be .jsonl or .jsonl.gz, got: {out.name}. "
+                "MemoryKG streams the cache to disk rather than building it in RAM; "
+                "a whole-file .json cache would defeat that at corpus scale."
+            )
+
+        from kg_utils.embedder import resolve_device  # pylint: disable=import-outside-toplevel
+
+        # A spawn worker can be handed a model *name*, never an embedder object,
+        # so the parallel path can only reproduce an embedder it can name. An
+        # embedder without ``model_name`` -- a test stub, or any custom
+        # implementation -- would otherwise fall through to DEFAULT_MODEL and
+        # silently embed with a model the caller did not ask for, at a different
+        # dimension. Take the in-process path instead.
+        nameable = getattr(self.embedder, "model_name", None)
+        if resolve_device(device) in {"mps", "cuda"} or not nameable:
+            return self._precompute_embeddings_jsonl_stream(
+                store, out, batch_size=batch_size, quiet=quiet
+            )
+        return self._precompute_embeddings_parallel_stream(
+            store,
+            out,
+            n_workers=n_workers,
+            batch_size=batch_size,
+            device=device,
+            quiet=quiet,
+        )
+
+    def _precompute_embeddings_jsonl_stream(
+        self,
+        store: GraphStore,
+        out: Path,
+        *,
+        batch_size: int,
+        quiet: bool,
+    ) -> Path:
+        """Stream embeddings to JSONL in-process, one node page at a time (GPU path)."""
+        if quiet:
+            suppress_ingestion_logging()
+
+        out.parent.mkdir(parents=True, exist_ok=True)
+        total = store.count_nodes(kinds=list(self.index_kinds))
+        model_name = getattr(self.embedder, "model_name", DEFAULT_MODEL)
+        dim = int(getattr(self.embedder, "dim", 0) or 0)
+        written = 0
+
+        if not quiet:
+            Console().print(f"  nodes    : {total:,} to embed  (streaming JSONL)")
+            from rich.progress import (  # pylint: disable=import-outside-toplevel
+                BarColumn,
+                MofNCompleteColumn,
+                Progress,
+                SpinnerColumn,
+                TextColumn,
+                TimeElapsedColumn,
+                TimeRemainingColumn,
+            )
+
+            _progress_ctx: contextlib.AbstractContextManager = Progress(
+                SpinnerColumn(),
+                TextColumn("[progress.description]{task.description}"),
+                BarColumn(),
+                MofNCompleteColumn(),
+                TimeElapsedColumn(),
+                TimeRemainingColumn(),
+            )
+        else:
+            _progress_ctx = contextlib.nullcontext()
+
+        evict_gpu_cache = _mps_cache_evictor()
+
+        with _open_text_auto(out, "wt") as f:
+            header = {
+                "__meta__": {
+                    "version": 1,
+                    "model": model_name,
+                    "dim": dim,
+                    "created_at": datetime.now(tz=UTC).isoformat(),
+                }
+            }
+            f.write(json.dumps(header, ensure_ascii=False, separators=(",", ":")) + "\n")
+
+            with _progress_ctx as prog:
+                task_id = prog.add_task("  Embedding", total=total) if prog is not None else None
+                for enc_nodes in store.iter_nodes(
+                    kinds=list(self.index_kinds), batch_size=max(1, int(batch_size))
+                ):
+                    texts = [_build_index_text(n) for n in enc_nodes]
+                    vecs = self.embedder.embed_texts(texts)
+
+                    for n, text, vec in zip(enc_nodes, texts, vecs, strict=True):
+                        row = {
+                            "id": n["id"],
+                            "kind": n["kind"],
+                            "name": n["name"],
+                            "title": n.get("title") or "",
+                            "file_path": n.get("file_path") or "",
+                            "text": text,
+                            "vector": vec,
+                        }
+                        f.write(json.dumps(row, ensure_ascii=False, separators=(",", ":")) + "\n")
+                        written += 1
+
+                    f.flush()
+                    if evict_gpu_cache is not None:
+                        evict_gpu_cache()
+                    if prog is not None and task_id is not None:
+                        prog.advance(task_id, len(enc_nodes))
+
+        if not quiet:
+            size_mb = out.stat().st_size / 1_048_576
+            Console().print(
+                f"  cache    : {out}  ({written:,} vectors, dim={dim}, {size_mb:,.0f} MB)"
+            )
+        return out
+
+    def _precompute_embeddings_parallel_stream(
+        self,
+        store: GraphStore,
+        out: Path,
+        *,
+        n_workers: int | None,
+        batch_size: int,
+        device: str | None,
+        quiet: bool,
+    ) -> Path:
+        """Embed via the multi-process ``CorpusEmbedder``, streaming to JSONL (CPU path)."""
+        from kg_utils.corpus_embedder import (  # pylint: disable=import-outside-toplevel
+            CorpusEmbedder,
+        )
+
+        if quiet:
+            suppress_ingestion_logging()
+
+        texts, metadata = self._read_texts_metadata(store)
+        model_name = getattr(self.embedder, "model_name", DEFAULT_MODEL)
+        corp_embedder = CorpusEmbedder(
+            model_name=model_name,
+            n_workers=n_workers,
+            batch_size=batch_size,
+            device=device,
+        )
+
+        if not quiet:
+            Console().print(
+                f"  nodes    : {len(texts):,} to embed  "
+                f"({corp_embedder.n_workers} workers, streaming JSONL)"
+            )
+
+        corp_embedder.embed_to_cache(texts, metadata, out_path=out)
+
+        if not quiet:
+            size_mb = out.stat().st_size / 1_048_576
+            Console().print(f"  cache    : {out}  ({len(texts):,} vectors, {size_mb:,.0f} MB)")
+        return out
+
+    def _read_texts_metadata(self, store: GraphStore) -> tuple[list[str], list[dict]]:
+        """Read index nodes as aligned ``(texts, metadata)`` ready for embedding.
+
+        Used by the CPU path only, which needs the full work list up front to
+        shard it across workers.  The GPU path streams pages instead and never
+        calls this.
+        """
+        nodes = list(store.query_nodes(kinds=list(self.index_kinds)))
+        texts = [_build_index_text(n) for n in nodes]
+        metadata = [
+            {
+                "id": n["id"],
+                "kind": n["kind"],
+                "name": n["name"],
+                "title": n.get("title") or "",
+                "file_path": n.get("file_path") or "",
+            }
+            for n in nodes
+        ]
+        return texts, metadata
+
+    def build_from_cache(
+        self,
+        store: GraphStore,
+        cache_path: Path,
+        *,
+        wipe: bool = False,
+        batch_size: int = 4096,
+        quiet: bool = False,
+        discover_similar: bool = True,
+        similar_k: int = 5,
+        similarity_edge_threshold: float = 0.85,
+        similar_max_degree: int = 0,
+    ) -> dict:
+        """Build (or rebuild) the vector index from a pre-computed embedding cache.
+
+        Skips model inference entirely — reads float32 vectors written by
+        :meth:`precompute_embeddings` and upserts them straight into the backend,
+        one batch at a time, so the cache is never held whole in RAM.
+
+        :param store: :class:`~memory_kg.store.GraphStore` (needed for SIMILAR_TO writes).
+        :param cache_path: Path to the JSONL cache.
+        :param wipe: If ``True``, delete all existing vectors first.
+        :param batch_size: Vector-store write batch size.
+        :param quiet: Suppress progress output.
+        :param discover_similar: Run SIMILAR_TO edge discovery after indexing.
+        :param similar_k: k-nearest neighbours per chunk for SIMILAR_TO discovery.
+        :param similarity_edge_threshold: Minimum cosine similarity for a SIMILAR_TO edge.
+        :param similar_max_degree: Cap total SIMILAR_TO edges per node (0 = unlimited).
+        :raises ValueError: If *cache_path* is not a JSONL cache.
+        :return: Stats dict (same schema as :meth:`build`).
+        """
+        if not _is_jsonl_cache(cache_path):
+            raise ValueError(f"embedding cache must be .jsonl or .jsonl.gz, got: {cache_path.name}")
+
+        import numpy as np  # pylint: disable=import-outside-toplevel
+
+        if quiet:
+            suppress_ingestion_logging()
+
+        if not quiet:
+            size_mb = cache_path.stat().st_size / 1_048_576
+            Console().print(f"  cache    : reading {cache_path.name} ({size_mb:,.0f} MB) …")
+
+        backend = self._open_for_build(wipe=wipe)
+        indexed = 0
+        model_name = "unknown"
+        dim = 0
+        pending_rows: list[dict[str, Any]] = []
+        chunk_pair_ids: list[str] = []
+        chunk_vecs_list: list[Any] = []
+        write_batch_size = max(1, int(batch_size))
+
+        with _open_text_auto(cache_path, "rt") as f:
+            first = f.readline()
+            if first:
+                first_obj = json.loads(first)
+                meta = first_obj.get("__meta__", {}) if isinstance(first_obj, dict) else {}
+                model_name = str(meta.get("model") or model_name)
+                dim = int(meta.get("dim") or dim)
+
+            for line in f:
+                if not line.strip():
+                    continue
+                row = json.loads(line)
+                rid = row["id"]
+                vec = row["vector"]
+                if not dim:
+                    dim = len(vec)
+
+                pending_rows.append(
+                    {
+                        "id": rid,
+                        "kind": row.get("kind", ""),
+                        "name": row.get("name", ""),
+                        "title": row.get("title") or "",
+                        "file_path": row.get("file_path") or "",
+                        "text": row.get("text") or "",
+                        "vector": vec,
+                    }
+                )
+
+                if discover_similar and rid.startswith("chunk:"):
+                    chunk_pair_ids.append(rid)
+                    chunk_vecs_list.append(vec)
+
+                if len(pending_rows) >= write_batch_size:
+                    indexed += backend.upsert(pending_rows, batch_size=len(pending_rows))
+                    pending_rows = []
+
+        if pending_rows:
+            indexed += backend.upsert(pending_rows, batch_size=len(pending_rows))
+
+        similar_edges_added = 0
+        if discover_similar and chunk_pair_ids and chunk_vecs_list:
+            similar_edges_added = self._discover_similar_edges(
+                store,
+                chunk_pair_ids,
+                np.asarray(chunk_vecs_list, dtype=np.float32),
+                k=similar_k,
+                threshold=similarity_edge_threshold,
+                max_degree=similar_max_degree,
+                quiet=quiet,
+            )
+
+        return {
+            "indexed_rows": indexed,
+            "dim": dim,
+            "model_name": model_name,
             "vectors_path": str(self.vectors_path),
             "kinds": list(self.index_kinds),
             "similar_edges_added": similar_edges_added,

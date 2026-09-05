@@ -13,6 +13,7 @@ Author: Eric G. Suchanek, PhD
 from __future__ import annotations
 
 from collections import Counter
+from collections.abc import Callable
 from pathlib import Path
 
 from memory_kg.memorykg import DocEdge, DocNode, parse_corpus
@@ -120,6 +121,45 @@ class DocGraph:
                 n_workers=self.n_workers,
             )
         return self
+
+    def extract_streaming(
+        self,
+        on_batch: Callable[[list[DocNode], list[DocEdge]], None],
+        *,
+        batch_size: int = 5000,
+    ) -> None:
+        """Run extraction, flushing nodes/edges to *on_batch* instead of caching them.
+
+        Use this in place of :meth:`extract` for corpora large enough that holding
+        every node in memory before writing is undesirable (LongMemEval-scale, hundreds
+        of thousands of nodes). Nothing is cached on this instance afterward — the
+        :attr:`nodes`/:attr:`edges` properties and :meth:`stats` are unavailable for a
+        streaming extraction; read counts back from wherever *on_batch* persisted them.
+
+        :param on_batch: Called with each batch of newly parsed nodes/edges, in
+            parsing-completion order. Typically a callback that upserts into storage.
+        :param batch_size: Approximate number of pending nodes buffered before flushing.
+        """
+        parse_corpus(
+            self.corpus_root,
+            extensions=self.extensions,
+            exclude=self.exclude,
+            chunk_strategy=self.chunk_strategy,
+            chunk_size=self.chunk_size,
+            chunk_overlap=self.chunk_overlap,
+            similarity_threshold=self.similarity_threshold,
+            embedder=self.embedder,
+            enable_topics=self.enable_topics,
+            enable_entities=self.enable_entities,
+            enable_keywords=self.enable_keywords,
+            emit_cooccur=self.emit_cooccur,
+            cooccur_window=self.cooccur_window,
+            topic_threshold=self.topic_threshold,
+            topics_file=self.topics_file,
+            n_workers=self.n_workers,
+            on_batch=on_batch,
+            stream_batch_size=batch_size,
+        )
 
     @property
     def nodes(self) -> list[DocNode]:

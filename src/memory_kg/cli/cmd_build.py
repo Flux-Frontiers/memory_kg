@@ -7,6 +7,12 @@ Click subcommands for building the MemoryKG:
     build-graph — parse corpus → SQLite only
     build-index — SQLite → vectors + optional SIMILAR_TO edges
 
+Two-phase build (embedding paid once, reusable across index rebuilds):
+
+    build-embeddings       — SQLite → JSONL embedding cache only
+    build-index-from-cache — JSONL embedding cache → vectors (no model inference)
+    build-two-phase        — SQLite → cache → vectors, end to end
+
 Author: Eric G. Suchanek, PhD
 """
 
@@ -472,5 +478,259 @@ def build_index(
     _console.print(f"  indexed  : {idx_stats['indexed_rows']} vectors")
     if not no_similar:
         _console.print(f"  SIMILAR_TO: {idx_stats.get('similar_edges_added', 0)} edges")
+    _console.print("\n[green]Build complete.[/green]")
+    kg.close()
+
+
+# ---------------------------------------------------------------------------
+# Two-phase build
+# ---------------------------------------------------------------------------
+
+_cache_option = click.option(
+    "--cache",
+    type=click.Path(),
+    default=None,
+    help="Embedding cache path (default: <sqlite parent>/embeddings.jsonl). "
+    "Must end in .jsonl or .jsonl.gz.",
+)
+_device_option = click.option(
+    "--device",
+    type=click.Choice(["cpu", "mps", "cuda", "auto"]),
+    default="auto",
+    show_default=True,
+    help="Embedding device. 'auto' detects; MPS/CUDA stream single-process, "
+    "CPU fans out across workers.",
+)
+
+
+def _resolve_cache_path(cache: str | None, db_path: Path) -> Path:
+    """Return the embedding-cache path, defaulting beside the SQLite graph."""
+    return Path(cache) if cache else db_path.parent / "embeddings.jsonl"
+
+
+@cli.command("build-embeddings")
+@repo_option
+@sqlite_option
+@vectors_option
+@model_option
+@_cache_option
+@_device_option
+@click.option(
+    "--batch",
+    type=int,
+    default=128,
+    show_default=True,
+    help="Embedding batch size.",
+)
+@click.option(
+    "--workers",
+    type=int,
+    default=None,
+    help="Worker processes for CPU embedding (default: CPU count / 2). Ignored on GPU.",
+)
+@click.option("--force", is_flag=True, default=False, help="Overwrite an existing cache.")
+def build_embeddings(
+    repo: str,
+    sqlite: str,
+    vectors: str,
+    model: str,
+    cache: str | None,
+    device: str,
+    batch: int,
+    workers: int | None,
+    force: bool,
+) -> None:
+    """Embed an existing SQLite graph into a JSONL cache (phase 1 of two)."""
+    repo_root = Path(repo).resolve()
+    db_path = Path(sqlite) if sqlite else repo_root / ".memorykg" / "graph.sqlite"
+    vectors_path = Path(vectors) if vectors else repo_root / ".memorykg" / "vectors.sqlite"
+    cache_path = _resolve_cache_path(cache, db_path)
+
+    if cache_path.exists() and not force:
+        _console.print(f"[yellow]Cache already exists: {cache_path}[/yellow]")
+        _console.print("Use --force to overwrite.")
+        return
+
+    kg = MemoryKG(
+        corpus_root=repo_root,
+        db_path=db_path,
+        vectors_path=vectors_path,
+        model=model,
+    )
+
+    _console.print(Rule(f"MemoryKG build-embeddings — {db_path.name}", style="bold blue"))
+    _console.print(f"  sqlite  : {db_path}")
+    _console.print(f"  cache   : {cache_path}")
+    _console.print(f"  device  : {device}")
+
+    _console.print("\nEmbedding nodes → cache …")
+    out = kg.build_embeddings(
+        cache_path,
+        n_workers=workers,
+        batch_size=batch,
+        device=None if device == "auto" else device,
+        quiet=False,
+    )
+    _console.print(f"\n[green]Embedding cache written:[/green] {out}")
+    _console.print("Next: memorykg build-index-from-cache")
+    kg.close()
+
+
+@cli.command("build-index-from-cache")
+@repo_option
+@sqlite_option
+@vectors_option
+@model_option
+@_cache_option
+@click.option(
+    "--update",
+    is_flag=True,
+    default=False,
+    help="Incremental update — keep existing vectors instead of wiping.",
+)
+@click.option(
+    "--no-similar",
+    is_flag=True,
+    default=False,
+    help="Skip SIMILAR_TO edge discovery after indexing.",
+)
+@click.option(
+    "--batch",
+    type=int,
+    default=4096,
+    show_default=True,
+    help="Vector-store write batch size.",
+)
+def build_index_from_cache(
+    repo: str,
+    sqlite: str,
+    vectors: str,
+    model: str,
+    cache: str | None,
+    update: bool,
+    no_similar: bool,
+    batch: int,
+) -> None:
+    """Build the vector index from a JSONL embedding cache (phase 2 of two)."""
+    repo_root = Path(repo).resolve()
+    db_path = Path(sqlite) if sqlite else repo_root / ".memorykg" / "graph.sqlite"
+    vectors_path = Path(vectors) if vectors else repo_root / ".memorykg" / "vectors.sqlite"
+    cache_path = _resolve_cache_path(cache, db_path)
+
+    if not cache_path.exists():
+        raise click.ClickException(
+            f"Embedding cache not found: {cache_path}. Run 'memorykg build-embeddings' first."
+        )
+
+    kg = MemoryKG(
+        corpus_root=repo_root,
+        db_path=db_path,
+        vectors_path=vectors_path,
+        model=model,
+    )
+
+    _console.print(Rule(f"MemoryKG build-index-from-cache — {db_path.name}", style="bold blue"))
+    _console.print(f"  cache   : {cache_path}")
+    _console.print(f"  vectors : {vectors_path}")
+
+    _console.print("\nIndexing cache → vectors (no model inference) …")
+    stats = kg.build_index_from_cache(
+        cache_path,
+        wipe=not update,
+        batch_size=batch,
+        discover_similar=not no_similar,
+        quiet=False,
+    )
+    _console.print(f"  indexed  : {stats.indexed_rows} vectors  dim={stats.index_dim}")
+    if not no_similar:
+        _console.print(f"  SIMILAR_TO: {stats.similar_edges_added or 0} edges")
+    _console.print("\n[green]Build complete.[/green]")
+    kg.close()
+
+
+@cli.command("build-two-phase")
+@repo_option
+@sqlite_option
+@vectors_option
+@model_option
+@_cache_option
+@_device_option
+@click.option(
+    "--no-similar",
+    is_flag=True,
+    default=False,
+    help="Skip SIMILAR_TO edge discovery after indexing.",
+)
+@click.option(
+    "--batch",
+    type=int,
+    default=128,
+    show_default=True,
+    help="Embedding batch size.",
+)
+@click.option(
+    "--workers",
+    type=int,
+    default=None,
+    help="Worker processes for CPU embedding (default: CPU count / 2). Ignored on GPU.",
+)
+@click.option(
+    "--keep-cache",
+    is_flag=True,
+    default=False,
+    help="Reuse an existing cache instead of re-embedding.",
+)
+def build_two_phase(
+    repo: str,
+    sqlite: str,
+    vectors: str,
+    model: str,
+    cache: str | None,
+    device: str,
+    no_similar: bool,
+    batch: int,
+    workers: int | None,
+    keep_cache: bool,
+) -> None:
+    """Embed to a JSONL cache, then index from it — the resumable build path."""
+    repo_root = Path(repo).resolve()
+    db_path = Path(sqlite) if sqlite else repo_root / ".memorykg" / "graph.sqlite"
+    vectors_path = Path(vectors) if vectors else repo_root / ".memorykg" / "vectors.sqlite"
+    cache_path = _resolve_cache_path(cache, db_path)
+
+    kg = MemoryKG(
+        corpus_root=repo_root,
+        db_path=db_path,
+        vectors_path=vectors_path,
+        model=model,
+    )
+
+    _console.print(Rule(f"MemoryKG build-two-phase — {db_path.name}", style="bold blue"))
+    _console.print(f"  sqlite  : {db_path}")
+    _console.print(f"  cache   : {cache_path}")
+    _console.print(f"  vectors : {vectors_path}")
+
+    if keep_cache and cache_path.exists():
+        _console.print(f"\n[yellow]Reusing existing cache:[/yellow] {cache_path}")
+    else:
+        _console.print("\nPhase 1: embedding nodes → cache …")
+        kg.build_embeddings(
+            cache_path,
+            n_workers=workers,
+            batch_size=batch,
+            device=None if device == "auto" else device,
+            quiet=False,
+        )
+
+    _console.print("\nPhase 2: indexing cache → vectors …")
+    stats = kg.build_index_from_cache(
+        cache_path,
+        wipe=True,
+        discover_similar=not no_similar,
+        quiet=False,
+    )
+    _console.print(f"  indexed  : {stats.indexed_rows} vectors  dim={stats.index_dim}")
+    if not no_similar:
+        _console.print(f"  SIMILAR_TO: {stats.similar_edges_added or 0} edges")
     _console.print("\n[green]Build complete.[/green]")
     kg.close()

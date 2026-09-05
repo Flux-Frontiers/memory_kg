@@ -142,3 +142,43 @@ def test_parse_corpus_empty_dir(tmp_path):
     nodes, edges = parse_corpus(tmp_path)
     assert nodes == []
     assert edges == []
+
+
+def test_parse_corpus_streaming_flushes_batches(tmp_path):
+    for i in range(6):
+        (tmp_path / f"doc{i}.md").write_text(f"# Title {i}\n\nContent for document {i}.\n")
+
+    batches: list[tuple[list, list]] = []
+    result = parse_corpus(
+        tmp_path,
+        on_batch=lambda nodes, edges: batches.append((nodes, edges)),
+        stream_batch_size=1,
+    )
+
+    # Streaming mode returns nothing — everything was handed to on_batch instead.
+    assert result == ([], [])
+    assert len(batches) > 1
+
+    streamed_node_ids = {n.id for nodes, _ in batches for n in nodes}
+    streamed_edges = [e for _, edges in batches for e in edges]
+    assert any(nid.startswith("doc:") for nid in streamed_node_ids)
+    assert any(e.rel == "CONTAINS" for e in streamed_edges)
+
+
+def test_parse_corpus_streaming_matches_non_streaming(tmp_path):
+    (tmp_path / "a.md").write_text("# A\n\nContent about architecture design.\n")
+    (tmp_path / "b.md").write_text("# B\n\nContent about query planning.\n")
+
+    full_nodes, full_edges = parse_corpus(tmp_path)
+
+    batches: list[tuple[list, list]] = []
+    parse_corpus(
+        tmp_path,
+        on_batch=lambda nodes, edges: batches.append((nodes, edges)),
+        stream_batch_size=1,
+    )
+    streamed_node_ids = {n.id for nodes, _ in batches for n in nodes}
+    streamed_edge_keys = {(e.src, e.rel, e.dst) for _, edges in batches for e in edges}
+
+    assert streamed_node_ids == {n.id for n in full_nodes}
+    assert streamed_edge_keys == {(e.src, e.rel, e.dst) for e in full_edges}

@@ -51,6 +51,13 @@ Step 1 — prepare corpus + build the KG (one time):
     # best for conversation corpora like LongMemEval.
     # --workers 8: parallel file parsing (Phase 1); Phase 2 embedding runs on MPS/GPU.
 
+    The build runs in three phases: parse to SQLite, embed to a JSONL cache, then
+    index from that cache. At this scale (528k+ nodes) embedding is the whole cost
+    of a build, so it is written to disk as it goes and a killed run can resume:
+
+        # resume after an interrupted build — replays the cache, no model inference
+        python benchmarks/longmemeval/longmemeval_memkg.py prepare <data.json> --keep-cache
+
 Step 2 — run the benchmark (many times — KG is reused):
 
     python benchmarks/longmemeval/longmemeval_memkg.py run ~/Downloads/longmemeval_s_cleaned.json
@@ -230,7 +237,7 @@ def write_corpus(data_file: Path, corpus_dir: Path, force: bool = False) -> dict
         data = json.load(fh)
 
     corpus_dir.mkdir(parents=True, exist_ok=True)
-    existing = {p.stem for p in corpus_dir.glob("*.md")}
+    existing = set() if force else {p.stem for p in corpus_dir.glob("*.md")}
 
     written = 0
     skipped = 0
@@ -244,7 +251,7 @@ def write_corpus(data_file: Path, corpus_dir: Path, force: bool = False) -> dict
         ):
             out_path = corpus_dir / f"{sess_id}.md"
             session_files[sess_id] = str(out_path)
-            if not force and sess_id in existing:
+            if sess_id in existing:
                 skipped += 1
                 continue
             out_path.write_text(_format_session_markdown(sess_id, date, session))
@@ -266,12 +273,26 @@ def build_kg(
     batch_size: int = 1024,
     discover_similar: bool = False,
     n_workers: int = 8,
+    cache_path: Path | None = None,
+    keep_cache: bool = False,
 ) -> None:
-    """Build a persistent MemoryKG from the corpus dir."""
+    """Build a persistent MemoryKG from the corpus dir.
+
+    Runs the two-phase path: parse to SQLite, embed to a JSONL cache, then index
+    from that cache.  At this corpus's scale (528k+ nodes) embedding is the whole
+    cost of a build, so paying it into a cache means an interrupted or repeated
+    run can resume with ``--keep-cache`` instead of starting the model over.
+
+    :param cache_path: Embedding cache path. Defaults to ``embeddings.jsonl``
+        beside the SQLite graph.
+    :param keep_cache: Reuse an existing cache instead of re-embedding.
+    """
+    cache_path = cache_path or db_path.parent / "embeddings.jsonl"
     print(f"  Building MemoryKG ({'wipe' if wipe else 'incremental'})...")
     print(f"    corpus:  {corpus_dir}")
     print(f"    sqlite:  {db_path}")
     print(f"    vectors: {vectors_path}")
+    print(f"    cache:   {cache_path}")
     print(f"    model:   {model or DEFAULT_MODEL}")
     print(f"    chunk:   {chunk_strategy}")
     print(f"    batch:   {batch_size}")
@@ -294,11 +315,26 @@ def build_kg(
         n_workers=n_workers,
     )
     try:
-        stats = kg.build(
+        reuse = keep_cache and cache_path.exists()
+        if reuse:
+            print(f"\n  Phase 1: reusing existing cache ({cache_path.name}) — not re-embedding")
+        else:
+            print("\n  Phase 1: parsing corpus → SQLite ...")
+            kg.build_graph(wipe=wipe)
+            print("\n  Phase 2: embedding → cache ...")
+            kg.build_embeddings(
+                cache_path,
+                batch_size=batch_size,
+                n_workers=n_workers,
+                quiet=False,
+            )
+
+        print("\n  Phase 3: indexing cache → vectors ...")
+        stats = kg.build_index_from_cache(
+            cache_path,
             wipe=wipe,
-            batch_size=batch_size,
             discover_similar=discover_similar,
-            n_workers=n_workers,
+            quiet=False,
         )
     finally:
         kg.close()
@@ -309,6 +345,7 @@ def build_kg(
         f"{stats.total_nodes} nodes, {stats.total_edges} edges, "
         f"{stats.indexed_rows} indexed rows"
     )
+    print(f"  Cache kept at {cache_path} — re-index without re-embedding via --keep-cache")
 
 
 _LONGMEMEVAL_URL = (
@@ -353,7 +390,16 @@ def cmd_prepare(args: argparse.Namespace) -> None:
     print("=" * 60)
     print(f"  Source: {data_file}")
 
-    write_corpus(data_file, CORPUS_DIR, force=args.wipe)
+    keep_cache = getattr(args, "keep_cache", False)
+    cache_path = Path(args.cache).resolve() if getattr(args, "cache", None) else None
+
+    if keep_cache and (cache_path or DOCKG_DB.parent / "embeddings.jsonl").exists():
+        # Resuming from a cache reuses the corpus and graph it was embedded from;
+        # rewriting them here would invalidate it.
+        print("  Corpus: reusing on-disk corpus (--keep-cache)")
+    else:
+        write_corpus(data_file, CORPUS_DIR, force=args.wipe)
+
     build_kg(
         CORPUS_DIR,
         DOCKG_DB,
@@ -364,6 +410,8 @@ def cmd_prepare(args: argparse.Namespace) -> None:
         batch_size=getattr(args, "batch", 1024),
         discover_similar=getattr(args, "similar", False),
         n_workers=getattr(args, "workers", 8),
+        cache_path=cache_path,
+        keep_cache=keep_cache,
     )
     print("  Ready. Run with:")
     print(f"    python {Path(__file__).name} run {data_file}")
@@ -1161,6 +1209,23 @@ def main() -> None:
         ),
     )
     p_prep.add_argument(
+        "--cache",
+        default=None,
+        help=(
+            "Embedding cache path (default: embeddings.jsonl beside the graph). "
+            "Must end in .jsonl or .jsonl.gz."
+        ),
+    )
+    p_prep.add_argument(
+        "--keep-cache",
+        action="store_true",
+        help=(
+            "Reuse an existing embedding cache instead of re-embedding — resumes a "
+            "killed build by replaying the cache into the index in seconds, with no "
+            "model inference. Leaves the corpus and graph as they are."
+        ),
+    )
+    p_prep.add_argument(
         "--download",
         action="store_true",
         help="Download the dataset from HuggingFace if the data file does not exist",
@@ -1200,6 +1265,23 @@ def main() -> None:
         type=int,
         default=8,
         help="Number of parallel embedding workers (default: 8).",
+    )
+    p_all.add_argument(
+        "--cache",
+        default=None,
+        help=(
+            "Embedding cache path (default: embeddings.jsonl beside the graph). "
+            "Must end in .jsonl or .jsonl.gz."
+        ),
+    )
+    p_all.add_argument(
+        "--keep-cache",
+        action="store_true",
+        help=(
+            "Reuse an existing embedding cache instead of re-embedding — resumes a "
+            "killed build by replaying the cache into the index in seconds, with no "
+            "model inference. Leaves the corpus and graph as they are."
+        ),
     )
     p_all.add_argument(
         "--device",

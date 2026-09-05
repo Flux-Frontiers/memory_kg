@@ -7,6 +7,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Two-phase index build: embed to a JSONL cache, then index from it.** The
+  embedding pass and the index write are separately resumable, so a failure in
+  the second does not throw away hours of the first.
+- **`parse_corpus(on_batch=...)` streams into SQLite instead of buffering the
+  whole corpus.** For corpora too large to hold in memory (LongMemEval-scale),
+  parsed nodes and edges are flushed to the callback in parsing-completion
+  order and the return value is `([], [])`. Shared nodes (topic/entity/keyword)
+  dedupe within a batch exactly as the non-streaming path does; for a node
+  spanning batches, the caller's upsert order decides which version survives.
+- **Upserts commit in batches of 5000** (`_UPSERT_BATCH_SIZE`), bounding peak
+  memory to one batch of row tuples and stopping a single large write from
+  holding one multi-hour transaction open.
+- **ConvoMem runs refuse to start over a partial download.** A truncated corpus
+  previously produced a complete-looking score against fewer questions.
+
+### Fixed
+
+- **The Pepys corpus tests now actually run.** `tests/test_temporal.py` pinned
+  the corpus to one hardcoded absolute path that exists on no machine, so its
+  five tests skipped everywhere -- locally and in CI -- while reading as
+  covered. These are the tests that caught both real dating bugs (the
+  line-anchored stamp pattern, and chunks inheriting the document's whole
+  decade). The corpus is now located via `MEMORYKG_PEPYS_CORPUS` or a
+  `corpus_pepys` clone beside this repo, and skips only when genuinely absent.
+  CI sparse-checks-out the single 6 MB file from the public `corpus_pepys`
+  repo rather than vendoring a second copy of it into this one.
+
+- **A custom embedder is no longer silently ignored on CPU.**
+  `precompute_embeddings()` routes GPU work in-process and CPU work across
+  spawn workers. A worker can be handed a model *name*, never an embedder
+  object, so the CPU path reloaded by name -- and an embedder with no
+  `model_name` fell back to `DEFAULT_MODEL`. The caller got a different model at
+  a different dimension with nothing raised. An unnameable embedder now takes
+  the in-process path whatever the device says.
+
+  This only ever failed off a GPU machine, which is why it took CI to surface
+  it: on an MPS or CUDA box the GPU branch reuses the caller's embedder and the
+  bug is unreachable.
+
+### Changed
+
+- **2026-08 sqlite-vec retest: every published benchmark number is corrected.**
+  See `benchmarks/RESULTS_SUMMARY.md` and `benchmarks/results_2026-08/`.
+- **Raw per-question result records are no longer tracked.** The `.md`
+  summaries and the charts they embed stay; the JSON/JSONL behind them are
+  regenerable and cost roughly 50k lines of history per retest. Runs from
+  before 2026-08 remain tracked -- untracking those is a separate decision.
+
 ### Fixed
 
 - **Memory dates are read per entry, from the format corpora actually use.**
