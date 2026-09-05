@@ -76,6 +76,19 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      # tests/test_temporal.py's Pepys class is the only coverage of dating
+      # against real text at real scale, and both dating bugs it caught had
+      # already passed against invented text. corpus_pepys is public, so one
+      # sparse checkout of the single 6 MB file is cheaper than vendoring it
+      # into this repo forever. Without it those five tests skip.
+      - name: Check out the Pepys corpus
+        uses: actions/checkout@v5
+        with:
+          repository: Flux-Frontiers/corpus_pepys
+          path: corpus_pepys
+          sparse-checkout: data/pepys_clean.txt
+          sparse-checkout-cone-mode: false
+
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
@@ -97,6 +110,8 @@ jobs:
         run: poetry install --no-interaction --with dev
 
       - name: Run tests
+        env:
+          MEMORYKG_PEPYS_CORPUS: ${{ github.workspace }}/corpus_pepys/data/pepys_clean.txt
         run: poetry run pytest
 
   wheel:

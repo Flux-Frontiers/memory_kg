@@ -33,6 +33,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   line-anchored stamp pattern, and chunks inheriting the document's whole
   decade). The corpus is now located via `MEMORYKG_PEPYS_CORPUS` or a
   `corpus_pepys` clone beside this repo, and skips only when genuinely absent.
+  CI sparse-checks-out the single 6 MB file from the public `corpus_pepys`
+  repo rather than vendoring a second copy of it into this one.
 
 - **A custom embedder is no longer silently ignored on CPU.**
   `precompute_embeddings()` routes GPU work in-process and CPU work across
