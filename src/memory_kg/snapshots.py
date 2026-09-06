@@ -433,6 +433,12 @@ class SnapshotManager(_BaseSnapshotManager):
         the properties return typed dataclasses instead; we substitute a plain
         ``_BaseSnapshot`` carrying the raw dicts so the base implementation
         can serialise without modification.
+
+        **Every field has to be copied across.** This rebuild is a silent
+        filter: a field omitted here is not dropped loudly, it falls back to
+        whatever the base's default is -- and for ``snapshot_key`` that default
+        makes ``key`` fall back to ``tree_hash``, undoing the key scheme at the
+        last step before the write.
         """
         if isinstance(snapshot, Snapshot):
             # Build a plain base-Snapshot with raw dicts (no property layer).
@@ -446,6 +452,10 @@ class SnapshotManager(_BaseSnapshotManager):
                 vs_previous=snapshot.__dict__["vs_previous"],
                 vs_baseline=snapshot.__dict__["vs_baseline"],
                 tree_hash=snapshot.tree_hash,
+                snapshot_key=snapshot.snapshot_key,
+                subject=snapshot.subject,
+                tool=snapshot.tool,
+                tool_version=snapshot.tool_version,
             )
             return super().save_snapshot(raw, force=force)
         return super().save_snapshot(snapshot, force=force)

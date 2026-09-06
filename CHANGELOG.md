@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **`save_snapshot` was dropping `snapshot_key`, `subject`, `tool` and
+  `tool_version`.** It rebuilds a bare `_BaseSnapshot` to normalise this class's
+  typed property views back to raw dicts before delegating to the base, and that
+  rebuild listed every base field except those four. The omission is silent: a
+  missing `snapshot_key` does not raise, it falls back to `tree_hash` -- so
+  every saved snapshot went back to tree-hash keying with empty provenance no
+  matter what the caller passed to `capture()`, undoing the key scheme at the
+  last step before the write.
+
+  Caught before this repo released. The same bug shipped in `pycode-kg` 0.25.0
+  and `doc-kg` 0.24.0 and was fixed in 0.25.1 / 0.24.1.
+
 ### Changed
 
 - **Snapshots are keyed on a release tag or timestamp, not a git tree hash.**

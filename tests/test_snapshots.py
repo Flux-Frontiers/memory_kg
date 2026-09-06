@@ -1095,3 +1095,39 @@ def test_to_dict_is_not_overridden_and_uses_the_current_key(tmp_path: Path) -> N
     d = snap.to_dict()
     assert d["key"] == "v0.9.0"
     assert d["metrics"]["coverage_score"] == 0.85  # typed property still serializes
+
+
+def test_save_snapshot_preserves_key_subject_and_tool(tmp_path: Path) -> None:
+    """save_snapshot must not drop snapshot_key/subject/tool/tool_version.
+
+    Regression test. ``save_snapshot`` rebuilds a bare ``_BaseSnapshot`` to
+    normalise this class's typed properties back to raw dicts before delegating
+    to the base implementation, and that rebuild listed every base field except
+    these four. The omission is silent: a missing ``snapshot_key`` does not
+    raise, it falls back to ``tree_hash``, so every saved file went back to
+    tree-hash keying with empty provenance no matter what the caller passed.
+
+    Shipped in pycode-kg 0.25.0 and doc-kg 0.24.0 before being caught; this
+    repo's fix is why 0.9.0 is the first memory-kg release with the key scheme.
+    """
+    mgr = SnapshotManager(tmp_path / "snaps")
+    snap = mgr.capture(
+        version="0.9.0",
+        branch="main",
+        graph_stats_dict={"total_nodes": 5, "total_edges": 3},
+        tree_hash="a" * 40,
+        key="v0.9.0",
+        subject="repo:memory-kg",
+    )
+    mgr.save_snapshot(snap)
+
+    on_disk = json.loads((tmp_path / "snaps" / "v0.9.0.json").read_text())
+    assert on_disk["key"] == "v0.9.0"
+    assert on_disk["subject"] == "repo:memory-kg"
+    assert on_disk["tool"] == "memory-kg"
+    assert on_disk["tool_version"]
+    assert on_disk["tree_hash"] == "a" * 40
+
+    manifest = mgr.load_manifest()
+    assert manifest.snapshots[0]["key"] == "v0.9.0"
+    assert manifest.snapshots[0]["subject"] == "repo:memory-kg"
