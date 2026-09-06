@@ -7,53 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
-
-- **`release.yml` now matches the rest of the fleet: it publishes to PyPI.**
-  This repo carried the older workflow that built a wheel and created a GitHub
-  Release but stopped there, so every PyPI upload had to be done by hand. That
-  is why 0.8.0 was tagged and released on GitHub on 2026-08-23 and never reached
-  PyPI, which still serves 0.7.0. The workflow now stashes the built artifacts
-  and hands them to a `publish` job using PyPI trusted publishing, so the index
-  and the GitHub Release carry byte-identical files.
-
-### Fixed
-
-- **`save_snapshot` was dropping `snapshot_key`, `subject`, `tool` and
-  `tool_version`.** It rebuilds a bare `_BaseSnapshot` to normalise this class's
-  typed property views back to raw dicts before delegating to the base, and that
-  rebuild listed every base field except those four. The omission is silent: a
-  missing `snapshot_key` does not raise, it falls back to `tree_hash` -- so
-  every saved snapshot went back to tree-hash keying with empty provenance no
-  matter what the caller passed to `capture()`, undoing the key scheme at the
-  last step before the write.
-
-  Caught before this repo released. The same bug shipped in `pycode-kg` 0.25.0
-  and `doc-kg` 0.24.0 and was fixed in 0.25.1 / 0.24.1.
-
-### Changed
-
-- **Snapshots are keyed on a release tag or timestamp, not a git tree hash.**
-  Requires `kgmodule-utils>=0.19.0`, where the key scheme changed; the floor
-  moves with it. The tree hash was read before `git add` staged the snapshot,
-  so it named a tree that was never committed -- 63 of 605 fleet snapshot keys
-  resolve.
-
-  `memorykg snapshot save VERSION` now uses VERSION as the key. Pass it
-  explicitly at release time: an omitted VERSION is auto-detected from the
-  installed memory-kg package, which names the measuring tool rather than the
-  corpus being measured, so it is recorded but never used as a key. Omitting it
-  keys on a UTC timestamp, which is correct for a corpus.
-
-- **`Snapshot.to_dict` is no longer overridden.** The override existed because
-  the base could not serialize this class's typed property views of `metrics`,
-  `vs_previous` and `vs_baseline`; 0.19.0's base reads them out of `__dict__`
-  instead. It also hardcoded `"key": self.tree_hash`, so leaving it in place
-  would have kept writing tree-hash keys regardless of the SDK.
-
-- **`Snapshot.from_dict` no longer copies a non-hash key into `tree_hash`.**
-  Under the old scheme the two were the same field. A stored key that is a real
-  40-character hash is still kept as provenance; a release tag is not.
+## [0.9.0] - 2026-09-06
 
 ### Added
 
@@ -62,8 +16,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   from the tool that measured it. `key` and `subject` are **named** parameters
   on `capture()`: it takes `**extra_metrics`, so an unnamed `key=` would have
   been silently recorded as a metric instead of reaching the base.
-
-### Added
 
 - **Two-phase index build: embed to a JSONL cache, then index from it.** The
   embedding pass and the index write are separately resumable, so a failure in
@@ -79,94 +31,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   holding one multi-hour transaction open.
 - **ConvoMem runs refuse to start over a partial download.** A truncated corpus
   previously produced a complete-looking score against fewer questions.
-
-### Fixed
-
-- **The Pepys corpus tests now actually run.** `tests/test_temporal.py` pinned
-  the corpus to one hardcoded absolute path that exists on no machine, so its
-  five tests skipped everywhere -- locally and in CI -- while reading as
-  covered. These are the tests that caught both real dating bugs (the
-  line-anchored stamp pattern, and chunks inheriting the document's whole
-  decade). The corpus is now located via `MEMORYKG_PEPYS_CORPUS` or a
-  `corpus_pepys` clone beside this repo, and skips only when genuinely absent.
-  CI sparse-checks-out the single 6 MB file from the public `corpus_pepys`
-  repo rather than vendoring a second copy of it into this one.
-
-- **A custom embedder is no longer silently ignored on CPU.**
-  `precompute_embeddings()` routes GPU work in-process and CPU work across
-  spawn workers. A worker can be handed a model *name*, never an embedder
-  object, so the CPU path reloaded by name -- and an embedder with no
-  `model_name` fell back to `DEFAULT_MODEL`. The caller got a different model at
-  a different dimension with nothing raised. An unnameable embedder now takes
-  the in-process path whatever the device says.
-
-  This only ever failed off a GPU machine, which is why it took CI to surface
-  it: on an MPS or CUDA box the GPU branch reuses the caller's embedder and the
-  bug is unreachable.
-
-### Changed
-
-- **2026-08 sqlite-vec retest: every published benchmark number is corrected.**
-  See `benchmarks/RESULTS_SUMMARY.md` and `benchmarks/results_2026-08/`.
-- **Raw per-question result records are no longer tracked.** The `.md`
-  summaries and the charts they embed stay; the JSON/JSONL behind them are
-  regenerable and cost roughly 50k lines of history per retest. Runs from
-  before 2026-08 remain tracked -- untracking those is a separate decision.
-
-### Fixed
-
-- **Memory dates are read per entry, from the format corpora actually use.**
-  The first version of this parsed YAML frontmatter `timestamp:` — DiaryKG's
-  convention, assumed to transfer. It does not. personal_agent's
-  `DiaryTransformer` writes one pipe-delimited entry per line:
-
-  ```
-  2024-01-15T10:30 | social | Reflection | On 2024-01-15T10:30, ...
-  ```
-
-  So on a real corpus `occurred_start` never fired, every node fell back to the
-  file's mtime, and a file spanning a year collapsed to the single moment it
-  was written out. The mechanism was right and the extraction was aimed at the
-  wrong format — it passed its tests because those tests fed it frontmatter
-  that no real corpus contains.
-
-  `_chunk_temporal()` now reads the stamps inside a chunk's own text: earliest
-  becomes `occurred_start`, latest `occurred_end` where they differ, so a chunk
-  covering several entries reads as the interval it actually spans. Document
-  nodes are dated by their content the same way, so a file of 2024 memories
-  written out in 2025 no longer lands on the timeline in 2025 — `recorded_at`
-  still records that it did.
-
-  **The pattern is deliberately not line-anchored.** The chunker normalises
-  whitespace, so by the time a chunk exists its entries sit on one line; an
-  anchored pattern found only the first stamp and silently dated a year of
-  memories to its opening entry. The `|` immediately after the stamp is what
-  keeps it specific — a bare date in prose (`On 2024-03-02, ...`) has no pipe
-  and does not match.
-
-  Frontmatter is retained as a fallback for corpora that do use it.
-
-- **Chunks with no stamp inherit the entry they belong to, not the document.**
-  Found by running the real Pepys diary rather than an invented file. Chunking
-  splits mid-entry, so most chunks carry no timestamp — **11,184 of 14,477** in
-  that corpus. They fell back to the document's contract, which had just become
-  the span of its whole content: the diary's entire decade. Every one of them
-  then matched every window, and a five-day query returned **11,190 nodes**
-  headed by 1660 content.
-
-  A diary reads forward: text after a date belongs to that date until the next
-  one. The chunk loop now carries the open entry and hands it to the chunks
-  that follow. The same five-day query — 2–6 September 1666 — now returns
-  **54 chunks**, and they are the Great Fire: Pepys woken at his window, Jane
-  reporting three hundred houses burned, Fish-street alight.
-
-  Year coverage went from 11,547 of 14,478 nodes piled on 1660 to an even
-  spread across 1660–1669.
-
-  Pinned by regression tests that run against `corpus_pepys` when it is present
-  and skip cleanly when it is not.
-
-### Added
 
 - **Temporal memory: documents carry `occurred_start` and `recorded_at`.**
   This is where the shared `kg_utils.temporal` contract earns its keep for
@@ -220,6 +84,131 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   older database is replaced rather than altered. Querying one before
   rebuilding fails loudly on the missing column, which is the signal to rebuild.
 
+### Changed
+
+- **`release.yml` now matches the rest of the fleet: it publishes to PyPI.**
+  This repo carried the older workflow that built a wheel and created a GitHub
+  Release but stopped there, so every PyPI upload had to be done by hand. That
+  is why 0.8.0 was tagged and released on GitHub on 2026-08-23 and never reached
+  PyPI, which still serves 0.7.0. The workflow now stashes the built artifacts
+  and hands them to a `publish` job using PyPI trusted publishing, so the index
+  and the GitHub Release carry byte-identical files.
+
+- **Snapshots are keyed on a release tag or timestamp, not a git tree hash.**
+  Requires `kgmodule-utils>=0.19.0`, where the key scheme changed; the floor
+  moves with it. The tree hash was read before `git add` staged the snapshot,
+  so it named a tree that was never committed -- 63 of 605 fleet snapshot keys
+  resolve.
+
+  `memorykg snapshot save VERSION` now uses VERSION as the key. Pass it
+  explicitly at release time: an omitted VERSION is auto-detected from the
+  installed memory-kg package, which names the measuring tool rather than the
+  corpus being measured, so it is recorded but never used as a key. Omitting it
+  keys on a UTC timestamp, which is correct for a corpus.
+
+- **`Snapshot.to_dict` is no longer overridden.** The override existed because
+  the base could not serialize this class's typed property views of `metrics`,
+  `vs_previous` and `vs_baseline`; 0.19.0's base reads them out of `__dict__`
+  instead. It also hardcoded `"key": self.tree_hash`, so leaving it in place
+  would have kept writing tree-hash keys regardless of the SDK.
+
+- **`Snapshot.from_dict` no longer copies a non-hash key into `tree_hash`.**
+  Under the old scheme the two were the same field. A stored key that is a real
+  40-character hash is still kept as provenance; a release tag is not.
+
+- **2026-08 sqlite-vec retest: every published benchmark number is corrected.**
+  See `benchmarks/RESULTS_SUMMARY.md` and `benchmarks/results_2026-08/`.
+- **Raw per-question result records are no longer tracked.** The `.md`
+  summaries and the charts they embed stay; the JSON/JSONL behind them are
+  regenerable and cost roughly 50k lines of history per retest. Runs from
+  before 2026-08 remain tracked -- untracking those is a separate decision.
+
+### Fixed
+
+- **`save_snapshot` was dropping `snapshot_key`, `subject`, `tool` and
+  `tool_version`.** It rebuilds a bare `_BaseSnapshot` to normalise this class's
+  typed property views back to raw dicts before delegating to the base, and that
+  rebuild listed every base field except those four. The omission is silent: a
+  missing `snapshot_key` does not raise, it falls back to `tree_hash` -- so
+  every saved snapshot went back to tree-hash keying with empty provenance no
+  matter what the caller passed to `capture()`, undoing the key scheme at the
+  last step before the write.
+
+  Caught before this repo released. The same bug shipped in `pycode-kg` 0.25.0
+  and `doc-kg` 0.24.0 and was fixed in 0.25.1 / 0.24.1.
+
+- **The Pepys corpus tests now actually run.** `tests/test_temporal.py` pinned
+  the corpus to one hardcoded absolute path that exists on no machine, so its
+  five tests skipped everywhere -- locally and in CI -- while reading as
+  covered. These are the tests that caught both real dating bugs (the
+  line-anchored stamp pattern, and chunks inheriting the document's whole
+  decade). The corpus is now located via `MEMORYKG_PEPYS_CORPUS` or a
+  `corpus_pepys` clone beside this repo, and skips only when genuinely absent.
+  CI sparse-checks-out the single 6 MB file from the public `corpus_pepys`
+  repo rather than vendoring a second copy of it into this one.
+
+- **A custom embedder is no longer silently ignored on CPU.**
+  `precompute_embeddings()` routes GPU work in-process and CPU work across
+  spawn workers. A worker can be handed a model *name*, never an embedder
+  object, so the CPU path reloaded by name -- and an embedder with no
+  `model_name` fell back to `DEFAULT_MODEL`. The caller got a different model at
+  a different dimension with nothing raised. An unnameable embedder now takes
+  the in-process path whatever the device says.
+
+  This only ever failed off a GPU machine, which is why it took CI to surface
+  it: on an MPS or CUDA box the GPU branch reuses the caller's embedder and the
+  bug is unreachable.
+
+- **Memory dates are read per entry, from the format corpora actually use.**
+  The first version of this parsed YAML frontmatter `timestamp:` — DiaryKG's
+  convention, assumed to transfer. It does not. personal_agent's
+  `DiaryTransformer` writes one pipe-delimited entry per line:
+
+  ```
+  2024-01-15T10:30 | social | Reflection | On 2024-01-15T10:30, ...
+  ```
+
+  So on a real corpus `occurred_start` never fired, every node fell back to the
+  file's mtime, and a file spanning a year collapsed to the single moment it
+  was written out. The mechanism was right and the extraction was aimed at the
+  wrong format — it passed its tests because those tests fed it frontmatter
+  that no real corpus contains.
+
+  `_chunk_temporal()` now reads the stamps inside a chunk's own text: earliest
+  becomes `occurred_start`, latest `occurred_end` where they differ, so a chunk
+  covering several entries reads as the interval it actually spans. Document
+  nodes are dated by their content the same way, so a file of 2024 memories
+  written out in 2025 no longer lands on the timeline in 2025 — `recorded_at`
+  still records that it did.
+
+  **The pattern is deliberately not line-anchored.** The chunker normalises
+  whitespace, so by the time a chunk exists its entries sit on one line; an
+  anchored pattern found only the first stamp and silently dated a year of
+  memories to its opening entry. The `|` immediately after the stamp is what
+  keeps it specific — a bare date in prose (`On 2024-03-02, ...`) has no pipe
+  and does not match.
+
+  Frontmatter is retained as a fallback for corpora that do use it.
+
+- **Chunks with no stamp inherit the entry they belong to, not the document.**
+  Found by running the real Pepys diary rather than an invented file. Chunking
+  splits mid-entry, so most chunks carry no timestamp — **11,184 of 14,477** in
+  that corpus. They fell back to the document's contract, which had just become
+  the span of its whole content: the diary's entire decade. Every one of them
+  then matched every window, and a five-day query returned **11,190 nodes**
+  headed by 1660 content.
+
+  A diary reads forward: text after a date belongs to that date until the next
+  one. The chunk loop now carries the open entry and hands it to the chunks
+  that follow. The same five-day query — 2–6 September 1666 — now returns
+  **54 chunks**, and they are the Great Fire: Pepys woken at his window, Jane
+  reporting three hundred houses burned, Fish-street alight.
+
+  Year coverage went from 11,547 of 14,478 nodes piled on 1660 to an even
+  spread across 1660–1669.
+
+  Pinned by regression tests that run against `corpus_pepys` when it is present
+  and skip cleanly when it is not.
 
 ## [0.8.0] - 2026-08-23
 

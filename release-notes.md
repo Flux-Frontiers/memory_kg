@@ -1,45 +1,64 @@
-# Release Notes — v0.8.0
+# Release Notes — v0.9.0
 
-> Released: 2026-08-23
+> Released: 2026-09-06
 
-This release trims MemoryKG's packaging surface and fixes three bugs that shipped
-in 0.7.0 and later: two in the pre-commit hook template `install-hooks` installs
-into consuming repos, and one in the Streamlit demo app.
+This release does three things at once: it gives MemoryKG real temporal
+memory, it makes large-corpus builds practical, and it stops snapshots from
+being keyed on a hash that never resolved.
 
 ## What changed
 
-**Dev tooling is no longer pip-installable.** The `dev` extra becomes an optional
-Poetry group, joining the `kg` group already there — install it with
-`poetry install --with dev` rather than `pip install memory-kg[dev]`. The `all`
-aggregate extra is removed for the same reason: beside the three viz packages it
-re-listed every dev tool by name, so the wheel advertised them as installable
-regardless of where the dependencies actually lived. This is a **breaking** change
-for anyone installing either extra.
+**Temporal memory: `occurred_start` and `recorded_at`.** A note written
+tonight about last Tuesday happened on Tuesday and was recorded tonight — a
+timeline that files it under tonight is wrong. Documents, sections and chunks
+now all carry both, distinguishing what a memory is about from when it was
+written down. The date parser was rewritten against a real corpus rather than
+an invented one: personal_agent's `DiaryTransformer` writes pipe-delimited
+entries per line, not the YAML frontmatter the first version assumed, so
+`occurred_start` never fired on real data until this was found. A related bug
+found on the Pepys diary sent most chunks — those with no timestamp of their
+own — to the document's full ten-year span instead of the entry they actually
+belong to; both are fixed and pinned by regression tests against the real
+corpus.
 
-**Dependency floors move up.** `kgmodule-utils` rises from 0.12.1 to 0.18.0 and
-`doc-kg` to 0.22.0, both direct dependencies; `pycode-kg` rises to 0.23.1 in the
-`kg` group.
+**Two-phase index build, and streaming corpus parsing.** Embedding and index
+writing are now separate resumable passes with a JSONL cache between them, so
+a failure writing the index no longer discards hours of embedding.
+`parse_corpus(on_batch=...)` streams parsed nodes into SQLite instead of
+buffering an entire corpus, for corpora too large to hold in memory. Upserts
+commit in batches of 5000, bounding peak memory and avoiding one long-held
+transaction.
 
-**The installed pre-commit hook had two bugs.** `MEMORYKG_SKIP_SNAPSHOT` was meant
-to skip only the per-commit snapshot step, but it sat above the quality-check
-invocation and silently skipped ruff, ty, and pytest along with it — now it gates
-only the snapshot, and the snapshot itself is opt-in via `MEMORYKG_SNAPSHOT=1`
-(default off). Separately, hook entries called tools through `poetry run`, which
-resolves against whichever environment the calling shell advertises; an inherited
-`VIRTUAL_ENV` from a different repo could silently redirect a hook to the wrong
-tool. Entries now call `.venv/bin/<tool>` directly.
+**Snapshots are keyed on a release tag or timestamp, not a git tree hash.**
+The tree hash was read before `git add` staged the snapshot, so it named a
+tree that was never committed — across the fleet, only 63 of 605 snapshot keys
+ever resolved. `snapshot save VERSION` now uses VERSION as the key; omit it
+for a corpus snapshot and it takes a UTC timestamp instead. A follow-up fix
+(caught before this release, not after) closes a second gap in the same area:
+`save_snapshot` was silently dropping the key and its provenance fields on the
+way to disk.
 
-**A Streamlit import relied on load order.** `app.py` called
-`st.components.v1.html()` after only `import streamlit as st` — importing a
-package doesn't bind its submodules, so this worked only because something else
-in the import graph happened to pull `streamlit.components` in first. The import
-is now explicit.
+**One column list drives every node read**, and the store gained a
+`metadata` column. Both close the same failure mode: a column reachable from
+some queries and not others reads as "this node is undated" rather than
+raising, which is how a missing column shipped silently before.
+
+**`release.yml` now publishes to PyPI**, matching the rest of the fleet. The
+old workflow built a wheel and created a GitHub Release but stopped there —
+which is why 0.8.0 was tagged and released on GitHub in August and never
+reached the index. This release is the first this repo has published through
+CI.
 
 ## Upgrading
 
-If you install this package with `[dev]` or `[all]`, switch to
-`poetry install --with dev`. Everything else in this release is additive or
-internal; no other action is needed.
+Rebuild your index. The new `metadata` column has no in-place migration —
+MemoryKG indexes are built from their corpus, so an old database is replaced
+rather than altered. Querying one before rebuilding fails loudly on the
+missing column, which is the signal to rebuild.
+
+Existing snapshots keep their keys and stay addressable. Anyone snapshotting
+at a release should pass the tag explicitly going forward:
+`capture(..., key="v0.9.0")`.
 
 ---
 
