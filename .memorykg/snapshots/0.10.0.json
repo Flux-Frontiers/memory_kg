@@ -1,0 +1,127 @@
+{
+  "key": "0.10.0",
+  "branch": "main",
+  "timestamp": "2026-09-06T22:44:10.942422+00:00",
+  "version": "0.10.0",
+  "subject": "repo:memory-kg",
+  "tool": "memory-kg",
+  "tool_version": "0.10.0",
+  "tree_hash": "b3b6d62395b417753d0fbdc8836ec9e6b5dde8b1",
+  "metrics": {
+    "db_path": ".memorykg/graph.sqlite",
+    "total_nodes": 3948,
+    "total_edges": 22044,
+    "node_counts": {
+      "chunk": 1006,
+      "document": 21,
+      "entity": 735,
+      "keyword": 1110,
+      "section": 375,
+      "topic": 701
+    },
+    "edge_counts": {
+      "CONTAINS": 1381,
+      "CO_OCCURS_WITH": 10854,
+      "HAS_KEYWORD": 3546,
+      "HAS_TOPIC": 950,
+      "MENTIONS_ENTITY": 2336,
+      "NEXT": 559,
+      "REFERENCES": 20,
+      "SIMILAR_TO": 2398
+    },
+    "meaningful_nodes": 3927,
+    "coverage_score": 0.8614976805831676,
+    "issues_count": 0,
+    "complexity_median": 20.0
+  },
+  "hotspots": [
+    {
+      "id": "chunk:docs/ingestion.md:0002",
+      "file_path": "docs/ingestion.md",
+      "label": "Pipeline Overview",
+      "references": 0,
+      "semantic_links": 24,
+      "total_links": 25
+    },
+    {
+      "id": "chunk:docs/ingestion.md:0025",
+      "file_path": "docs/ingestion.md",
+      "label": "Embedding Model",
+      "references": 0,
+      "semantic_links": 22,
+      "total_links": 23
+    },
+    {
+      "id": "chunk:CHANGELOG.md:0154",
+      "file_path": "CHANGELOG.md",
+      "label": "Changed",
+      "references": 0,
+      "semantic_links": 22,
+      "total_links": 22
+    },
+    {
+      "id": "chunk:CHANGELOG.md:0145",
+      "file_path": "CHANGELOG.md",
+      "label": "Changed",
+      "references": 0,
+      "semantic_links": 21,
+      "total_links": 22
+    },
+    {
+      "id": "chunk:analysis/memory_kg_analysis_20260425.md:0009",
+      "file_path": "analysis/memory_kg_analysis_20260425.md",
+      "label": "Fan-In Ranking",
+      "references": 0,
+      "semantic_links": 20,
+      "total_links": 21
+    },
+    {
+      "id": "chunk:docs/CHEATSHEET.md:0002",
+      "file_path": "docs/CHEATSHEET.md",
+      "label": "The Four Tools at a Glance",
+      "references": 0,
+      "semantic_links": 20,
+      "total_links": 21
+    },
+    {
+      "id": "chunk:CHANGELOG.md:0163",
+      "file_path": "CHANGELOG.md",
+      "label": "Added",
+      "references": 0,
+      "semantic_links": 20,
+      "total_links": 20
+    },
+    {
+      "id": "chunk:analysis/memory_kg_analysis_20260425.md:0049",
+      "file_path": "analysis/memory_kg_analysis_20260425.md",
+      "label": "Query Search Retrieval Semantic",
+      "references": 0,
+      "semantic_links": 20,
+      "total_links": 20
+    },
+    {
+      "id": "chunk:README.md:0064",
+      "file_path": "README.md",
+      "label": "Documentation",
+      "references": 8,
+      "semantic_links": 19,
+      "total_links": 28
+    },
+    {
+      "id": "chunk:analysis/memory_kg_analysis_20260425.md:0039",
+      "file_path": "analysis/memory_kg_analysis_20260425.md",
+      "label": "Snapshot History",
+      "references": 0,
+      "semantic_links": 19,
+      "total_links": 20
+    }
+  ],
+  "issues": [],
+  "vs_previous": null,
+  "vs_baseline": {
+    "nodes": 238,
+    "edges": 224,
+    "coverage_delta": 0.020060048447861134,
+    "issues_delta": 0
+  }
+}

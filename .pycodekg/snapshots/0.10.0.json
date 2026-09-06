@@ -1,0 +1,155 @@
+{
+  "key": "0.10.0",
+  "branch": "main",
+  "timestamp": "2026-09-06T22:43:05.881487+00:00",
+  "version": "0.10.0",
+  "subject": "repo:memory-kg",
+  "tool": "pycode-kg",
+  "tool_version": "0.26.0",
+  "tree_hash": "b3b6d62395b417753d0fbdc8836ec9e6b5dde8b1",
+  "metrics": {
+    "db_path": ".pycodekg/graph.sqlite",
+    "total_nodes": 4663,
+    "meaningful_nodes": 338,
+    "total_edges": 4304,
+    "node_counts": {
+      "class": 41,
+      "function": 106,
+      "method": 153,
+      "module": 38,
+      "symbol": 4325
+    },
+    "edge_counts": {
+      "ATTR_ACCESS": 1369,
+      "CALLS": 1554,
+      "CONTAINS": 300,
+      "IMPORTS": 313,
+      "INHERITS": 1,
+      "RESOLVES_TO": 767
+    },
+    "module_count": 38,
+    "class_count": 41,
+    "function_count": 106,
+    "method_count": 153,
+    "docstring_coverage": 0.991,
+    "snapshot_count": 1,
+    "coverage_documented": 335,
+    "coverage_total": 338,
+    "critical_issues": 3,
+    "complexity_median": 4,
+    "module_node_counts": {
+      "src/memory_kg/__init__.py": 3,
+      "src/memory_kg/__main__.py": 1,
+      "src/memory_kg/app.py": 148,
+      "src/memory_kg/chunker.py": 236,
+      "src/memory_kg/cli/__init__.py": 1,
+      "src/memory_kg/cli/cmd_analyze.py": 8,
+      "src/memory_kg/cli/cmd_build.py": 221,
+      "src/memory_kg/cli/cmd_hooks.py": 74,
+      "src/memory_kg/cli/cmd_mcp.py": 13,
+      "src/memory_kg/cli/cmd_model.py": 14,
+      "src/memory_kg/cli/cmd_pipeline.py": 104,
+      "src/memory_kg/cli/cmd_query.py": 60,
+      "src/memory_kg/cli/cmd_semantic_analyze.py": 8,
+      "src/memory_kg/cli/cmd_snapshot.py": 184,
+      "src/memory_kg/cli/cmd_viz.py": 21,
+      "src/memory_kg/cli/group.py": 2,
+      "src/memory_kg/cli/main.py": 2,
+      "src/memory_kg/cli/options.py": 10,
+      "src/memory_kg/config.py": 16,
+      "src/memory_kg/embedder_worker.py": 4,
+      "src/memory_kg/entry_chunk.py": 21,
+      "src/memory_kg/graph.py": 91,
+      "src/memory_kg/index.py": 418,
+      "src/memory_kg/kg.py": 352,
+      "src/memory_kg/manifold.py": 144,
+      "src/memory_kg/mcp_server.py": 73,
+      "src/memory_kg/memorykg.py": 249,
+      "src/memory_kg/memorykg_semantic_analysis.py": 278,
+      "src/memory_kg/memorykg_thorough_analysis.py": 171,
+      "src/memory_kg/pipeline.py": 187,
+      "src/memory_kg/relations.py": 46,
+      "src/memory_kg/sampler.py": 208,
+      "src/memory_kg/semantic_builder.py": 106,
+      "src/memory_kg/semantic_extractor.py": 80,
+      "src/memory_kg/semantic_primitives.py": 23,
+      "src/memory_kg/snapshots.py": 67,
+      "src/memory_kg/store.py": 189,
+      "src/memory_kg/topics.py": 126
+    }
+  },
+  "hotspots": [
+    {
+      "name": "m:src/memory_kg/kg.py:MemoryKG.close",
+      "callers": 12,
+      "callees": 0,
+      "risk_level": "low"
+    },
+    {
+      "name": "m:src/memory_kg/store.py:GraphStore.close",
+      "callers": 12,
+      "callees": 0,
+      "risk_level": "low"
+    },
+    {
+      "name": "m:src/memory_kg/store.py:GraphStore.con",
+      "callers": 11,
+      "callees": 0,
+      "risk_level": "low"
+    },
+    {
+      "name": "m:src/memory_kg/kg.py:MemoryKG.store",
+      "callers": 8,
+      "callees": 1,
+      "risk_level": "low"
+    },
+    {
+      "name": "fn:src/memory_kg/chunker.py:_extract_links",
+      "callers": 5,
+      "callees": 1,
+      "risk_level": "low"
+    },
+    {
+      "name": "m:src/memory_kg/kg.py:MemoryKG.index",
+      "callers": 5,
+      "callees": 2,
+      "risk_level": "low"
+    },
+    {
+      "name": "fn:src/memory_kg/index.py:suppress_ingestion_logging",
+      "callers": 5,
+      "callees": 0,
+      "risk_level": "low"
+    },
+    {
+      "name": "fn:src/memory_kg/chunker.py:_groups_to_chunks",
+      "callers": 4,
+      "callees": 0,
+      "risk_level": "low"
+    },
+    {
+      "name": "fn:src/memory_kg/mcp_server.py:_get_kg",
+      "callers": 4,
+      "callees": 0,
+      "risk_level": "low"
+    },
+    {
+      "name": "m:src/memory_kg/kg.py:TextPack.to_json",
+      "callers": 4,
+      "callees": 1,
+      "risk_level": "low"
+    }
+  ],
+  "issues": [
+    "[WARN] 2 dead-code candidates found (`index.py:_resolve_device`, `store.py:edges_from`) -- no callers in code or tests; verify against downstream consumers, then remove or archive",
+    "[INFO] 13 definitions are unused in production code but exercised by tests -- likely public API for downstream packages; not counted against the quality grade",
+    "[WARN] `kg.py` has 32 functions/methods/classes -- consider splitting into focused submodules"
+  ],
+  "vs_previous": null,
+  "vs_baseline": {
+    "nodes": 246,
+    "edges": 103,
+    "coverage_delta": 0.21099999999999997,
+    "critical_issues_delta": 1
+  }
+}

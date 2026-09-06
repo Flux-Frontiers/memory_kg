@@ -35,6 +35,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `_compute_delta_from_metrics`, and a `diff_snapshots` that adds `timestamp` to
   each side. Snapshot files, manifests and the CLI output are unchanged.
 
+## [0.10.0] - 2026-09-06
+
 ## [0.9.0] - 2026-09-06
 
 ### Added
