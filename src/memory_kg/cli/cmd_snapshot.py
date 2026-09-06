@@ -21,7 +21,12 @@ from memory_kg.cli.group import cli
 from memory_kg.cli.options import sqlite_option
 from memory_kg.kg import MemoryKG
 from memory_kg.memorykg_thorough_analysis import MemoryKGAnalyzer
-from memory_kg.snapshots import SnapshotManager
+from memory_kg.snapshots import (
+    SnapshotDelta,
+    SnapshotManager,
+    delta_from_dict,
+    metrics_from_dict,
+)
 from memory_kg.store import GraphStore
 
 
@@ -146,9 +151,10 @@ def save_snapshot(
     click.echo(f"  Key:       {snapshot_obj.key}")
     click.echo(f"  Timestamp: {snapshot_obj.timestamp}")
     click.echo(f"  Version:   {snapshot_obj.version}")
-    click.echo(f"  Nodes:     {snapshot_obj.metrics.total_nodes}")
-    click.echo(f"  Edges:     {snapshot_obj.metrics.total_edges}")
-    click.echo(f"  Coverage:  {snapshot_obj.metrics.coverage_score:.1%}")
+    saved_metrics = metrics_from_dict(snapshot_obj.metrics)
+    click.echo(f"  Nodes:     {saved_metrics.total_nodes}")
+    click.echo(f"  Edges:     {saved_metrics.total_edges}")
+    click.echo(f"  Coverage:  {saved_metrics.coverage_score:.1%}")
 
 
 @snapshot.command("list")
@@ -245,19 +251,20 @@ def show_snapshot(key: str, snapshots_dir: str | None) -> None:
     click.echo()
 
     click.echo("Metrics:")
-    click.echo(f"  Total Nodes:       {snapshot_obj.metrics.total_nodes}")
-    click.echo(f"  Total Edges:       {snapshot_obj.metrics.total_edges}")
-    click.echo(f"  Meaningful Nodes:  {snapshot_obj.metrics.meaningful_nodes}")
-    click.echo(f"  Coverage Score:    {snapshot_obj.metrics.coverage_score:.1%}")
-    click.echo(f"  Issues Count:      {snapshot_obj.metrics.issues_count}")
-    click.echo(f"  Complexity Median: {snapshot_obj.metrics.complexity_median:.2f}")
+    metrics = metrics_from_dict(snapshot_obj.metrics)
+    click.echo(f"  Total Nodes:       {metrics.total_nodes}")
+    click.echo(f"  Total Edges:       {metrics.total_edges}")
+    click.echo(f"  Meaningful Nodes:  {metrics.meaningful_nodes}")
+    click.echo(f"  Coverage Score:    {metrics.coverage_score:.1%}")
+    click.echo(f"  Issues Count:      {metrics.issues_count}")
+    click.echo(f"  Complexity Median: {metrics.complexity_median:.2f}")
     click.echo()
 
     click.echo("Node/Edge Breakdown:")
-    for kind, count in sorted(snapshot_obj.metrics.node_counts.items()):
+    for kind, count in sorted(metrics.node_counts.items()):
         click.echo(f"  {kind}: {count}")
     click.echo()
-    for rel, count in sorted(snapshot_obj.metrics.edge_counts.items()):
+    for rel, count in sorted(metrics.edge_counts.items()):
         click.echo(f"  {rel}: {count}")
     click.echo()
 
@@ -270,7 +277,7 @@ def show_snapshot(key: str, snapshots_dir: str | None) -> None:
         click.echo()
 
     if snapshot_obj.vs_previous:
-        delta = snapshot_obj.vs_previous
+        delta = delta_from_dict(snapshot_obj.vs_previous) or SnapshotDelta()
         click.echo("Delta vs. Previous:")
         click.echo(f"  Nodes:    {delta.nodes:+d}")
         click.echo(f"  Edges:    {delta.edges:+d}")
@@ -279,7 +286,7 @@ def show_snapshot(key: str, snapshots_dir: str | None) -> None:
         click.echo()
 
     if snapshot_obj.vs_baseline:
-        delta = snapshot_obj.vs_baseline
+        delta = delta_from_dict(snapshot_obj.vs_baseline) or SnapshotDelta()
         click.echo("Delta vs. Baseline:")
         click.echo(f"  Nodes:    {delta.nodes:+d}")
         click.echo(f"  Edges:    {delta.edges:+d}")
