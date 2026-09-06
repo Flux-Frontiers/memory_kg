@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`release.yml` now matches the rest of the fleet: it publishes to PyPI.**
+  This repo carried the older workflow that built a wheel and created a GitHub
+  Release but stopped there, so every PyPI upload had to be done by hand. That
+  is why 0.8.0 was tagged and released on GitHub on 2026-08-23 and never reached
+  PyPI, which still serves 0.7.0. The workflow now stashes the built artifacts
+  and hands them to a `publish` job using PyPI trusted publishing, so the index
+  and the GitHub Release carry byte-identical files.
+
 ### Fixed
 
 - **`save_snapshot` was dropping `snapshot_key`, `subject`, `tool` and
