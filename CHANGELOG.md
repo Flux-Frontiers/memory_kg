@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`memory_kg.snapshots.Snapshot` is now the shared `kg_utils.snapshots.Snapshot`,
+  not a subclass.** The subclass replaced `metrics`, `vs_previous` and
+  `vs_baseline` with properties returning `SnapshotMetrics` and `SnapshotDelta`.
+  Every shared manager method that reads those fields by attribute then needed a
+  hand-written copy, and this module carried nine: `capture`, `save_snapshot`,
+  `load_snapshot`, `get_previous`, `get_baseline`, `diff_snapshots`,
+  `_compute_delta`, `to_dict` and `from_dict`. The `save_snapshot` copy is the
+  one that dropped `snapshot_key`, `subject` and `tool` on the way to disk; it
+  was caught here in #28 before release, and shipped in doc-kg 0.24.0 and
+  pycode-kg 0.25.0. Removing the subclass removes the whole class of bug rather
+  than the one instance of it.
+
+  A snapshot's `metrics`, `vs_previous` and `vs_baseline` are plain dicts.
+  `SnapshotMetrics` and `SnapshotDelta` remain exported as converters for
+  callers that want attribute access; `delta_to_dict` and `delta_from_dict` are
+  now public alongside `metrics_to_dict` and `metrics_from_dict`. Read a metric
+  as `snap.metrics["total_nodes"]`, or as
+  `metrics_from_dict(snap.metrics).total_nodes` when you want the converter's
+  defaults for absent keys.
+
+  `SnapshotManager` keeps only what is genuinely MemoryKG-specific: the
+  `package_name` default, the `capture()` that derives `meaningful_nodes` and
+  coerces the MemoryKG metric fields, `coverage_delta` and `issues_delta` in
+  `_compute_delta_from_metrics`, and a `diff_snapshots` that adds `timestamp` to
+  each side. Snapshot files, manifests and the CLI output are unchanged.
+
 ## [0.9.0] - 2026-09-06
 
 ### Added
