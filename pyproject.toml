@@ -86,7 +86,13 @@ dependencies = [
     # numpy, rich, sentence-transformers, torch, transformers and sqlite-vec --
     # all of which are already declared directly above -- plus `lancedb`, which
     # was the last thing pulling the retired backend into a clean install.
-    "kgmodule-utils[sqlite-vec]>=0.19.0",
+    # 0.20.0 is a hard requirement, not a preference: snapshots.py has no
+    # __init__, capture or diff_snapshots of its own any more. It configures
+    # the base through the package_name class attribute and the
+    # _domain_metrics() hook, neither of which exists before 0.20.0. Against
+    # 0.19.x the manager reports itself as "kg-utils" and loses
+    # meaningful_nodes.
+    "kgmodule-utils[sqlite-vec]>=0.20.0",
 ]
 
 [project.optional-dependencies]
