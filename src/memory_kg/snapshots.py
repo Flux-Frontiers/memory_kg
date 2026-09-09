@@ -18,7 +18,7 @@ This module adds:
     ``metrics_from_dict`` / ``metrics_to_dict`` and ``delta_from_dict`` /
     ``delta_to_dict``; a ``Snapshot`` never holds one.
   - a ``SnapshotManager`` subclass that sets ``package_name="memory-kg"``, builds
-    the MemoryKG metrics dict in ``capture()``, adds ``coverage_delta`` and
+    the MemoryKG metrics dict in ``_domain_metrics()``, adds ``coverage_delta`` and
     ``issues_delta`` to deltas, ignores ``db_path`` when deciding whether
     metrics changed, and adds ``timestamp`` to each side of a diff.
 
@@ -42,7 +42,6 @@ Usage
 from __future__ import annotations
 
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Any
 
 # ---------------------------------------------------------------------------
@@ -179,108 +178,40 @@ class SnapshotManager(_BaseSnapshotManager):
     dropped-key defect into two sibling repos' releases.
     """
 
-    def __init__(
-        self,
-        snapshots_dir: Path | str,
-        *,
-        package_name: str = "memory-kg",
-        db_path: Path | str | None = None,
-    ) -> None:
-        """Initialize the manager rooted at ``snapshots_dir``.
-
-        :param snapshots_dir: Directory holding snapshot JSON and the manifest.
-        :param package_name: Package name used for version detection.
-        :param db_path: Optional MemoryKG SQLite path, recorded in metrics.
-        """
-        super().__init__(snapshots_dir, package_name=package_name, db_path=db_path)
+    #: Version detection reads this; the base records it as the snapshot's
+    #: ``tool``. Replaces an ``__init__`` that only forwarded to ``super()``.
+    package_name = "memory-kg"
 
     # ------------------------------------------------------------------
-    # capture — build the MemoryKG metrics dict
+    # Capture-time metrics derived by this module
     # ------------------------------------------------------------------
 
-    def capture(
-        self,
-        version: str | None = None,
-        branch: str | None = None,
-        graph_stats_dict: dict[str, Any] | None = None,
-        tree_hash: str = "",
-        hotspots: list[dict[str, Any]] | None = None,
-        issues: list[str] | None = None,
-        key: str = "",
-        subject: str = "",
-        **extra_metrics: Any,
-    ) -> Snapshot:
-        """Capture a MemoryKG snapshot.
+    def _domain_metrics(self, stats: dict[str, Any]) -> dict[str, Any]:
+        """Derive the MemoryKG metric fields from the graph stats.
 
-        Derives ``meaningful_nodes`` from the graph stats and coerces the
-        MemoryKG metric fields, then delegates to the shared implementation.
+        Called by the inherited ``capture()``. Overriding this rather than
+        ``capture()`` is deliberate: a ``capture()`` override has to restate the
+        base signature, and restating it is how an unnamed ``key=`` fell into
+        ``**extra_metrics`` and shipped a sibling package keyed on a tree hash.
 
-        :param version: Version string (e.g., "0.3.0").
-        :param branch: Git branch name; auto-detected if None.
-        :param graph_stats_dict: Output from ``graph_stats()`` / ``store.stats()``.
-        :param tree_hash: Git tree hash, recorded as provenance; auto-detected
-            if not provided. It is not the snapshot's key.
-        :param hotspots: Top hot chunks with metadata.
-        :param issues: List of issue description strings.
-        :param key: Snapshot identifier. Pass the release tag at release time;
-            omit it and the base assigns a UTC timestamp. Named explicitly
-            rather than left to ``**extra_metrics``, which would silently
-            record it as a metric instead of passing it to the base.
-        :param subject: What was measured, e.g. ``repo:memory-kg`` or
-            ``corpus:pepys``. Explicit for the same reason.
-        :param extra_metrics: Domain-specific fields; recognised keys are
-            ``coverage_score`` (float), ``issues_count`` (int), and
-            ``complexity_median`` (float).
-        :return: New :class:`~kg_utils.snapshots.Snapshot` (not yet persisted).
+        The three zero values are defaults, not measurements. Anything the
+        caller passes to ``capture()`` overrides them, which is how
+        ``cmd_snapshot`` supplies the real numbers; they exist so a snapshot
+        taken without them still carries the keys.
+
+        :param stats: Graph stats passed to ``capture()``.
+        :return: ``meaningful_nodes`` plus defaults for the MemoryKG metrics.
         """
-        stats = graph_stats_dict or {}
         node_counts = stats.get("node_counts", {})
-        meaningful_nodes = max(
-            0,
-            int(stats.get("total_nodes", 0)) - int(node_counts.get("document", 0)),
-        )
-
-        extra: dict[str, Any] = {
-            "meaningful_nodes": meaningful_nodes,
-            "coverage_score": float(extra_metrics.pop("coverage_score", 0.0)),
-            "issues_count": int(extra_metrics.pop("issues_count", 0)),
-            "complexity_median": float(extra_metrics.pop("complexity_median", 0.0)),
-            **extra_metrics,
+        return {
+            "meaningful_nodes": max(
+                0,
+                int(stats.get("total_nodes", 0)) - int(node_counts.get("document", 0)),
+            ),
+            "coverage_score": 0.0,
+            "issues_count": 0,
+            "complexity_median": 0.0,
         }
-
-        return super().capture(
-            version=version,
-            branch=branch,
-            graph_stats_dict=stats,
-            tree_hash=tree_hash,
-            key=key,
-            subject=subject,
-            hotspots=hotspots,
-            issues=issues,
-            **extra,
-        )
-
-    # ------------------------------------------------------------------
-    # diff_snapshots — add the timestamp the CLI prints
-    # ------------------------------------------------------------------
-
-    def diff_snapshots(self, key_a: str, key_b: str) -> dict[str, Any]:
-        """Compare two snapshots, adding ``timestamp`` to each side.
-
-        :param key_a: Earlier snapshot key.
-        :param key_b: Later snapshot key.
-        :return: The shared diff result with ``a['timestamp']`` and
-            ``b['timestamp']`` filled in.
-        """
-        result = super().diff_snapshots(key_a, key_b)
-        if "error" in result:
-            return result
-
-        for side, key in (("a", key_a), ("b", key_b)):
-            snap = self.load_snapshot(key)
-            if snap is not None:
-                result[side]["timestamp"] = snap.timestamp
-        return result
 
     # ------------------------------------------------------------------
     # Delta computation — adds coverage_delta and issues_delta

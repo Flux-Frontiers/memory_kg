@@ -86,7 +86,13 @@ dependencies = [
     # numpy, rich, sentence-transformers, torch, transformers and sqlite-vec --
     # all of which are already declared directly above -- plus `lancedb`, which
     # was the last thing pulling the retired backend into a clean install.
-    "kgmodule-utils[sqlite-vec]>=0.19.0",
+    # 0.20.0 is a hard requirement, not a preference: snapshots.py has no
+    # __init__, capture or diff_snapshots of its own any more. It configures
+    # the base through the package_name class attribute and the
+    # _domain_metrics() hook, neither of which exists before 0.20.0. Against
+    # 0.19.x the manager reports itself as "kg-utils" and loses
+    # meaningful_nodes.
+    "kgmodule-utils[sqlite-vec]>=0.20.0",
 ]
 
 [project.optional-dependencies]
@@ -143,8 +149,14 @@ ruff = ">=0.4.0,<0.16"
 optional = true
 
 [tool.poetry.group.kg.dependencies]
-doc-kg = ">=0.22.0"
-pycode-kg = ">=0.23.1"
+# Both floors are the releases that retired these packages' own snapshot
+# overrides and moved them onto kgmodule-utils>=0.20.0, the same SDK this repo
+# now requires. Pinned lower, `poetry install --with kg` could resolve a dockg
+# or pycodekg predating the shared extension points into the same environment
+# as a memory_kg that depends on them. The previous floors were four and five
+# releases behind.
+doc-kg = ">=0.26.0"
+pycode-kg = ">=0.27.0"
 
 [project.urls]
 Homepage   = "https://github.com/Flux-Frontiers/memory_kg"
