@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-09-08
+
+### Changed
+
+- **`SnapshotManager` configures the shared base instead of overriding it.**
+  The `__init__`, `capture` and `diff_snapshots` overrides are deleted;
+  `snapshots.py` drops from 494 lines to 229. What each did now comes from a
+  `kgmodule-utils` 0.20.0 extension point: the `package_name` class attribute
+  replaces `__init__`, the `_domain_metrics(stats)` hook replaces `capture`
+  (it derives `meaningful_nodes` and declares the three MemoryKG metric
+  defaults), and the base `diff_snapshots` already includes `timestamp`, so
+  the override existed for nothing else and cost two extra `load_snapshot`
+  calls. `_compute_delta_from_metrics` stays; it is genuinely domain-specific.
+  No keyword renames: the CLI already passed `coverage_score`, `issues_count`
+  and `complexity_median` under the names they are stored as. Seven new tests
+  pin what the deleted overrides did.
+- **`kgmodule-utils>=0.20.0` is now a hard floor.** `package_name` and
+  `_domain_metrics()` do not exist before 0.20.0; against 0.19.x the manager
+  reports itself as `kg-utils` and loses `meaningful_nodes`.
+- The optional `kg` tooling group now pins `doc-kg>=0.26.0` and
+  `pycode-kg>=0.27.0`, the releases that retired those packages' own snapshot
+  overrides and moved onto the same SDK floor. The previous pins were four and
+  five releases behind and could resolve a `dockg` or `pycodekg` predating the
+  shared extension points into the same environment.
+
+## [0.10.0] - 2026-09-06
+
 ### Changed
 
 - **`memory_kg.snapshots.Snapshot` is now the shared `kg_utils.snapshots.Snapshot`,
@@ -35,7 +62,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `_compute_delta_from_metrics`, and a `diff_snapshots` that adds `timestamp` to
   each side. Snapshot files, manifests and the CLI output are unchanged.
 
-## [0.10.0] - 2026-09-06
 
 ## [0.9.0] - 2026-09-06
 
