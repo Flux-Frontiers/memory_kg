@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`kgmodule-utils` floor raised to `>=0.22.0`** (was `>=0.20.0`), and the
+  maintainer-only `kg` group's `pycode-kg` to `>=0.27.1` (was `>=0.27.0`),
+  for the fleet's current releases. Nothing in this repo depends on either
+  specifically; this is a currency bump.
+
 ## [0.11.0] - 2026-09-08
 
 ### Changed
