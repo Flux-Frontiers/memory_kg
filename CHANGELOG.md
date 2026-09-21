@@ -7,7 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **The MCP server closes the graph on shutdown** (`kgrag_priv` sweep item 5),
+  via `FastMCP(lifespan=...)` -- the resource-cleanup pattern `genealogy_kg`
+  set and the fleet standards record. One hook covers both the stdio and SSE
+  transports, since both route through the same underlying `Server.run()`.
+  Verified through `mcp.shared.memory`'s in-process transport: a real
+  `Server.run()`/lifespan cycle, not a mocked `close`.
+
 ### Changed
+
+- **The duplicate `[0.4.0]` and `[0.4.1]` headings are explained rather than
+  renumbered** (`kgrag_priv` sweep item 26). Both pairs record real releases,
+  of two different packages: the 2026-04-25 pair is memory_kg's own, matching
+  its `pyproject.toml` bumps and the `v0.4.1` tag, and the 2026-03 pair was
+  inherited from the project memory_kg was rebranded out of -- it was already
+  in this file at the initial commit on 2026-04-08, and this repository has no
+  commits before that date. Neither version number is wrong, so renumbering
+  either would have made this file false. A note now marks where the inherited
+  history begins.
 
 - **Fleet dependency floors raised and relocked** (`kgrag_priv` sweep item 46):
   `kgmodule-utils` to `>=0.23.0`. The three packages released on 2026-09-20 and put
@@ -926,6 +945,20 @@ memorykg build-index --repo <corpus>
 
 ### Fixed
 - `memorykg.py`: Changed `DEFAULT_MODEL` from `all-mpnet-base-v2` to `nomic-ai/nomic-embed-text-v1`; fixed the HuggingFace 404 error caused by the nonexistent `sentence-transformers/nomic-embed-text` model ID
+
+<!-- Everything below this line predates memory_kg and is inherited. -->
+
+> **Inherited history.** The entries below come from the project memory_kg was
+> rebranded out of, and were already in this file at memory_kg's initial commit
+> on 2026-04-08 -- this repository has no commits before that date. They refer
+> to `doc-kg`, `code-kg` and `CODEKG_SKIP_SNAPSHOT` because that is what the
+> predecessor was.
+>
+> That is why `[0.4.0]` and `[0.4.1]` each appear twice in this file. Both pairs
+> record real releases, of two different packages: the 2026-04-25 pair is
+> memory_kg's own, matching its `pyproject.toml` bumps and the `v0.4.1` tag, and
+> the pair below is the predecessor's. Neither version number is wrong, so
+> neither has been renumbered.
 
 ## [0.4.1] - 2026-03-18
 
