@@ -129,35 +129,6 @@ pytest = ">=9.0.3"
 pytest-cov = ">=5.0.0"
 ruff = ">=0.15,<0.16"
 
-# ---------------------------------------------------------------------------
-# Maintainer tooling (Poetry group, not a PEP 621 extra)
-# ---------------------------------------------------------------------------
-# doc-kg and pycode-kg are tools this repo *runs*, not libraries it imports.
-# Nothing under src/ imports either one; they are here because .mcp.json serves
-# `dockg` and `pycodekg` MCP servers, which need those CLIs on PATH. Without a
-# declaration a fresh clone gets dead MCP servers and no hint why.
-#
-# This is deliberately a Poetry group, not a [project.optional-dependencies]
-# extra. A group is maintainer-facing: locked and installable, but never
-# written into the wheel's metadata. `pip install memory-kg[...]` stays
-# unaffected, because an extra would instead put sibling KG packages into the
-# published dependency graph and couple their resolution together.
-#
-#   poetry install --with kg      # get the dockg / pycodekg CLIs into .venv/bin
-#   poetry install                # default: group is optional, skipped
-[tool.poetry.group.kg]
-optional = true
-
-[tool.poetry.group.kg.dependencies]
-# Both floors are the releases that retired these packages' own snapshot
-# overrides and moved them onto kgmodule-utils>=0.20.0, the same SDK this repo
-# now requires. Pinned lower, `poetry install --with kg` could resolve a dockg
-# or pycodekg predating the shared extension points into the same environment
-# as a memory_kg that depends on them. The previous floors were four and five
-# releases behind.
-doc-kg = ">=0.26.0"
-pycode-kg = ">=0.27.1"
-
 [project.urls]
 Homepage   = "https://github.com/Flux-Frontiers/memory_kg"
 Repository = "https://github.com/Flux-Frontiers/memory_kg"
