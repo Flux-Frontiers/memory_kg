@@ -1,6 +1,6 @@
 {
   "format": "1.0",
-  "last_update": "2026-09-09T01:40:48.651653+00:00",
+  "last_update": "2026-09-21T15:39:35.060372+00:00",
   "snapshots": [
     {
       "key": "92f29d06e99afffef54d0710b101554a74a2eace",
@@ -95,6 +95,52 @@
       "tool": "memory-kg",
       "tool_version": "0.11.0",
       "file": "0.11.0.json",
+      "metrics": {
+        "db_path": ".memorykg/graph.sqlite",
+        "total_nodes": 3976,
+        "total_edges": 22149,
+        "node_counts": {
+          "chunk": 1012,
+          "document": 21,
+          "entity": 737,
+          "keyword": 1123,
+          "section": 375,
+          "topic": 708
+        },
+        "edge_counts": {
+          "CONTAINS": 1387,
+          "CO_OCCURS_WITH": 10890,
+          "HAS_KEYWORD": 3570,
+          "HAS_TOPIC": 956,
+          "MENTIONS_ENTITY": 2347,
+          "NEXT": 565,
+          "REFERENCES": 20,
+          "SIMILAR_TO": 2414
+        },
+        "meaningful_nodes": 3955,
+        "coverage_score": 0.8623188405797101,
+        "issues_count": 0,
+        "complexity_median": 20.0
+      },
+      "deltas": {
+        "vs_previous": null,
+        "vs_baseline": {
+          "nodes": 266,
+          "edges": 329,
+          "coverage_delta": 0.020881208444403665,
+          "issues_delta": 0
+        }
+      }
+    },
+    {
+      "key": "0.12.0",
+      "branch": "main",
+      "timestamp": "2026-09-21T15:39:35.059039+00:00",
+      "version": "0.12.0",
+      "subject": "repo:memory-kg",
+      "tool": "memory-kg",
+      "tool_version": "0.12.0",
+      "file": "0.12.0.json",
       "metrics": {
         "db_path": ".memorykg/graph.sqlite",
         "total_nodes": 3976,

@@ -1,45 +1,38 @@
-# Release Notes — v0.11.0
+# Release Notes -- v0.12.0
 
-> Released: 2026-09-08
+> Released: 2026-09-21
 
-MemoryKG's snapshot manager now configures the shared `kgmodule-utils` base
-through its extension points instead of overriding its methods, and the
-dependency floors move to the releases that make that possible.
+MemoryKG's MCP server now closes the graph database when it shuts down. This
+release also settles a long-standing puzzle in the changelog: why `[0.4.0]` and
+`[0.4.1]` each appear twice. No index rebuild or migration is needed.
 
 ## What changed
 
-**The remaining snapshot overrides are gone.** After 0.10.0 removed the
-`Snapshot` subclass, `SnapshotManager` still carried its own `__init__`,
-`capture` and `diff_snapshots`. Each existed to do one thing the shared base
-could not express: name the package, derive `meaningful_nodes` and declare
-the MemoryKG metric defaults, and add a timestamp to each side of a diff.
-`kgmodule-utils` 0.20.0 added a `package_name` class attribute and a
-`_domain_metrics()` hook for exactly the first two, and its `diff_snapshots`
-already includes the timestamp. So the three overrides are deleted, and
-`snapshots.py` drops from 494 lines to 229. Only
-`_compute_delta_from_metrics` remains, because coverage and issue deltas are
-genuinely MemoryKG-specific. Seven new tests pin the behaviour the deleted
-code used to provide. Snapshot files, manifests, the CLI and the MCP tools
-are unchanged.
+**The MCP server closes the graph on shutdown.** `memorykg-mcp` wires an
+`asynccontextmanager` into `FastMCP(lifespan=...)`, so the SQLite connection is
+released when the server stops rather than left to process exit. One hook
+covers both the stdio and SSE transports, because both route through the same
+underlying `Server.run()`. This is the resource-cleanup pattern the fleet
+standardised on, and it is verified against a real server run rather than a
+stubbed `close`.
 
-**`kgmodule-utils` 0.20.0 is a hard requirement.** The extension points this
-release relies on do not exist in 0.19.x. Installed against an older SDK the
-manager silently reports itself as `kg-utils` and drops `meaningful_nodes`
-from every snapshot, so the floor is raised rather than left as a preference.
+**The duplicate 0.4.x changelog headings are explained, not renumbered.** They
+had been recorded as a defect -- one of each pair assumed to carry a wrong
+version number. Neither does. This repository's git history begins 2026-04-08,
+and at that first commit the changelog already carried the 2026-03 entries,
+inherited wholesale from the project MemoryKG was rebranded out of; they
+reference `doc-kg`, `code-kg` and `CODEKG_SKIP_SNAPSHOT` for that reason. The
+2026-04-25 pair is MemoryKG's own, matching its version bumps and the `v0.4.1`
+tag.
 
-**The `kg` tooling group catches up.** The optional group that installs the
-`dockg` and `pycodekg` CLIs this repo uses to index itself was pinned four
-and five releases behind, the most stale pair in the fleet. It now requires
-`doc-kg` 0.26.0 and `pycode-kg` 0.27.0, the releases that made the same move
-onto the shared SDK, so `poetry install --with kg` cannot resolve a tool that
-predates the extension points into the same environment.
+Both pairs therefore record real releases, of two different packages.
+Renumbering either would have made an accurate file inaccurate, so a note now
+marks where the inherited history begins and says why the numbers repeat.
 
 ## Upgrading
 
-Run `poetry lock` (or `pip install -U memory-kg`) so `kgmodule-utils`
-resolves to 0.20.0 or later; nothing else changes for normal use. Code that
-subclassed `SnapshotManager` and relied on the deleted `capture` or
-`diff_snapshots` overrides should move to the `_domain_metrics()` hook.
+Nothing to do. If you run `memorykg-mcp` inside a long-lived process, it now
+leaves no database handle behind when it stops.
 
 ---
 
