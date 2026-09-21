@@ -284,6 +284,5 @@ benchmarks/iStatistica Pro - 2026-04-09 03-26-10 +0000.csv
 .codex/
 
 # MCP server config -- machine-specific, contains absolute paths
-.mcp.json
 .mcp.json.sav
 # === end KG generated artifacts ===
