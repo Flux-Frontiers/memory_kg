@@ -92,7 +92,7 @@ dependencies = [
     # _domain_metrics() hook, neither of which exists before 0.20.0. Against
     # 0.19.x the manager reports itself as "kg-utils" and loses
     # meaningful_nodes.
-    "kgmodule-utils[sqlite-vec]>=0.22.0",
+    "kgmodule-utils[sqlite-vec]>=0.23.0",
 ]
 
 [project.optional-dependencies]
