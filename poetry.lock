@@ -1268,14 +1268,14 @@ referencing = ">=0.31.0"
 
 [[package]]
 name = "kgmodule-utils"
-version = "0.22.0"
+version = "0.23.0"
 description = "Shared types, graph store, semantic index, and pipeline base for the KGModule SDK"
 optional = false
 python-versions = "<3.14,>=3.12"
 groups = ["main"]
 files = [
-    {file = "kgmodule_utils-0.22.0-py3-none-any.whl", hash = "sha256:407bb0ee4b29d3f9008050e5abb040649bb156ab3ef849c197f884576126bab6"},
-    {file = "kgmodule_utils-0.22.0.tar.gz", hash = "sha256:93af0fdabd907f52ee83d2f9c673882fb7d29c1dc54fd342e315800f17d3e744"},
+    {file = "kgmodule_utils-0.23.0-py3-none-any.whl", hash = "sha256:f0ec8050f33fb0d71b4d1ca3fa8148627118df2201b53da0737f00622f35f97c"},
+    {file = "kgmodule_utils-0.23.0.tar.gz", hash = "sha256:264a137efdcf36265172f7c223816ef1c2e0697dc6dc7e35606f5835dc1a379d"},
 ]
 
 [package.dependencies]
@@ -1290,7 +1290,7 @@ synthesis = ["httpx (>=0.27.0)", "openai (>=1.30.0)", "pillow (>=10.0.0)"]
 synthesis-mflux = ["httpx (>=0.27.0)", "mflux (>=0.9.0)", "openai (>=1.30.0)", "pillow (>=10.0.0)"]
 viz = ["pyvis (>=0.3.2)"]
 viz3d = ["numpy (>=1.24.0)"]
-viz3d-qt = ["PyQt5 (>=5.15.0)", "numpy (>=1.24.0)", "pyvista (>=0.44.0)", "quiltwright (>=0.14.1)"]
+viz3d-qt = ["PyQt5 (>=5.15.0)", "numpy (>=1.24.0)", "pyvista (>=0.44.0)", "quiltwright (>=0.15.0)"]
 viz3d-render = ["numpy (>=1.24.0)", "pyvista (>=0.44.0)"]
 
 [[package]]
@@ -4185,4 +4185,4 @@ viz = ["plotly", "pyvis", "streamlit"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<3.14"
-content-hash = "6f3d18b3bd6ff73fd9004dfe5e3f4a9a0fe8f570c0d399af6cffd5b55a4fff60"
+content-hash = "24bfa9d1f852ff4ab3890b5fcc2b7220f92dd0a1acc4d46dd06042560b176ab8"
