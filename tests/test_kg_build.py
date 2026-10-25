@@ -1,5 +1,7 @@
 """Tests for MemoryKG.build_graph() — streams parsed nodes/edges into the store."""
 
+from kg_utils.stats import stats_problems
+
 from memory_kg.kg import MemoryKG
 from memory_kg.memorykg import parse_corpus
 
@@ -71,4 +73,42 @@ def test_build_graph_streams_in_small_batches(tmp_path, monkeypatch):
 
     assert flush_count > 1
     assert stats.total_nodes > 0
+    kg.close()
+
+
+def test_stats_is_in_the_fleet_shape(tmp_path):
+    """MemoryKG.stats() answers the fleet shape; the store keeps its flat keys."""
+    corpus = tmp_path / "corpus"
+    corpus.mkdir()
+    _write_corpus(corpus)
+
+    kg = MemoryKG(
+        corpus_root=corpus,
+        db_path=tmp_path / "graph.sqlite",
+        vectors_path=tmp_path / "vectors.sqlite",
+    )
+    kg.build_graph(wipe=True)
+    flat = kg.store.stats()
+    stats = kg.stats()
+
+    assert stats_problems(stats) == []
+    assert stats["kind"] == "memory"
+    assert stats["nodes"] == {"total": flat["total_nodes"], "by_kind": flat["node_counts"]}
+    assert stats["edges"] == {"total": flat["total_edges"], "by_rel": flat["edge_counts"]}
+    assert stats["vector_backend"] == "sqlite-vec" and stats["vector_count"] == 0
+    assert not (tmp_path / "vectors.sqlite").exists()  # counting creates no store
+    kg.close()
+
+
+def test_stats_reports_an_error_in_the_shape(tmp_path, monkeypatch):
+    kg = MemoryKG(corpus_root=tmp_path, db_path=tmp_path / "graph.sqlite")
+
+    def boom():
+        raise RuntimeError("store unreadable")
+
+    monkeypatch.setattr(kg.store, "stats", boom)
+    stats = kg.stats()
+
+    assert stats_problems(stats) == []
+    assert stats["error"] == "store unreadable" and stats["nodes"]["total"] == 0
     kg.close()

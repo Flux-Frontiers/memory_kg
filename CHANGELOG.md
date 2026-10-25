@@ -15,6 +15,16 @@ passes.
 
 ### Changed
 
+- **`MemoryKG.stats()`, and so the `stats` tool, return the fleet stats
+  shape** (kgrag_priv `FLEET_STANDARDS.md`, "KG stats shape"):
+  `{"kind": "memory", "nodes": {"total", "by_kind"}, "edges": {"total",
+  "by_rel"}}` plus `vector_backend` and `vector_count`. The flat
+  `total_nodes` / `total_edges` / `node_counts` / `edge_counts` keys are gone
+  from it; `GraphStore.stats()` still reports them flat, so snapshots are
+  unchanged. kgmodule-utils 0.29.0 checks the `stats` tool's answer on every
+  call, which is why this lands with the server port. Errors no longer raise:
+  the counts come back empty and `error` says why. The thorough analysis and
+  `docs/CHEATSHEET.md` read the new shape.
 - **The MCP server is built on `kg_utils.mcp`.** It serves the fleet's five
   canonical tools under the same names as every other KG server: `stats`,
   `query`, `pack`, `get_node` and `neighbors`. `query` and `pack` keep

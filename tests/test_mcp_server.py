@@ -32,6 +32,7 @@ import anyio
 import pytest
 from click.testing import CliRunner
 from kg_utils.mcp import CANONICAL_TOOLS, manifest
+from kg_utils.stats import stats_problems
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 from mcp.shared.memory import create_connected_server_and_client_session
@@ -147,7 +148,9 @@ def test_graph_tools_answer_without_a_model(corpus, monkeypatch):
         )
 
     stats, node, near, missing, query = _session(build_server(corpus), calls)
-    assert not stats.isError and stats.structuredContent["total_nodes"] == 4
+    assert not stats.isError and stats.structuredContent["nodes"]["total"] == 4
+    assert stats_problems(stats.structuredContent) == []
+    assert stats.structuredContent["kind"] == "memory"
     assert not node.isError and node.structuredContent["title"] == "Intro"
     assert [n["id"] for n in near.structuredContent["nodes"]] == [
         "chunk:a.md:0000",
@@ -256,7 +259,7 @@ def test_stdio_subprocess_serves(corpus):
     init, tools, stats = anyio.run(run)
     assert (init.serverInfo.name, init.serverInfo.version) == ("memorykg", memory_kg.__version__)
     assert [t.name for t in tools.tools] == list(CANONICAL_TOOLS)
-    assert stats.structuredContent["total_nodes"] == 4
+    assert stats.structuredContent["nodes"]["total"] == 4
     err = (corpus / "stderr.log").read_text(encoding="utf-8")
     assert "memorykg MCP server starting (stdio)" in err and "memorykg: serving" in err
 

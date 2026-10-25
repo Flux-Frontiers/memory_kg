@@ -30,28 +30,35 @@ Example output:
 
 ```json
 {
-  "total_nodes": 1500,
-  "total_edges": 2100,
-  "node_counts": {
-    "document": 12,
-    "section": 48,
-    "chunk": 850,
-    "topic": 120,
-    "entity": 200,
-    "keyword": 270
+  "kind": "memory",
+  "nodes": {
+    "total": 1500,
+    "by_kind": {
+      "document": 12,
+      "section": 48,
+      "chunk": 850,
+      "topic": 120,
+      "entity": 200,
+      "keyword": 270
+    }
   },
-  "edge_counts": {
-    "CONTAINS": 900,
-    "NEXT": 450,
-    "SIMILAR_TO": 350,
-    "HAS_TOPIC": 200,
-    "MENTIONS_ENTITY": 150,
-    "HAS_KEYWORD": 50
-  }
+  "edges": {
+    "total": 2100,
+    "by_rel": {
+      "CONTAINS": 900,
+      "NEXT": 450,
+      "SIMILAR_TO": 350,
+      "HAS_TOPIC": 200,
+      "MENTIONS_ENTITY": 150,
+      "HAS_KEYWORD": 50
+    }
+  },
+  "vector_backend": "sqlite-vec",
+  "vector_count": 850
 }
 ```
 
-High chunk and symbol counts indicate a rich corpus. High `SIMILAR_TO` counts mean semantic clustering is active.
+This is the fleet's stats shape: every KG server's `stats` answers it. High chunk counts indicate a rich corpus. High `SIMILAR_TO` counts mean semantic clustering is active.
 
 ---
 

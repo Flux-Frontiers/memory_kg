@@ -17,12 +17,15 @@ Author: Eric G. Suchanek, PhD
 
 from __future__ import annotations
 
+import contextlib
 import json
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from kg_utils.stats import kg_stats, stats_from_store
 from kg_utils.validation import MAX_MAX_NODES, bounded_int
+from kg_utils.vector_backend import SqliteVecBackend
 
 from memory_kg.graph import DocGraph
 from memory_kg.index import Embedder, SemanticIndex, SentenceTransformerEmbedder
@@ -824,9 +827,37 @@ class MemoryKG:
     # Convenience
     # ------------------------------------------------------------------
 
-    def stats(self) -> dict:
-        """Return store statistics (node/edge counts by kind/relation)."""
-        return self.store.stats()
+    def stats(self) -> dict[str, Any]:
+        """Return live statistics in the fleet shape (:mod:`kg_utils.stats`).
+
+        ``{"kind": "memory", "nodes": {"total", "by_kind"}, "edges": {"total",
+        "by_rel"}}`` plus ``vector_backend``, ``vector_count`` and the store's
+        other keys. Never raises: on error the counts are empty and ``error``
+        says why. Reads the graph only; never loads the embedding model.
+
+        Changed in 0.13.0: the flat ``total_nodes`` / ``node_counts`` keys are
+        gone; the same numbers are in ``nodes.total`` and ``nodes.by_kind``.
+        :meth:`GraphStore.stats` still reports them flat.
+
+        :return: The statistics dict.
+        """
+        try:
+            vector_count = 0
+            with contextlib.suppress(Exception):
+                # A read-only count needs neither the model nor the true dim.
+                backend = SqliteVecBackend(self.vectors_path, dim=384)
+                try:
+                    vector_count = backend.count()
+                finally:
+                    backend.close()
+            return stats_from_store(
+                "memory",
+                self.store.stats(),
+                vector_backend="sqlite-vec",
+                vector_count=vector_count,
+            )
+        except Exception as exc:  # pylint: disable=broad-exception-caught
+            return kg_stats("memory", {}, {}, error=str(exc))
 
     def node(self, node_id: str) -> dict | None:
         """Fetch a single node by ID from the store."""
