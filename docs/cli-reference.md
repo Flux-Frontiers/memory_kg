@@ -164,9 +164,13 @@ Requires `[viz]` extra: `pip install 'memory-kg[viz]'`.
 ## `memorykg mcp` — MCP server
 
 ```bash
-memorykg mcp [--repo PATH] [--db PATH] [--vectors PATH]
-             [--model NAME] [--transport stdio|sse]
+memorykg mcp [--repo PATH] [--db PATH] [--vectors PATH] [--model NAME]
+             [--transport stdio|streamable-http] [--host H] [--port N]
+             [--manifest]
 ```
+
+`memorykg-mcp` is the same command. `--manifest` prints the tool list as JSON
+without opening the graph.
 
 See [MCP.md](MCP.md) for full client setup guide (Claude Code, GitHub Copilot, Claude Desktop, Cline).
 

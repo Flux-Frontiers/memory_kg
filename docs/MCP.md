@@ -9,12 +9,17 @@ MemoryKG includes an MCP server exposed by:
 - `memorykg mcp`
 - `memorykg-mcp`
 
-Once configured, agents get these tools:
+Once configured, agents get the fleet's five canonical tools, under the same
+names as every other KG server built on `kg_utils.mcp`:
 
-- `graph_stats()`
-- `query_docs(q, k, hop, rels, max_nodes)`
-- `pack_docs(q, k, hop, rels, max_chars, max_nodes)`
+- `stats()`
+- `query(q, k, hop, max_nodes, rels)`
+- `pack(q, k, hop, max_nodes, rels, max_chars)`
 - `get_node(node_id)`
+- `neighbors(node_id, rels, direction, limit)`
+
+The list is generated, not kept by hand: `memorykg mcp --manifest` prints it as
+JSON without opening the graph.
 
 ## Quick Start
 
@@ -52,8 +57,14 @@ Optional flags:
 
 - `--db .memorykg/graph.sqlite`
 - `--vectors .memorykg/vectors.sqlite`
-- `--model all-mpnet-base-v2`
-- `--transport stdio|sse`
+- `--model BAAI/bge-small-en-v1.5`
+- `--transport stdio|streamable-http` (with `--host` / `--port` for HTTP)
+- `--manifest` — print the tool list as JSON and exit
+
+These are the standard flags every fleet server takes. A relative `--db` or
+`--vectors` is taken from `--repo`. On startup each session prints the store it
+is actually serving to stderr, and a corpus with no graph is refused rather
+than served empty.
 
 ## Claude Code Or Kilo Code (.mcp.json)
 
@@ -147,25 +158,35 @@ Both options are additive — CLI flags extend `pyproject.toml` excludes. Exclud
 
 ## Tool Semantics
 
-- `graph_stats()`
+- `stats()`
 Returns node and edge totals and breakdowns by kind and relation.
 
-- `query_docs(...)`
-Hybrid semantic and graph expansion query. Returns JSON.
+- `query(...)`
+Hybrid search: dense and keyword (BM25) seeds, then graph expansion. Returns
+JSON. `rels` is a list, e.g. `["HAS_TOPIC", "SIMILAR_TO"]`; omit it for the
+corpus relations.
 
-- `pack_docs(...)`
-Same hybrid retrieval, returns a Markdown context pack.
+- `pack(...)`
+Same hybrid retrieval, returns a Markdown context pack; `max_chars` caps each
+excerpt.
 
 - `get_node(node_id)`
 Returns one node record as JSON.
+
+- `neighbors(node_id, rels, direction, limit)`
+The edges touching one node and the nodes at their other ends. Graph only; no
+model is loaded.
 
 ## Troubleshooting
 
 - `mcp package not found`
 Install dependencies in the active environment (`poetry install`) and retry.
 
-- `SQLite database not found`
+- `no graph at ...`
 Run `memorykg build <corpus_root>` first.
+
+- `Invalid value for '--transport': 'sse'`
+SSE was dropped in 0.13.0; use `stdio` or `streamable-http`.
 
 - No tools visible in client
 Verify absolute paths in MCP config and restart the client.

@@ -20,6 +20,9 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
+
+from kg_utils.validation import MAX_MAX_NODES, bounded_int
 
 from memory_kg.graph import DocGraph
 from memory_kg.index import Embedder, SemanticIndex, SentenceTransformerEmbedder
@@ -828,6 +831,55 @@ class MemoryKG:
     def node(self, node_id: str) -> dict | None:
         """Fetch a single node by ID from the store."""
         return self.store.node(node_id)
+
+    def neighbors(
+        self,
+        node_id: str,
+        *,
+        rels: tuple[str, ...] | list[str] | None = None,
+        direction: str = "both",
+        limit: int = 50,
+    ) -> dict[str, Any] | None:
+        """Return a node's one-hop neighbourhood: its edges and the nodes at their far ends.
+
+        The same contract as :meth:`kg_utils.pipeline.KGModule.neighbors`, so
+        the fleet's canonical ``neighbors`` tool means the same here: a
+        section's chunks, a chunk's NEXT and SIMILAR_TO neighbours, an
+        assertion's subject and supporting chunks. Reads the graph only; never
+        loads the embedding model.
+
+        :param node_id: The node whose neighbours to return.
+        :param rels: Relation types to follow, or ``None`` for all of them.
+        :param direction: ``"out"``, ``"in"`` or ``"both"``.
+        :param limit: Maximum number of edges, between 1 and 500.
+        :return: ``{"node": ..., "edges": [...], "nodes": [...]}``, ``nodes``
+            holding each distinct far-end node that exists, in edge order;
+            ``None`` if *node_id* is not in the graph, matching :meth:`node`.
+        :raises ValueError: On an empty *node_id*, an unknown *direction* or an
+            out-of-range *limit*.
+        """
+        if not isinstance(node_id, str) or not node_id.strip():
+            raise ValueError("node_id must be a non-empty string")
+        bounded_int("limit", limit, 1, MAX_MAX_NODES)
+        if direction not in ("out", "in", "both"):
+            raise ValueError(f"direction must be 'out', 'in' or 'both', got {direction!r}")
+        node = self.store.node(node_id)
+        if node is None:
+            return None
+        edges = self.store.edges_touching(
+            node_id, direction=direction, rels=list(rels) if rels else None, limit=limit
+        )
+        seen: set[str] = set()
+        nodes: list[dict] = []
+        for e in edges:
+            other = e["dst"] if e["src"] == node_id else e["src"]
+            if other in seen:
+                continue
+            seen.add(other)
+            far = self.store.node(other)
+            if far is not None:
+                nodes.append(far)
+        return {"node": node, "edges": edges, "nodes": nodes}
 
     def close(self) -> None:
         """Close the underlying SQLite connection."""

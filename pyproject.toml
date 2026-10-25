@@ -67,12 +67,9 @@ requires-python = ">=3.12,<3.14"
 dependencies = [
     "click>=8.1.0,<9",
     "markdown-it-py>=3.0.0",
-    # Upper-bounded: mcp 2.0 removed the bundled `mcp.server.fastmcp` module
-    # (FastMCP was split out into the standalone `fastmcp` package) and rebuilt
-    # mcp.server around new submodules. src/memory_kg/mcp_server.py imports
-    # FastMCP at module scope, so an unbounded floor lets a clean install pull
-    # 2.x and break `memorykg-mcp` at import time. Lift this only alongside a
-    # port to the standalone fastmcp package.
+    # The server is kg_utils.mcp's now, which needs kgmodule-utils 0.29.0 (on
+    # the local wheel until the fleet lap ends). At that release this line goes
+    # and the floor below becomes kgmodule-utils[sqlite-vec,mcp]>=0.29.0.
     "mcp>=1.3.0,<2",
     "numpy>=1.24.0",
     "pandas>=2.0.0",

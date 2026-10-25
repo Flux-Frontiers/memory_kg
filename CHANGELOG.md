@@ -7,6 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Step 3 of the fleet's MCP centralization (kgrag_priv
+`docs/MCP_CENTRALIZATION_PLAN.md`, sweep item 93). **Needs kgmodule-utils
+0.29.0**, which provides `kg_utils.mcp`; until that release it is tested
+against the local 0.29.0.dev0 wheel, and the floor is raised when the fleet lap
+passes.
+
+### Changed
+
+- **The MCP server is built on `kg_utils.mcp`.** It serves the fleet's five
+  canonical tools under the same names as every other KG server: `stats`,
+  `query`, `pack`, `get_node` and `neighbors`. `query` and `pack` keep
+  MemoryKG's own hybrid search (`pack` still takes `max_chars`). The server's
+  instructions are generated from the tools' docstrings, and
+  `memorykg mcp --manifest` prints the tool list as JSON without opening a
+  graph. The graph is opened per session; each session prints the store it is
+  actually serving to stderr, and a corpus with no graph is refused
+  (`no graph at ...`) rather than served empty. Under stdio, stray prints go to
+  stderr instead of corrupting the protocol stream.
+- `memorykg mcp` and `memorykg-mcp` are one command with the fleet's standard
+  flags: `--repo`, `--db`, `--vectors`, `--model`,
+  `--transport stdio|streamable-http`, `--host`, `--port`, `--manifest`.
+  Registering the command no longer imports `mcp`, so every other `memorykg`
+  command starts without it.
+- `get_node` on a missing id is a tool error (`no node with id ...`), not an
+  `{"error": ...}` payload.
+
+### Added
+
+- `MemoryKG.neighbors(node_id, *, rels=None, direction="both", limit=50)` and
+  `GraphStore.edges_touching()`: the edges touching one node and the nodes at
+  their other ends, ordered by (rel, src, dst). Graph only; no model is loaded.
+  Same contract as `kg_utils.pipeline.KGModule.neighbors`.
+
+### Removed
+
+- **MCP tool names `graph_stats`, `query_docs` and `pack_docs`**, with no
+  aliases: use `stats`, `query` and `pack`. Their `rels` argument is now a
+  list (`["HAS_TOPIC", "SIMILAR_TO"]`), not a comma-separated string.
+- `memorykg mcp --transport sse`.
+
 ## [0.12.0] - 2026-09-21
 
 ### Added

@@ -74,7 +74,7 @@ MemoryKG shares its architecture with [PyCodeKG](https://github.com/Flux-Frontie
 - **Passage packing** — Source-grounded text passages with headings, ready to paste into an LLM prompt
 - **Coverage analysis & temporal snapshots** — Per-document metrics, hot chunks, orphan detection, version-over-version diffs
 - **Parallel ingestion** — `--workers N` parallel Phase 1 parsing for large corpora
-- **MCP server** — Four tools for AI agent integration (`graph_stats`, `query_docs`, `pack_docs`, `get_node`)
+- **MCP server** — the fleet's five canonical tools for AI agent integration (`stats`, `query`, `pack`, `get_node`, `neighbors`), the same names as every KG server built on `kg_utils.mcp`
 - **Streamlit web app** — Interactive graph browser, hybrid query UI, and passage pack explorer
 
 ---
