@@ -17,9 +17,15 @@ Author: Eric G. Suchanek, PhD
 
 from __future__ import annotations
 
+import contextlib
 import json
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
+
+from kg_utils.stats import kg_stats, stats_from_store
+from kg_utils.validation import MAX_MAX_NODES, bounded_int
+from kg_utils.vector_backend import SqliteVecBackend
 
 from memory_kg.graph import DocGraph
 from memory_kg.index import Embedder, SemanticIndex, SentenceTransformerEmbedder
@@ -821,13 +827,90 @@ class MemoryKG:
     # Convenience
     # ------------------------------------------------------------------
 
-    def stats(self) -> dict:
-        """Return store statistics (node/edge counts by kind/relation)."""
-        return self.store.stats()
+    def stats(self) -> dict[str, Any]:
+        """Return live statistics in the fleet shape (:mod:`kg_utils.stats`).
+
+        ``{"kind": "memory", "nodes": {"total", "by_kind"}, "edges": {"total",
+        "by_rel"}}`` plus ``vector_backend``, ``vector_count`` and the store's
+        other keys. Never raises: on error the counts are empty and ``error``
+        says why. Reads the graph only; never loads the embedding model.
+
+        Changed in 0.13.0: the flat ``total_nodes`` / ``node_counts`` keys are
+        gone; the same numbers are in ``nodes.total`` and ``nodes.by_kind``.
+        :meth:`GraphStore.stats` still reports them flat.
+
+        :return: The statistics dict.
+        """
+        try:
+            vector_count = 0
+            with contextlib.suppress(Exception):
+                # A read-only count needs neither the model nor the true dim.
+                backend = SqliteVecBackend(self.vectors_path, dim=384)
+                try:
+                    vector_count = backend.count()
+                finally:
+                    backend.close()
+            return stats_from_store(
+                "memory",
+                self.store.stats(),
+                vector_backend="sqlite-vec",
+                vector_count=vector_count,
+            )
+        except Exception as exc:  # pylint: disable=broad-exception-caught
+            return kg_stats("memory", {}, {}, error=str(exc))
 
     def node(self, node_id: str) -> dict | None:
         """Fetch a single node by ID from the store."""
         return self.store.node(node_id)
+
+    def neighbors(
+        self,
+        node_id: str,
+        *,
+        rels: tuple[str, ...] | list[str] | None = None,
+        direction: str = "both",
+        limit: int = 50,
+    ) -> dict[str, Any] | None:
+        """Return a node's one-hop neighbourhood: its edges and the nodes at their far ends.
+
+        The same contract as :meth:`kg_utils.pipeline.KGModule.neighbors`, so
+        the fleet's canonical ``neighbors`` tool means the same here: a
+        section's chunks, a chunk's NEXT and SIMILAR_TO neighbours, an
+        assertion's subject and supporting chunks. Reads the graph only; never
+        loads the embedding model.
+
+        :param node_id: The node whose neighbours to return.
+        :param rels: Relation types to follow, or ``None`` for all of them.
+        :param direction: ``"out"``, ``"in"`` or ``"both"``.
+        :param limit: Maximum number of edges, between 1 and 500.
+        :return: ``{"node": ..., "edges": [...], "nodes": [...]}``, ``nodes``
+            holding each distinct far-end node that exists, in edge order;
+            ``None`` if *node_id* is not in the graph, matching :meth:`node`.
+        :raises ValueError: On an empty *node_id*, an unknown *direction* or an
+            out-of-range *limit*.
+        """
+        if not isinstance(node_id, str) or not node_id.strip():
+            raise ValueError("node_id must be a non-empty string")
+        bounded_int("limit", limit, 1, MAX_MAX_NODES)
+        if direction not in ("out", "in", "both"):
+            raise ValueError(f"direction must be 'out', 'in' or 'both', got {direction!r}")
+        node = self.store.node(node_id)
+        if node is None:
+            return None
+        edges = self.store.edges_touching(
+            node_id, direction=direction, rels=list(rels) if rels else None, limit=limit
+        )
+        seen: set[str] = set()
+        nodes: list[dict] = []
+        for e in edges:
+            other = e["dst"] if e["src"] == node_id else e["src"]
+            if other in seen:
+                continue
+            seen.add(other)
+            far = self.store.node(other)
+            if far is not None:
+                nodes.append(far)
+        return {"node": node, "edges": edges, "nodes": nodes}
 
     def close(self) -> None:
         """Close the underlying SQLite connection."""

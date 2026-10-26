@@ -1,27 +1,28 @@
 # MemoryKG Query Cheatsheet
 
-A practical reference for the four MCP tools, with examples drawn from document corpora.
+A practical reference for the five MCP tools, with examples drawn from document corpora.
 All queries below work against a live MemoryKG knowledge graph built from `.md` and `.txt` files.
 
 ---
 
-## The Four Tools at a Glance
+## The Five Tools at a Glance
 
 | Tool | Best for | Returns |
 |---|---|---|
-| `graph_stats()` | Orientation — size and shape of the corpus | JSON: node/edge counts by kind |
-| `query_docs(q)` | Structural exploration — *what exists, how topics relate* | JSON: ranked nodes + edges |
-| `pack_docs(q)` | Document text retrieval — *actual excerpts from files* | Markdown: chunks with file paths and line ranges |
+| `stats()` | Orientation — size and shape of the corpus | JSON: node/edge counts by kind |
+| `query(q)` | Structural exploration — *what exists, how topics relate* | JSON: ranked nodes + edges |
+| `pack(q)` | Document text retrieval — *actual excerpts from files* | Markdown: chunks with file paths and line ranges |
 | `get_node(node_id)` | Pinpoint lookup — one node by its stable ID | JSON: full node metadata |
+| `neighbors(node_id)` | Walk the structure — the edges touching one node | JSON: edges + the nodes at their other ends |
 
 ---
 
-## 1. Orient First with `graph_stats`
+## 1. Orient First with `stats`
 
 Always start here when approaching an unfamiliar corpus or after a rebuild.
 
 ```python
-graph_stats()
+stats()
 ```
 
 Returns counts broken down by node kind and edge relation.
@@ -29,39 +30,46 @@ Example output:
 
 ```json
 {
-  "total_nodes": 1500,
-  "total_edges": 2100,
-  "node_counts": {
-    "document": 12,
-    "section": 48,
-    "chunk": 850,
-    "topic": 120,
-    "entity": 200,
-    "keyword": 270
+  "kind": "memory",
+  "nodes": {
+    "total": 1500,
+    "by_kind": {
+      "document": 12,
+      "section": 48,
+      "chunk": 850,
+      "topic": 120,
+      "entity": 200,
+      "keyword": 270
+    }
   },
-  "edge_counts": {
-    "CONTAINS": 900,
-    "NEXT": 450,
-    "SIMILAR_TO": 350,
-    "HAS_TOPIC": 200,
-    "MENTIONS_ENTITY": 150,
-    "HAS_KEYWORD": 50
-  }
+  "edges": {
+    "total": 2100,
+    "by_rel": {
+      "CONTAINS": 900,
+      "NEXT": 450,
+      "SIMILAR_TO": 350,
+      "HAS_TOPIC": 200,
+      "MENTIONS_ENTITY": 150,
+      "HAS_KEYWORD": 50
+    }
+  },
+  "vector_backend": "sqlite-vec",
+  "vector_count": 850
 }
 ```
 
-High chunk and symbol counts indicate a rich corpus. High `SIMILAR_TO` counts mean semantic clustering is active.
+This is the fleet's stats shape: every KG server's `stats` answers it. High chunk counts indicate a rich corpus. High `SIMILAR_TO` counts mean semantic clustering is active.
 
 ---
 
-## 2. Semantic Exploration with `query_docs`
+## 2. Semantic Exploration with `query`
 
 Returns a ranked set of nodes and the edges between them. Good for mapping unknown territory.
 
 ### Find documents about a topic
 
 ```python
-query_docs("authentication and authorization")
+query("authentication and authorization")
 ```
 
 Returns documents, sections, and chunks related to security topics — no need to know filenames.
@@ -69,7 +77,7 @@ Returns documents, sections, and chunks related to security topics — no need t
 ### Trace topics across the corpus
 
 ```python
-query_docs("deployment pipeline CI/CD", rels="HAS_TOPIC")
+query("deployment pipeline CI/CD", rels=["HAS_TOPIC"])
 ```
 
 `rels=` restricts graph expansion to a single edge type. Set it to `"HAS_TOPIC"` to follow topic classification edges only.
@@ -77,7 +85,7 @@ query_docs("deployment pipeline CI/CD", rels="HAS_TOPIC")
 ### Find mentions of specific entities
 
 ```python
-query_docs("PostgreSQL database", rels="MENTIONS_ENTITY")
+query("PostgreSQL database", rels=["MENTIONS_ENTITY"])
 ```
 
 Locates all chunks that mention specific tools, technologies, or entities.
@@ -85,7 +93,7 @@ Locates all chunks that mention specific tools, technologies, or entities.
 ### Find structurally related content
 
 ```python
-query_docs("error handling", rels="CONTAINS,NEXT")
+query("error handling", rels=["CONTAINS", "NEXT"])
 ```
 
 `CONTAINS` follows the document hierarchy (doc → section → chunk).
@@ -94,7 +102,7 @@ query_docs("error handling", rels="CONTAINS,NEXT")
 ### Find semantically similar chunks
 
 ```python
-query_docs("performance optimization", rels="SIMILAR_TO")
+query("performance optimization", rels=["SIMILAR_TO"])
 ```
 
 Returns chunks across the corpus that are semantically similar (cosine similarity ≥ 0.85).
@@ -102,7 +110,7 @@ Returns chunks across the corpus that are semantically similar (cosine similarit
 ### Increase graph depth
 
 ```python
-query_docs("API design patterns", hop=2)
+query("API design patterns", hop=2)
 ```
 
 `hop=2` follows edges two levels out from each seed. Useful when the entry point is one hop away from related content.
@@ -110,21 +118,21 @@ query_docs("API design patterns", hop=2)
 ### Combine multiple relation types
 
 ```python
-query_docs("authentication", rels="HAS_TOPIC,MENTIONS_ENTITY,SIMILAR_TO")
+query("authentication", rels=["HAS_TOPIC", "MENTIONS_ENTITY", "SIMILAR_TO"])
 ```
 
 Comma-separated `rels` expand through multiple relation types simultaneously.
 
 ---
 
-## 3. Document Text Retrieval with `pack_docs`
+## 3. Document Text Retrieval with `pack`
 
 Returns Markdown with actual document excerpts, ranked and deduplicated. Use this when you need to *read* the content, not just locate it.
 
 ### Understand documentation about a feature
 
 ```python
-pack_docs("user authentication flow")
+pack("user authentication flow")
 ```
 
 Returns relevant document chunks with file paths and context.
@@ -132,7 +140,7 @@ Returns relevant document chunks with file paths and context.
 ### Get excerpts for a specific concept
 
 ```python
-pack_docs("deployment steps installation", max_nodes=5)
+pack("deployment steps installation", max_nodes=5)
 ```
 
 `max_nodes` limits the number of chunks returned — useful when you only need the top results.
@@ -140,7 +148,7 @@ pack_docs("deployment steps installation", max_nodes=5)
 ### Widen the text window
 
 ```python
-pack_docs("API endpoint documentation", max_chars=3000)
+pack("API endpoint documentation", max_chars=3000)
 ```
 
 `max_chars=` controls the total character limit for all returned chunks. Default is 2000.
@@ -148,7 +156,7 @@ pack_docs("API endpoint documentation", max_chars=3000)
 ### Increase semantic seeds
 
 ```python
-pack_docs("configuration management environment variables", k=12)
+pack("configuration management environment variables", k=12)
 ```
 
 `k=` is the number of semantic seed nodes before graph expansion. Raise it when the first results feel off-target.
@@ -156,7 +164,7 @@ pack_docs("configuration management environment variables", k=12)
 ### Find related content across files
 
 ```python
-pack_docs("monitoring and observability", rels="SIMILAR_TO,HAS_TOPIC")
+pack("monitoring and observability", rels=["SIMILAR_TO", "HAS_TOPIC"])
 ```
 
 Returns chunks related by semantic similarity or topic classification across the entire corpus.
@@ -165,7 +173,7 @@ Returns chunks related by semantic similarity or topic classification across the
 
 ## 4. Pinpoint Lookup with `get_node`
 
-Fetch a single node by its stable ID. Node IDs appear in `query_docs` and `pack_docs` results.
+Fetch a single node by its stable ID. Node IDs appear in `query` and `pack` results.
 
 ### Node ID format
 
@@ -183,7 +191,7 @@ keyword:jwt-token
 ### Fetch a document
 
 ```python
-get_node("document:docs/api-reference.md")
+get_node("doc:docs/api-reference.md")
 ```
 
 Returns file path, sections, full text content.
@@ -191,7 +199,7 @@ Returns file path, sections, full text content.
 ### Fetch a section
 
 ```python
-get_node("section:docs/api-reference.md:rest-endpoints")
+get_node("sec:docs/api-reference.md:rest-endpoints")
 ```
 
 ### Fetch a chunk
@@ -244,52 +252,52 @@ get_node("entity:postgresql")
 ### "What does this corpus say about X?"
 
 ```python
-pack_docs("X concept or topic")
+pack("X concept or topic")
 ```
 
 ### "Find all documents about topic T"
 
 ```python
-query_docs("T", rels="HAS_TOPIC")
+query("T", rels=["HAS_TOPIC"])
 ```
 
 ### "What chunks mention entity E?"
 
 ```python
-pack_docs("E name or technology")
+pack("E name or technology")
 # or
-query_docs("E", rels="MENTIONS_ENTITY")
+query("E", rels=["MENTIONS_ENTITY"])
 ```
 
 ### "Find chunks similar to this one"
 
 ```python
-query_docs("concept", rels="SIMILAR_TO")
+query("concept", rels=["SIMILAR_TO"])
 ```
 
 ### "Show the structure of a document"
 
 ```python
-query_docs("document name", rels="CONTAINS", hop=2)
+query("document name", rels=["CONTAINS"], hop=2)
 ```
 
 ### "Find cross-references between documents"
 
 ```python
-query_docs("topic", rels="REFERENCES")
+query("topic", rels=["REFERENCES"])
 ```
 
 ### "Get adjacent context around a chunk"
 
 ```python
-query_docs("chunk text", rels="CONTAINS,NEXT")
+query("chunk text", rels=["CONTAINS", "NEXT"])
 ```
 
 ---
 
 ## 7. Parameter Quick Reference
 
-### `query_docs` and `pack_docs` shared params
+### `query` and `pack` shared params
 
 | Parameter | Default | Effect |
 |---|---|---|
@@ -299,11 +307,20 @@ query_docs("chunk text", rels="CONTAINS,NEXT")
 | `rels` | All edge types | Edge types to traverse |
 | `max_nodes` | `25` / `15` | Cap returned nodes |
 
-### `pack_docs` only
+### `pack` only
 
 | Parameter | Default | Effect |
 |---|---|---|
-| `max_chars` | `2000` | Total character limit for returned text |
+| `max_chars` | `2000` | Longest excerpt, in characters |
+
+### `neighbors`
+
+| Parameter | Default | Effect |
+|---|---|---|
+| `node_id` | *(required)* | The node to start from |
+| `rels` | All edge types | Edge types to keep |
+| `direction` | `"both"` | `"out"`, `"in"` or `"both"` |
+| `limit` | `50` | Most edges (1-500), ordered by relation, source, target |
 
 ---
 

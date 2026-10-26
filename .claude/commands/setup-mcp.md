@@ -318,13 +318,13 @@ Present a summary of everything that was done:
 Restart Claude Code / Claude Desktop to activate the memorykg MCP server.
 
 Available tools once active:
-  • graph_stats()          — corpus size and shape
-  • query_docs(q)          — semantic + structural exploration
-  • pack_docs(q)           — document text with surrounding context
+  • stats()          — corpus size and shape
+  • query(q)          — semantic + structural exploration
+  • pack(q)           — document text with surrounding context
   • get_node(node_id)      — single node metadata lookup
 
 Suggested first query after restart:
-  graph_stats()
+  stats()
 ```
 
 ---

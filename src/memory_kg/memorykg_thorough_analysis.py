@@ -229,7 +229,7 @@ class MemoryKGAnalyzer:
 
     def _generate_insights(self) -> None:
         """Populate ``self.strengths`` and ``self.issues`` from computed metrics."""
-        node_counts = self.stats.get("node_counts", {})
+        node_counts = self.stats["nodes"]["by_kind"]
         chunk_count = int(node_counts.get("chunk", 0))
         doc_count = int(node_counts.get("document", 0))
 
@@ -294,8 +294,8 @@ class MemoryKGAnalyzer:
         stats = result["stats"]
         lines.append("## Baseline")
         lines.append("")
-        lines.append(f"- Nodes: **{stats.get('total_nodes', 0)}**")
-        lines.append(f"- Edges: **{stats.get('total_edges', 0)}**")
+        lines.append(f"- Nodes: **{stats['nodes']['total']}**")
+        lines.append(f"- Edges: **{stats['edges']['total']}**")
         lines.append("")
 
         lines.append("## Semantic Coverage")
@@ -362,8 +362,8 @@ def _print_summary(console: Console, result: dict) -> None:
     table.add_column("Metric")
     table.add_column("Value", justify="right")
 
-    table.add_row("Total nodes", str(stats.get("total_nodes", 0)))
-    table.add_row("Total edges", str(stats.get("total_edges", 0)))
+    table.add_row("Total nodes", str(stats.get("nodes", {}).get("total", 0)))
+    table.add_row("Total edges", str(stats.get("edges", {}).get("total", 0)))
     table.add_row("Topic coverage", f"{cov.get('topic_coverage', 0.0):.1%}")
     table.add_row("Entity coverage", f"{cov.get('entity_coverage', 0.0):.1%}")
     table.add_row("Keyword coverage", f"{cov.get('keyword_coverage', 0.0):.1%}")

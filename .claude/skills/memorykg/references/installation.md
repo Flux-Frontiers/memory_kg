@@ -38,7 +38,9 @@
 | `--repo` | `.` | Corpus root |
 | `--db` | `.memorykg/graph.sqlite` | SQLite path |
 | `--vectors` | `.memorykg/vectors.sqlite` | sqlite-vec vector store |
-| `--transport` | `stdio` | `stdio` or `sse` |
+| `--model` | `BAAI/bge-small-en-v1.5` | Sentence-transformer model |
+| `--transport` | `stdio` | `stdio` or `streamable-http` (`--host` / `--port`) |
+| `--manifest` | | Print the tool list as JSON and exit |
 
 ### `memorykg query`
 
@@ -160,7 +162,7 @@ Get venv path: `poetry env info --path`
 | Narrow, precise lookup | `k=4, hop=0` |
 | Standard exploration | `k=8, hop=1` (default) |
 | Broad topic sweep | `k=12, hop=2` |
-| Follow document structure | `k=8, hop=1, rels="CONTAINS,NEXT"` |
+| Follow document structure | `k=8, hop=1, rels=["CONTAINS", "NEXT"]` |
 
 ### Choosing `rels`
 
@@ -176,11 +178,11 @@ Get venv path: `poetry env info --path`
 ### Typical session workflow
 
 ```
-1. graph_stats()                                               → orientation: corpus size and shape
-2. query_docs("authentication flow", k=8, hop=1)              → find relevant nodes
-3. pack_docs("JWT token validation", k=6, hop=1)              → read actual document text
-4. pack_docs("error handling", k=4, hop=2, rels="SIMILAR_TO") → related chunks across files
-5. get_node("document:docs/auth.md")                          → single node metadata
+1. stats()                                                 → orientation: corpus size and shape
+2. query("authentication flow", k=8, hop=1)                → find relevant nodes
+3. pack("JWT token validation", k=6, hop=1)                → read actual document text
+4. pack("error handling", k=4, hop=2, rels=["SIMILAR_TO"]) → related chunks across files
+5. get_node("doc:docs/auth.md")                            → single node metadata
 ```
 
 ---
@@ -212,7 +214,7 @@ sqlite3 .memorykg/graph.sqlite "SELECT id FROM nodes WHERE kind='document' LIMIT
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| `WARNING: SQLite database not found` | Graph not built | Run `memorykg build-graph --repo <corpus>` first |
+| `no graph at ...` | Graph not built | Run `memorykg build-graph --repo <corpus>` first |
 | `mcp package not found` | Install is incomplete | `mcp` is a core dependency — re-run `poetry install` (there is no `mcp` extra) |
 | No tools visible in MCP client | Relative paths or wrong location | Use absolute paths in `.mcp.json`; restart client |
 | Empty query results | Vector store stale or missing | Run `memorykg build-index` from corpus root |

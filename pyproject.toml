@@ -46,7 +46,7 @@ packages = [{ include = "memory_kg", from = "src" }]
 # ---------------------------------------------------------------------------
 [project]
 name = "memory-kg"
-version = "0.12.0"
+version = "0.13.0"
 description = "A tool to build a semantically searchable knowledge graph from memories"
 readme = "README.md"
 license = "Elastic-2.0"
@@ -67,13 +67,6 @@ requires-python = ">=3.12,<3.14"
 dependencies = [
     "click>=8.1.0,<9",
     "markdown-it-py>=3.0.0",
-    # Upper-bounded: mcp 2.0 removed the bundled `mcp.server.fastmcp` module
-    # (FastMCP was split out into the standalone `fastmcp` package) and rebuilt
-    # mcp.server around new submodules. src/memory_kg/mcp_server.py imports
-    # FastMCP at module scope, so an unbounded floor lets a clean install pull
-    # 2.x and break `memorykg-mcp` at import time. Lift this only alongside a
-    # port to the standalone fastmcp package.
-    "mcp>=1.3.0,<2",
     "numpy>=1.24.0",
     "pandas>=2.0.0",
     "pyyaml>=6.0.0",
@@ -92,7 +85,9 @@ dependencies = [
     # _domain_metrics() hook, neither of which exists before 0.20.0. Against
     # 0.19.x the manager reports itself as "kg-utils" and loses
     # meaningful_nodes.
-    "kgmodule-utils[sqlite-vec]>=0.23.0",
+    # 0.29.0: the MCP server is kg_utils.mcp's ([mcp] brings mcp itself),
+    # stats() is the fleet stats shape, and LanceDB is gone.
+    "kgmodule-utils[sqlite-vec,mcp]>=0.29.0",
 ]
 
 [project.optional-dependencies]

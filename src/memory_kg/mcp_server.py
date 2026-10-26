@@ -2,186 +2,161 @@
 """
 mcp_server.py — MemoryKG MCP Server
 
-Exposes the MemoryKG hybrid query and text-pack pipeline as Model Context Protocol
-(MCP) tools for MCP-compatible agents.
+Serves a memory corpus's knowledge graph to any MCP-compatible agent over the
+fleet's shared server base, :mod:`kg_utils.mcp`.
+
+The server answers the fleet's canonical tools -- ``stats``, ``query``,
+``pack``, ``get_node``, ``neighbors`` -- under the same names as every other
+KG server. ``query`` and ``pack`` are MemoryKG's own: its search fuses dense
+and keyword (BM25) seeds, and ``pack`` sizes excerpts in characters.
+``stats``, ``get_node`` and ``neighbors`` are the shared ones.
+
+The tool list is not kept by hand anywhere: each tool's docstring is its
+description, the server's instructions are generated from them, and::
+
+    memorykg mcp --manifest
+
+prints the whole list as JSON without opening the graph.
+
+Usage
+-----
+::
+
+    memorykg mcp --repo /path/to/corpus
+
+``--db`` and ``--vectors`` default to ``.memorykg/graph.sqlite`` and
+``.memorykg/vectors.sqlite``; a relative path is taken from ``--repo``.
+``memorykg-mcp`` is the same command under its older name.
 """
 
 from __future__ import annotations
 
-import argparse
-import json
-import sys
-from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Any
 
-from mcp.server.fastmcp import FastMCP
+from kg_utils.mcp import Context, KGServer, kg_from, make_server
 
-from memory_kg import MemoryKG
+from memory_kg import MemoryKG, __version__
 from memory_kg.memorykg import DEFAULT_MODEL
 from memory_kg.store import DEFAULT_RELS
 
-_kg: MemoryKG | None = None  # pylint: disable=invalid-name
-_default_rels = (
-    "CONTAINS,NEXT,REFERENCES,SIMILAR_TO,HAS_TOPIC,MENTIONS_ENTITY,HAS_KEYWORD,CO_OCCURS_WITH"  # pylint: disable=invalid-name
+#: Relations ``query`` and ``pack`` follow when the caller names none: the
+#: store's defaults plus CO_OCCURS_WITH, as the server has always used.
+SERVER_RELS: tuple[str, ...] = (*DEFAULT_RELS, "CO_OCCURS_WITH")
+
+PREAMBLE = (
+    "MemoryKG is a hybrid semantic + structural knowledge graph for conversational "
+    "memory and document corpora. Nodes are documents or sessions ('doc:<file>'), "
+    "sections ('sec:<file>:<heading-slug>'), chunks ('chunk:<file>:<0000>'), the "
+    "topics, entities and keywords drawn from them ('topic:<slug>', 'entity:<slug>', "
+    "'keyword:<slug>'), and, where the semantic memory layer is built, assertions and "
+    "events. Edges: CONTAINS (document → section → chunk), NEXT (reading order), "
+    "REFERENCES, SIMILAR_TO, HAS_TOPIC, MENTIONS_ENTITY, HAS_KEYWORD and "
+    "CO_OCCURS_WITH; the memory layer adds SUPPORTS, ABOUT, REFERS_TO, INVOLVES, "
+    "DESCRIBES, SUPERSEDES and DERIVED_FROM.\n\n"
+    "## Recommended workflows\n\n"
+    "- **Orientation**: stats\n"
+    "- **Recall material on a subject**: query → get_node\n"
+    "- **Read it**: pack with a descriptive query\n"
+    "- **Walk the structure**: neighbors(node_id) — a session's sections, a chunk's "
+    "NEXT and SIMILAR_TO neighbours, an assertion's subject and supporting chunks; "
+    "narrow with rels=[...] or direction"
 )
 
 
-def _get_kg() -> MemoryKG:
-    """Return the global MemoryKG instance, raising if not initialised."""
-    if _kg is None:
-        raise RuntimeError("MemoryKG not initialised. Run via 'memorykg-mcp --repo /path/to/repo'")
-    return _kg
-
-
-@asynccontextmanager
-async def _lifespan(_server: FastMCP) -> AsyncIterator[None]:
-    """Close the graph's SQLite connection(s) when the server shuts down.
-
-    ``main()`` sets the module-level ``_kg`` before ``mcp.run()`` calls into
-    this, and both the stdio and SSE transports route through the same
-    underlying ``Server.run()``, so this fires on either one.
-    """
-    try:
-        yield
-    finally:
-        if _kg is not None:
-            _kg.close()
-
-
-mcp = FastMCP(
-    "memorykg",
-    instructions=(
-        "MemoryKG is a hybrid semantic + structural knowledge graph for document corpora. "
-        "Use these tools to query document chunks, sections, topics, entities, and edges."
-    ),
-    lifespan=_lifespan,
-)
-
-
-@mcp.tool()
-def query_docs(
+def query(
     q: str,
     k: int = 8,
     hop: int = 1,
-    rels: str = _default_rels,
     max_nodes: int = 25,
-) -> str:
-    """Run hybrid semantic + graph query over MemoryKG and return JSON."""
-    rel_tuple = tuple(r.strip() for r in rels.split(",") if r.strip())
-    result = _get_kg().query(
-        q,
-        k=k,
-        hop=hop,
-        rels=rel_tuple or DEFAULT_RELS,
-        max_nodes=max_nodes,
+    rels: list[str] | None = None,
+    *,
+    ctx: Context,
+) -> dict[str, Any]:
+    """
+    Hybrid search over the memory: ranked sessions, sections, chunks and topics, and the edges among them.
+
+    Seeds fuse dense (vector) and keyword (BM25) matches, then expand through
+    the graph. Use ``pack`` instead when you want the text itself.
+
+    :param q: Natural-language query.
+    :param k: Seeds to start from (1-100, default 8).
+    :param hop: Graph expansion hops from each seed (0-5, default 1).
+    :param max_nodes: Most nodes to return (default 25).
+    :param rels: Edge types to follow; omit for the corpus relations listed above.
+    """
+    result = kg_from(ctx).query(
+        q, k=k, hop=hop, rels=tuple(rels) if rels else SERVER_RELS, max_nodes=max_nodes
     )
-    return result.to_json()
+    return result.to_dict()
 
 
-@mcp.tool()
-def pack_docs(
+def pack(
     q: str,
     k: int = 8,
     hop: int = 1,
-    rels: str = _default_rels,
-    max_chars: int = 2000,
     max_nodes: int = 15,
+    rels: list[str] | None = None,
+    max_chars: int = 2000,
+    *,
+    ctx: Context,
 ) -> str:
-    """Run hybrid query and return Markdown text pack."""
-    rel_tuple = tuple(r.strip() for r in rels.split(",") if r.strip())
-    pack = _get_kg().pack(
+    """
+    Hybrid search rendered as a Markdown pack of text excerpts, ready to read.
+
+    :param q: Natural-language query.
+    :param k: Seeds to start from (1-100, default 8).
+    :param hop: Graph expansion hops (0-5, default 1).
+    :param max_nodes: Most excerpts (default 15).
+    :param rels: Edge types to follow; omit for the corpus relations listed above.
+    :param max_chars: Longest excerpt, in characters (default 2000).
+    """
+    result = kg_from(ctx).pack(
         q,
         k=k,
         hop=hop,
-        rels=rel_tuple or DEFAULT_RELS,
+        rels=tuple(rels) if rels else SERVER_RELS,
         max_chars=max_chars,
         max_nodes=max_nodes,
     )
-    return pack.to_markdown()
+    return result.to_markdown()
 
 
-@mcp.tool()
-def get_node(node_id: str) -> str:
-    """Fetch a single MemoryKG node by ID and return JSON."""
-    node = _get_kg().node(node_id)
-    if node is None:
-        return json.dumps({"error": f"Node not found: {node_id!r}"})
-    return json.dumps(node, indent=2, ensure_ascii=False)
+def build_server(
+    repo: str | Path,
+    db: str | Path | None = None,
+    vectors: str | Path | None = None,
+    model: str | None = None,
+) -> KGServer:
+    """Build the MemoryKG MCP server for one corpus, without opening its graph.
 
+    :param repo: Corpus root the graph was built from.
+    :param db: Graph database; ``None`` for ``<repo>/.memorykg/graph.sqlite``.
+    :param vectors: Vector store; ``None`` for ``<repo>/.memorykg/vectors.sqlite``.
+    :param model: Embedding model; ``None`` for :data:`DEFAULT_MODEL`.
+    :return: The server; serve it with :func:`kg_utils.mcp.run`.
+    """
+    root = Path(repo).resolve()
 
-@mcp.tool()
-def graph_stats() -> str:
-    """Return node/edge count stats for the current MemoryKG store."""
-    stats = _get_kg().stats()
-    return json.dumps(stats, indent=2, ensure_ascii=False)
+    def open_kg() -> MemoryKG:
+        return MemoryKG(root, db, vectors, model=model or DEFAULT_MODEL)
 
-
-def _parse_args(argv: list | None = None) -> argparse.Namespace:
-    """Parse command-line arguments for the MemoryKG MCP server."""
-    p = argparse.ArgumentParser(
-        prog="memorykg-mcp",
-        description="MemoryKG MCP server — exposes document graph query tools to AI agents.",
+    server = make_server(
+        open_kg, name="memorykg", kind="memory", version=__version__, instructions=PREAMBLE
     )
-    p.add_argument("--repo", default=".", help="Repository root directory")
-    p.add_argument(
-        "--db",
-        default=".memorykg/graph.sqlite",
-        help="Path to SQLite graph (default: .memorykg/graph.sqlite)",
-    )
-    p.add_argument(
-        "--vectors",
-        default=".memorykg/vectors.sqlite",
-        help="Path to the sqlite-vec store (default: .memorykg/vectors.sqlite)",
-    )
-    p.add_argument(
-        "--model",
-        default=DEFAULT_MODEL,
-        help=f"Sentence-transformer model name (default: {DEFAULT_MODEL})",
-    )
-    p.add_argument(
-        "--transport",
-        choices=["stdio", "sse"],
-        default="stdio",
-        help="MCP transport: stdio (default) or sse",
-    )
-    return p.parse_args(argv)
+    server.canonical("query")(query)
+    server.canonical("pack")(pack)
+    return server
 
 
-def main(argv: list | None = None) -> None:
-    """Start the MemoryKG MCP server and expose tools over MCP transport."""
-    global _kg
+def main(argv: list[str] | None = None) -> None:
+    """Entry point for ``memorykg-mcp``: the same command as ``memorykg mcp``.
 
-    args = _parse_args(argv)
+    :param argv: Arguments; ``None`` for ``sys.argv[1:]``.
+    """
+    from memory_kg.cli.cmd_mcp import mcp_command  # pylint: disable=import-outside-toplevel
 
-    repo = Path(args.repo).resolve()
-    db = Path(args.db) if Path(args.db).is_absolute() else repo / args.db
-    vectors_path = Path(args.vectors) if Path(args.vectors).is_absolute() else repo / args.vectors
-
-    if not db.exists():
-        print(
-            f"WARNING: SQLite database not found at '{db}'.\\nRun 'memorykg build' first.",
-            file=sys.stderr,
-        )
-
-    print(
-        f"MemoryKG MCP server starting\\n"
-        f"  repo     : {repo}\\n"
-        f"  db       : {db}\\n"
-        f"  vectors  : {vectors_path}\\n"
-        f"  model    : {args.model}\\n"
-        f"  transport: {args.transport}",
-        file=sys.stderr,
-    )
-
-    _kg = MemoryKG(
-        corpus_root=repo,
-        db_path=db,
-        vectors_path=vectors_path,
-        model=args.model,
-    )
-
-    mcp.run(transport=args.transport)
+    mcp_command.main(args=argv, prog_name="memorykg-mcp")
 
 
 if __name__ == "__main__":

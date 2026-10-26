@@ -1,38 +1,41 @@
-# Release Notes -- v0.12.0
+# Release Notes -- v0.13.0
 
-> Released: 2026-09-21
+> Released: 2026-10-25
 
-MemoryKG's MCP server now closes the graph database when it shuts down. This
-release also settles a long-standing puzzle in the changelog: why `[0.4.0]` and
-`[0.4.1]` each appear twice. No index rebuild or migration is needed.
+MemoryKG's MCP server now runs on the fleet's shared base, `kg_utils.mcp`, so
+it answers the same five tools under the same names as every other KG server:
+`stats`, `query`, `pack`, `get_node` and `neighbors`. `MemoryKG.stats()` now
+returns the fleet's statistics shape. Both changes break existing MCP configs
+and some Python callers, so read Upgrading before you install.
 
 ## What changed
 
-**The MCP server closes the graph on shutdown.** `memorykg-mcp` wires an
-`asynccontextmanager` into `FastMCP(lifespan=...)`, so the SQLite connection is
-released when the server stops rather than left to process exit. One hook
-covers both the stdio and SSE transports, because both route through the same
-underlying `Server.run()`. This is the resource-cleanup pattern the fleet
-standardised on, and it is verified against a real server run rather than a
-stubbed `close`.
+**One MCP vocabulary across the fleet.** `graph_stats`, `query_docs` and
+`pack_docs` are now `stats`, `query` and `pack`, with no aliases, and the new
+`neighbors` tool walks one node's edges without loading the embedding model.
+`query` and `pack` keep MemoryKG's own hybrid search; `pack` still sizes
+excerpts by `max_chars`. The server's instructions are generated from the
+tools' docstrings, and `memorykg mcp --manifest` prints the tool list without
+opening a graph.
 
-**The duplicate 0.4.x changelog headings are explained, not renumbered.** They
-had been recorded as a defect -- one of each pair assumed to carry a wrong
-version number. Neither does. This repository's git history begins 2026-04-08,
-and at that first commit the changelog already carried the 2026-03 entries,
-inherited wholesale from the project MemoryKG was rebranded out of; they
-reference `doc-kg`, `code-kg` and `CODEKG_SKIP_SNAPSHOT` for that reason. The
-2026-04-25 pair is MemoryKG's own, matching its version bumps and the `v0.4.1`
-tag.
+**One command, standard flags.** `memorykg mcp` and `memorykg-mcp` are the same
+command, with the fleet's `--repo`, `--db`, `--vectors`, `--model`,
+`--transport stdio|streamable-http`, `--host`, `--port` and `--manifest`. The
+graph opens per session and closes after, a corpus with no graph is refused
+instead of served empty, and a missing node is a tool error rather than an
+error payload.
 
-Both pairs therefore record real releases, of two different packages.
-Renumbering either would have made an accurate file inaccurate, so a note now
-marks where the inherited history begins and says why the numbers repeat.
+**Statistics in the fleet shape.** `MemoryKG.stats()` returns `kind`, `nodes`
+(`total`, `by_kind`) and `edges` (`total`, `by_rel`), plus `vector_backend` and
+`vector_count`. The store keeps its flat keys, so snapshots are unchanged.
 
 ## Upgrading
 
-Nothing to do. If you run `memorykg-mcp` inside a long-lived process, it now
-leaves no database handle behind when it stops.
+Rename the tools in agent instructions or scripts (`graph_stats` -> `stats`,
+`query_docs` -> `query`, `pack_docs` -> `pack`), pass `rels` as a list, and drop
+`--transport sse` from any config. Code that read
+`MemoryKG.stats()["total_nodes"]` reads `["nodes"]["total"]` instead. memory-kg
+now needs kgmodule-utils 0.29.0, whose `[mcp]` extra brings the MCP SDK.
 
 ---
 

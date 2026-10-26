@@ -1,0 +1,127 @@
+{
+  "key": "0.13.0",
+  "branch": "feat/mcp-server-base",
+  "timestamp": "2026-10-26T03:42:29.489359+00:00",
+  "version": "0.13.0",
+  "subject": "repo:memory-kg",
+  "tool": "memory-kg",
+  "tool_version": "0.13.0",
+  "tree_hash": "e68c3ce84b39a34730b4460047dc7aa457ad141f",
+  "metrics": {
+    "db_path": ".memorykg/graph.sqlite",
+    "total_nodes": 4073,
+    "total_edges": 22640,
+    "node_counts": {
+      "chunk": 1037,
+      "document": 21,
+      "entity": 751,
+      "keyword": 1153,
+      "section": 377,
+      "topic": 734
+    },
+    "edge_counts": {
+      "CONTAINS": 1414,
+      "CO_OCCURS_WITH": 11140,
+      "HAS_KEYWORD": 3682,
+      "HAS_TOPIC": 982,
+      "MENTIONS_ENTITY": 2406,
+      "NEXT": 584,
+      "REFERENCES": 20,
+      "SIMILAR_TO": 2412
+    },
+    "meaningful_nodes": 4052,
+    "coverage_score": 0.8659594985535198,
+    "issues_count": 0,
+    "complexity_median": 20.0
+  },
+  "hotspots": [
+    {
+      "id": "chunk:docs/ingestion.md:0002",
+      "file_path": "docs/ingestion.md",
+      "label": "Pipeline Overview",
+      "references": 0,
+      "semantic_links": 24,
+      "total_links": 25
+    },
+    {
+      "id": "chunk:docs/ingestion.md:0025",
+      "file_path": "docs/ingestion.md",
+      "label": "Embedding Model",
+      "references": 0,
+      "semantic_links": 22,
+      "total_links": 23
+    },
+    {
+      "id": "chunk:CHANGELOG.md:0183",
+      "file_path": "CHANGELOG.md",
+      "label": "Changed",
+      "references": 0,
+      "semantic_links": 22,
+      "total_links": 22
+    },
+    {
+      "id": "chunk:CHANGELOG.md:0174",
+      "file_path": "CHANGELOG.md",
+      "label": "Changed",
+      "references": 0,
+      "semantic_links": 21,
+      "total_links": 22
+    },
+    {
+      "id": "chunk:analysis/memory_kg_analysis_20260425.md:0009",
+      "file_path": "analysis/memory_kg_analysis_20260425.md",
+      "label": "Fan-In Ranking",
+      "references": 0,
+      "semantic_links": 20,
+      "total_links": 21
+    },
+    {
+      "id": "chunk:analysis/memory_kg_analysis_20260425.md:0050",
+      "file_path": "analysis/memory_kg_analysis_20260425.md",
+      "label": "Graph Traversal Node Edge",
+      "references": 0,
+      "semantic_links": 20,
+      "total_links": 21
+    },
+    {
+      "id": "chunk:CHANGELOG.md:0192",
+      "file_path": "CHANGELOG.md",
+      "label": "Added",
+      "references": 0,
+      "semantic_links": 20,
+      "total_links": 20
+    },
+    {
+      "id": "chunk:analysis/memory_kg_analysis_20260425.md:0049",
+      "file_path": "analysis/memory_kg_analysis_20260425.md",
+      "label": "Query Search Retrieval Semantic",
+      "references": 0,
+      "semantic_links": 20,
+      "total_links": 20
+    },
+    {
+      "id": "chunk:README.md:0064",
+      "file_path": "README.md",
+      "label": "Documentation",
+      "references": 8,
+      "semantic_links": 19,
+      "total_links": 28
+    },
+    {
+      "id": "chunk:CHANGELOG.md:0019",
+      "file_path": "CHANGELOG.md",
+      "label": "Changed",
+      "references": 0,
+      "semantic_links": 19,
+      "total_links": 20
+    }
+  ],
+  "issues": [],
+  "vs_previous": null,
+  "vs_baseline": {
+    "nodes": 363,
+    "edges": 820,
+    "coverage_delta": 0.02452186641821341,
+    "issues_delta": 0
+  }
+}
