@@ -203,9 +203,14 @@ class GraphStore:
     # ------------------------------------------------------------------
 
     def clear(self) -> None:
-        """Delete all nodes and edges."""
-        self.con.execute("DELETE FROM edges;")
-        self.con.execute("DELETE FROM nodes;")
+        """Drop and recreate the nodes and edges tables.
+
+        Recreating rather than deleting rows is what replaces a database built
+        under an older schema, such as one from before the ``metadata`` column.
+        """
+        self.con.execute("DROP TABLE IF EXISTS edges;")
+        self.con.execute("DROP TABLE IF EXISTS nodes;")
+        self.con.executescript(_SCHEMA_SQL)
         self.con.commit()
 
     def write(

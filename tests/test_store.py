@@ -1,6 +1,7 @@
 """Tests for GraphStore."""
 
 import os
+import sqlite3
 import subprocess
 import sys
 import textwrap
@@ -219,6 +220,22 @@ def test_store_wipe(tmp_path):
     s = store.stats()
     assert s["total_nodes"] == 3  # no duplicates after wipe
     store.close()
+
+
+def test_store_wipe_replaces_pre_metadata_schema(tmp_path):
+    """A wipe rebuild over a database from before the metadata column succeeds."""
+    db = tmp_path / "old.sqlite"
+    con = sqlite3.connect(db)
+    con.execute(
+        "CREATE TABLE nodes (id TEXT PRIMARY KEY, kind TEXT NOT NULL, name TEXT NOT NULL,"
+        " title TEXT, file_path TEXT, char_start INTEGER, char_end INTEGER,"
+        " heading_level INTEGER, text TEXT)"
+    )
+    con.commit()
+    con.close()
+    with GraphStore(db) as store:
+        store.write(_make_nodes(), _make_edges(), wipe=True)
+        assert store.stats()["total_nodes"] == 3
 
 
 def test_store_context_manager(tmp_path):
