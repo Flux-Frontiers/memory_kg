@@ -412,9 +412,9 @@ def score_item(
     Query MemoryKG for one item and compute recall.
 
     :param use_haystack: If True, restrict sqlite-vec seeding to the item's own file.
-    :param score_top: Score only the first *score_top* ranked nodes, and count a
-        turn as found only when its text is inside a node's text, as MemPalace's
-        R@5 does. ``None`` scores every returned node with containment either way.
+    :param score_top: Score only the first *score_top* ranked nodes, as
+        MemPalace's R@5 scores its top 5 turns. ``None`` scores every returned
+        node. Containment counts either way in both cases.
     :return: (recall, details_dict)
     """
     question = item["question"]
@@ -434,17 +434,16 @@ def score_item(
     )
 
     scored = result.nodes if score_top is None else result.nodes[:score_top]
-    either_way = score_top is None
     found = 0
     for user_text, asst_text in evidence_turns:
         u = user_text.lower()
         a = asst_text.lower()
         for node in scored:
             node_text = (node.get("text") or "").strip().lower()
-            if u and node_text and (u in node_text or (either_way and node_text in u)):
+            if u and node_text and (u in node_text or node_text in u):
                 found += 1
                 break
-            if a and node_text and (a in node_text or (either_way and node_text in a)):
+            if a and node_text and (a in node_text or node_text in a):
                 found += 1
                 break
 
@@ -825,7 +824,7 @@ def _add_run_args(p: argparse.ArgumentParser) -> None:
         "--score-top",
         type=int,
         default=None,
-        help="Score only the top N ranked nodes, evidence inside node text (MemPalace's rule)",
+        help="Score only the top N ranked nodes, as MemPalace's R@5 scores its top 5",
     )
     p.add_argument(
         "--no-haystack",
