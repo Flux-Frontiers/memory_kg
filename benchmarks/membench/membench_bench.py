@@ -406,11 +406,15 @@ def score_item(
     rels: tuple[str, ...],
     max_nodes: int,
     use_haystack: bool = True,
+    score_top: int | None = None,
 ) -> tuple[float, dict]:
     """
     Query MemoryKG for one item and compute recall.
 
     :param use_haystack: If True, restrict sqlite-vec seeding to the item's own file.
+    :param score_top: Score only the first *score_top* ranked nodes, and count a
+        turn as found only when its text is inside a node's text, as MemPalace's
+        R@5 does. ``None`` scores every returned node with containment either way.
     :return: (recall, details_dict)
     """
     question = item["question"]
@@ -429,16 +433,18 @@ def score_item(
         haystack_files=haystack,
     )
 
+    scored = result.nodes if score_top is None else result.nodes[:score_top]
+    either_way = score_top is None
     found = 0
     for user_text, asst_text in evidence_turns:
         u = user_text.lower()
         a = asst_text.lower()
-        for node in result.nodes:
+        for node in scored:
             node_text = (node.get("text") or "").strip().lower()
-            if u and node_text and (u in node_text or node_text in u):
+            if u and node_text and (u in node_text or (either_way and node_text in u)):
                 found += 1
                 break
-            if a and node_text and (a in node_text or node_text in a):
+            if a and node_text and (a in node_text or (either_way and node_text in a)):
                 found += 1
                 break
 
@@ -597,6 +603,7 @@ def cmd_run(args: argparse.Namespace) -> None:
     print(f"  k (seeds):   {args.k}")
     print(f"  hop:         {args.hop}")
     print(f"  max_nodes:   {args.max_nodes}")
+    print(f"  score top:   {args.score_top or 'all returned nodes'}")
     print(f"  rels:        {rels_str}")
     print("-" * 60)
     print("\n  Loading data...\n")
@@ -648,6 +655,7 @@ def cmd_run(args: argparse.Namespace) -> None:
                 rels=rels,
                 max_nodes=args.max_nodes,
                 use_haystack=use_haystack,
+                score_top=args.score_top,
             )
             t_q = time.time() - t0
 
@@ -814,6 +822,12 @@ def _add_run_args(p: argparse.ArgumentParser) -> None:
     p.add_argument("--model", default=None, help="Override sentence-transformer model")
     p.add_argument("--out", default=None, help="Output JSONL file path")
     p.add_argument(
+        "--score-top",
+        type=int,
+        default=None,
+        help="Score only the top N ranked nodes, evidence inside node text (MemPalace's rule)",
+    )
+    p.add_argument(
         "--no-haystack",
         action="store_true",
         help="Ablation: disable per-item file scoping (global search across all items)",
@@ -845,6 +859,7 @@ def main() -> None:
     p_all.add_argument("--rels", default=None)
     p_all.add_argument("--out", default=None)
     p_all.add_argument("--no-haystack", action="store_true")
+    p_all.add_argument("--score-top", type=int, default=None)
     p_all.set_defaults(func=cmd_all)
 
     args = parser.parse_args()
