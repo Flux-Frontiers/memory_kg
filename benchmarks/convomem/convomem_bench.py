@@ -279,10 +279,10 @@ def retrieve_for_item(
     """
     Build a per-item MemoryKG, query it, and return recall.
 
-    :param score_top: Score only the first *score_top* ranked nodes, and count
-        evidence as found only when its text is inside a node's text, the way
-        MemPalace scores its top-10. ``None`` scores every returned node with
-        containment either way, as the April and August runs did.
+    :param score_top: Score only the first *score_top* ranked nodes, as
+        MemPalace scores its top 10. ``None`` scores every returned node, as the
+        April and August runs did. Containment counts either way in both cases,
+        which is MemPalace's rule too.
 
     :return: (recall, details_dict)
     """
@@ -325,7 +325,7 @@ def retrieve_for_item(
                 node_text = (node.get("text") or "").strip().lower()
                 if not node_text:
                     continue
-                if ev_text in node_text or (score_top is None and node_text in ev_text):
+                if ev_text in node_text or node_text in ev_text:
                     found += 1
                     break
 
@@ -483,7 +483,7 @@ if __name__ == "__main__":
         "--score-top",
         type=int,
         default=None,
-        help="Score only the top N ranked nodes, evidence inside node text (MemPalace's rule)",
+        help="Score only the top N ranked nodes, as MemPalace scores its top 10",
     )
     parser.add_argument("--out", default=None, help="Output JSON file")
     args = parser.parse_args()
