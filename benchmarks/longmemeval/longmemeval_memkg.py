@@ -873,6 +873,7 @@ def cmd_run(args: argparse.Namespace) -> None:
         corpus_root=CORPUS_DIR,
         db_path=DOCKG_DB,
         vectors_path=DOCKG_VECTORS,
+        **({"model": args.model} if getattr(args, "model", None) else {}),
     )
 
     ks = [1, 3, 5, 10, 30, 50]
@@ -1276,6 +1277,9 @@ def main() -> None:
 
     p_run = sub.add_parser("run", help="Query the pre-built MemoryKG and score results")
     _add_run_args(p_run)
+    p_run.add_argument(
+        "--model", default=None, help="Query model; must match the one prepare built with"
+    )
     p_run.set_defaults(func=cmd_run)
 
     p_all = sub.add_parser("all", help="prepare + run in one invocation")
