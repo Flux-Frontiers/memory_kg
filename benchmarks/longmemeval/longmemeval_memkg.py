@@ -503,34 +503,75 @@ _STOP_WORDS = {
     "make",
 }
 
+#: Spelled-out counts accepted wherever a digit is ("four weeks ago").
+_WORD_NUMBERS = {
+    "a": 1,
+    "an": 1,
+    "one": 1,
+    "two": 2,
+    "three": 3,
+    "four": 4,
+    "five": 5,
+    "six": 6,
+    "seven": 7,
+    "eight": 8,
+    "nine": 9,
+    "ten": 10,
+    "eleven": 11,
+    "twelve": 12,
+}
+_COUNT = r"(\d+|" + "|".join(_WORD_NUMBERS) + r")"
+_WEEKDAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+
 _TEMPORAL_PATTERNS: list[tuple[re.Pattern, int, int]] = [
-    # (pattern, offset_days, window_days)
-    (re.compile(r"(\d+)\s+days?\s+ago", re.I), 0, 3),  # "N days ago" — offset set per match
+    # (pattern, offset_days, window_days); offset 0 means "count the match"
     (re.compile(r"a\s+couple\s+of\s+days?\s+ago", re.I), 2, 3),
     (re.compile(r"a\s+week\s+ago", re.I), 7, 5),
-    (re.compile(r"(\d+)\s+weeks?\s+ago", re.I), 0, 7),
-    (re.compile(r"last\s+week", re.I), 7, 5),
     (re.compile(r"a\s+month\s+ago", re.I), 30, 10),
-    (re.compile(r"(\d+)\s+months?\s+ago", re.I), 0, 14),
+    (re.compile(_COUNT + r"\s+days?\s+ago", re.I), 0, 3),
+    (re.compile(_COUNT + r"\s+weeks?\s+ago", re.I), 0, 7),
+    (re.compile(r"last\s+week", re.I), 7, 5),
+    (re.compile(_COUNT + r"\s+months?\s+ago", re.I), 0, 14),
     (re.compile(r"last\s+month", re.I), 30, 10),
     (re.compile(r"recently", re.I), 14, 14),
 ]
+_LAST_WEEKDAY = re.compile(r"last\s+(" + "|".join(_WEEKDAYS) + ")", re.I)
 
 
-def _parse_time_offset_days(question: str) -> tuple[int, int] | None:
-    """Return (offset_days, window_days) if a temporal reference is detected, else None."""
+def _parse_date(value: str) -> datetime:
+    """Parse a LongMemEval date, ``2023/03/15 (Wed) 10:41``, or an ISO date.
+
+    :param value: Date string; only the first ten characters are read.
+    :raises ValueError: If neither format matches.
+    """
+    return datetime.strptime(value[:10].replace("/", "-"), "%Y-%m-%d")
+
+
+def _parse_time_offset_days(
+    question: str, q_date: datetime | None = None
+) -> tuple[int, int] | None:
+    """Return (offset_days, window_days) if a temporal reference is detected, else None.
+
+    :param question: Raw question text.
+    :param q_date: Date the question was asked; needed for "last <weekday>".
+    """
+    if q_date is not None:
+        m = _LAST_WEEKDAY.search(question)
+        if m:
+            back = (q_date.weekday() - _WEEKDAYS.index(m.group(1).lower())) % 7 or 7
+            return back, 1
     for pat, offset, window in _TEMPORAL_PATTERNS:
         m = pat.search(question)
         if m:
-            if offset == 0 and m.lastindex:
-                n = int(m.group(1))
-                # "N days ago" vs "N weeks ago" vs "N months ago"
-                if "month" in m.group(0).lower():
+            if offset == 0:
+                word = m.group(1).lower()
+                n = int(word) if word.isdigit() else _WORD_NUMBERS[word]
+                unit = m.group(0).lower()
+                if "month" in unit:
                     return n * 30, 14
-                elif "week" in m.group(0).lower():
+                if "week" in unit:
                     return n * 7, 7
-                else:
-                    return n, 3
+                return n, 3
             return offset, window
     return None
 
@@ -579,31 +620,32 @@ def _temporal_rerank(
 
     :param hits: Session hits sorted by ascending rank.
     :param question: Raw question text.
-    :param question_date: ISO date string when the question was asked.
-    :param haystack_dates: Mapping of session_id → ISO date string.
+    :param question_date: Date the question was asked (LongMemEval or ISO format).
+    :param haystack_dates: Mapping of session_id → date string (LongMemEval or ISO format).
     :param max_boost: Maximum distance reduction for a perfect date match.
     :return: Re-ranked list of session hits.
     """
     if not question_date or not haystack_dates:
         return hits
-    parsed = _parse_time_offset_days(question)
+    try:
+        q_date = _parse_date(question_date)
+    except ValueError:
+        return hits
+    parsed = _parse_time_offset_days(question, q_date)
     if parsed is None:
         return hits
 
     offset_days, window_days = parsed
-    try:
-        q_date = datetime.strptime(question_date[:10], "%Y-%m-%d")
-    except ValueError:
-        return hits
     target = q_date - timedelta(days=offset_days)
 
     scored: list[tuple[float, Any]] = []
     for h in hits:
         date_str = haystack_dates.get(h.session_id)
-        dist = float(h.rank)
+        # rank + 1, so the top hit can be passed: rank 0 times any boost stays 0
+        dist = float(h.rank + 1)
         if date_str:
             try:
-                s_date = datetime.strptime(date_str[:10], "%Y-%m-%d")
+                s_date = _parse_date(date_str)
                 days_diff = abs((s_date - target).days)
                 temporal_boost = max(0.0, max_boost * (1.0 - days_diff / max(window_days, 1)))
                 dist = dist * (1.0 - temporal_boost)
