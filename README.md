@@ -1,7 +1,7 @@
 [![CI](https://github.com/Flux-Frontiers/memory_kg/actions/workflows/ci.yml/badge.svg)](https://github.com/Flux-Frontiers/memory_kg/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.12%20%7C%203.13-blue.svg)](https://www.python.org/)
 [![License: Elastic-2.0](https://img.shields.io/badge/License-Elastic%202.0-blue.svg)](https://www.elastic.co/licensing/elastic-license)
-[![Version](https://img.shields.io/badge/version-0.13.0-blue.svg)](https://github.com/Flux-Frontiers/memory_kg/releases)
+[![Version](https://img.shields.io/badge/version-0.13.1-blue.svg)](https://github.com/Flux-Frontiers/memory_kg/releases)
 [![Poetry](https://img.shields.io/endpoint?url=https://python-poetry.org/badge/v0.json)](https://python-poetry.org/)
 [![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.21282909-blue.svg)](https://doi.org/10.5281/zenodo.21282909)
 
@@ -180,7 +180,7 @@ poetry run python3 benchmarks/longmemeval/longmemeval_memkg.py run \
   --out benchmarks/longmemeval/results_20260826_bge_haystack.jsonl
 
 # Expected: R@1=90.4%  R@5=98.2%  R@10=99.2%
-#           recall_all@10=98.8%  NDCG@10=0.954  misses@10=4/500
+#           recall_all@10=98.8%  NDCG@10=0.953  misses@10=4/500
 ```
 
 ### ConvoMem — 96.3% Tier-1 Recall Across 1,897 Items
@@ -227,7 +227,7 @@ If you use MemoryKG in your research or project, please cite it:
 
 **APA**
 
-> Suchanek, E. G. (2026). *MemoryKG: Hybrid Semantic-Graph Knowledge Base for Conversational Memory* (Version 0.13.0) [Software]. Flux-Frontiers. https://github.com/Flux-Frontiers/memory_kg
+> Suchanek, E. G. (2026). *MemoryKG: Hybrid Semantic-Graph Knowledge Base for Conversational Memory* (Version 0.13.1) [Software]. Flux-Frontiers. https://github.com/Flux-Frontiers/memory_kg
 
 **BibTeX**
 
@@ -235,7 +235,7 @@ If you use MemoryKG in your research or project, please cite it:
 @software{suchanek_memory_kg,
   author    = {Suchanek, Eric G.},
   title     = {{MemoryKG}: Hybrid Semantic-Graph Knowledge Base for Conversational Memory},
-  version   = {0.13.0},
+  version   = {0.13.1},
   year      = {2026},
   publisher = {Flux-Frontiers},
   url       = {https://github.com/Flux-Frontiers/memory_kg},

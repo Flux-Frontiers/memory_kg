@@ -1,41 +1,34 @@
-# Release Notes -- v0.13.0
+# Release Notes -- v0.13.1
 
-> Released: 2026-10-25
+> Released: 2026-11-09
 
-MemoryKG's MCP server now runs on the fleet's shared base, `kg_utils.mcp`, so
-it answers the same five tools under the same names as every other KG server:
-`stats`, `query`, `pack`, `get_node` and `neighbors`. `MemoryKG.stats()` now
-returns the fleet's statistics shape. Both changes break existing MCP configs
-and some Python callers, so read Upgrading before you install.
+A bugfix release. Rebuilding with `wipe` over a graph made before the
+`metadata` column no longer crashes, and the dependency lock moves to the
+latest releases. The benchmark harnesses also gained the scoring options used
+in the latest comparison with MemPalace.
 
 ## What changed
 
-**One MCP vocabulary across the fleet.** `graph_stats`, `query_docs` and
-`pack_docs` are now `stats`, `query` and `pack`, with no aliases, and the new
-`neighbors` tool walks one node's edges without loading the embedding model.
-`query` and `pack` keep MemoryKG's own hybrid search; `pack` still sizes
-excerpts by `max_chars`. The server's instructions are generated from the
-tools' docstrings, and `memorykg mcp --manifest` prints the tool list without
-opening a graph.
+**`wipe` replaces an older database.** `GraphStore.clear()` used to delete
+rows and keep the tables, so a wipe rebuild over an older `graph.sqlite` kept
+the old `nodes` table, and every insert failed with "table nodes has no column
+named metadata". It now drops the tables and recreates them from the current
+schema.
 
-**One command, standard flags.** `memorykg mcp` and `memorykg-mcp` are the same
-command, with the fleet's `--repo`, `--db`, `--vectors`, `--model`,
-`--transport stdio|streamable-http`, `--host`, `--port` and `--manifest`. The
-graph opens per session and closes after, a corpus with no graph is refused
-instead of served empty, and a missing node is a tool error rather than an
-error payload.
+**Benchmarks.** ConvoMem and MemBench take `--score-top N`, which scores only
+the top N ranked nodes, the cutoff MemPalace uses. ConvoMem's `--semantic`
+builds topic, entity and keyword nodes. The LongMemEval temporal rerank now
+reads LongMemEval's date format, so it actually runs; the 0.13.0 re-run gives
+R@1 90.4%, R@5 98.2% and R@10 99.2%, unchanged from August.
 
-**Statistics in the fleet shape.** `MemoryKG.stats()` returns `kind`, `nodes`
-(`total`, `by_kind`) and `edges` (`total`, `by_rel`), plus `vector_backend` and
-`vector_count`. The store keeps its flat keys, so snapshots are unchanged.
+**Dependencies.** The lock moves to the latest releases, including
+kgmodule-utils 0.30.0, torch 2.15.0, transformers 5.22.2 and
+sentence-transformers 6.2.0. Minimum versions are unchanged.
 
 ## Upgrading
 
-Rename the tools in agent instructions or scripts (`graph_stats` -> `stats`,
-`query_docs` -> `query`, `pack_docs` -> `pack`), pass `rels` as a list, and drop
-`--transport sse` from any config. Code that read
-`MemoryKG.stats()["total_nodes"]` reads `["nodes"]["total"]` instead. memory-kg
-now needs kgmodule-utils 0.29.0, whose `[mcp]` extra brings the MCP SDK.
+`pip install -U memory-kg`. No rebuild is needed. If a `wipe` rebuild failed
+on an older graph, run it again.
 
 ---
 
