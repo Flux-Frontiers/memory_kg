@@ -1,17 +1,17 @@
 # MemoryKG × LongMemEval — Multi-Run Comparison
 
-**Generated:** 2026-08-26 20:55:55
-**Repository:** memory_kg @ `9754508` (chore/benchmark-retest-2026-08)
+**Generated:** 2026-10-29 11:22:26
+**Repository:** memory_kg @ `67074b9` (fix/store-metadata-migration)
 **Machine:** Apple M5 Max MacBook Pro, 64 GB RAM, 2 TB SSD
 
 ---
 
 ## Recall@k Comparison
 
-| k | results_260425 | results_bge_haystack | results_no_normalize | results_sibling_boost | results_sibling_boost2 | results_sqlitevec_parity | results_20260826_bge_haystack |
+| k | results_260425 | results_bge_haystack | results_no_normalize | results_sibling_boost | results_sibling_boost2 | results_sqlitevec_parity | results_20261029_bge_haystack |
 |--:|--:|--:|--:|--:|--:|--:|--:|
 |  1 | 0.904 | 0.904 | 0.904 | 0.904 | 0.904 | 0.904 | 0.904 |
-|  3 | 0.974 | 0.972 | 0.974 | 0.964 | 0.972 | 0.972 | 0.972 |
+|  3 | 0.974 | 0.972 | 0.974 | 0.964 | 0.972 | 0.972 | 0.970 |
 |  5 | 0.984 | 0.982 | 0.984 | 0.976 | 0.982 | 0.982 | 0.982 |
 | 10 | 0.994 | 0.992 | 0.994 | 0.990 | 0.992 | 0.992 | 0.992 |
 | 30 | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 |
@@ -19,14 +19,14 @@
 
 ## NDCG@k Comparison
 
-| k | results_260425 | results_bge_haystack | results_no_normalize | results_sibling_boost | results_sibling_boost2 | results_sqlitevec_parity | results_20260826_bge_haystack |
+| k | results_260425 | results_bge_haystack | results_no_normalize | results_sibling_boost | results_sibling_boost2 | results_sqlitevec_parity | results_20261029_bge_haystack |
 |--:|--:|--:|--:|--:|--:|--:|--:|
 |  1 | 0.904 | 0.904 | 0.904 | 0.904 | 0.904 | 0.904 | 0.904 |
-|  3 | 0.942 | 0.945 | 0.942 | 0.940 | 0.945 | 0.945 | 0.945 |
+|  3 | 0.942 | 0.945 | 0.942 | 0.940 | 0.945 | 0.945 | 0.943 |
 |  5 | 0.942 | 0.950 | 0.942 | 0.946 | 0.950 | 0.950 | 0.950 |
-| 10 | 0.943 | 0.954 | 0.943 | 0.951 | 0.954 | 0.954 | 0.954 |
+| 10 | 0.943 | 0.954 | 0.943 | 0.951 | 0.954 | 0.954 | 0.953 |
 | 30 | 0.942 | 0.955 | 0.942 | 0.953 | 0.955 | 0.955 | 0.955 |
-| 50 | 0.942 | 0.955 | 0.942 | 0.953 | 0.955 | 0.955 | 0.956 |
+| 50 | 0.942 | 0.955 | 0.942 | 0.953 | 0.955 | 0.955 | 0.955 |
 
 ---
 
@@ -365,18 +365,18 @@ gpt4_68e94288
 
 ---
 
-## Run: `results_20260826_bge_haystack` (n=500 — 339.7s (0.68s/q))
+## Run: `results_20261029_bge_haystack` (n=500 — 272.3s (0.54s/q))
 
 ## Session-Level Retrieval Metrics
 
 | k | Recall@k | NDCG@k |
 |--:|--:|--:|
 |  1 | 0.904 | 0.904 |
-|  3 | 0.972 | 0.945 |
+|  3 | 0.970 | 0.943 |
 |  5 | 0.982 | 0.950 |
-| 10 | 0.992 | 0.954 |
+| 10 | 0.992 | 0.953 |
 | 30 | 1.000 | 0.955 |
-| 50 | 1.000 | 0.956 |
+| 50 | 1.000 | 0.955 |
 
 ## Per-Type Breakdown
 
@@ -387,7 +387,7 @@ gpt4_68e94288
 | single-session-assistant | 56 | 1.000 | 1.000 | 1.000 |
 | single-session-preference | 30 | 1.000 | 1.000 | 0.913 |
 | single-session-user | 70 | 0.986 | 1.000 | 0.932 |
-| temporal-reasoning | 133 | 0.947 | 0.977 | 0.921 |
+| temporal-reasoning | 133 | 0.947 | 0.977 | 0.919 |
 
 ## Key Findings
 

@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **`wipe` replaces an older database.** `GraphStore.clear()` now drops and
+  recreates the tables instead of deleting rows, so a wipe rebuild over a
+  `graph.sqlite` from before the `metadata` column no longer fails with
+  "table nodes has no column named metadata".
+
+### Changed
+
+- **Benchmarks.** `--score-top N` for ConvoMem and MemBench scores only the
+  top N nodes, matching MemPalace's rule; ConvoMem `--semantic` builds topic,
+  entity and keyword nodes; the LongMemEval temporal rerank now parses
+  LongMemEval dates and runs, and `run` takes `--model` to match `prepare`.
+  LongMemEval re-run on 0.13.0: R@1 90.4%, R@5 98.2%, R@10 99.2%.
+- Lock refreshed to the latest releases (kgmodule-utils 0.30.0, torch 2.15.0,
+  transformers 5.22.2, sentence-transformers 6.2.0, among others). Floors
+  unchanged. The `ty` rule `unresolved-import` is now `import-not-found`.
+
 ## [0.13.0] - 2026-10-25
 
 Step 3 of the fleet's MCP centralization (kgrag_priv

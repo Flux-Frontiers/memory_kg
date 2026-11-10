@@ -267,6 +267,8 @@ def write_item_corpus(item: dict, corpus_dir: Path) -> None:
 # RETRIEVAL
 # =============================================================================
 
+_SEMANTIC_KINDS = frozenset({"topic", "entity", "keyword"})
+
 
 def retrieve_for_item(
     item: dict,
@@ -274,9 +276,19 @@ def retrieve_for_item(
     top_k: int = 10,
     hop: int = 1,
     rels: tuple[str, ...] = DEFAULT_RELS,
+    score_top: int | None = None,
+    semantic: bool = False,
 ) -> tuple[float, dict]:
     """
     Build a per-item MemoryKG, query it, and return recall.
+
+    :param score_top: Score only the first *score_top* ranked nodes, as
+        MemPalace scores its top 10. ``None`` scores every returned node, as the
+        April and August runs did. Containment counts either way in both cases,
+        which is MemPalace's rule too.
+    :param semantic: Build topic, entity and keyword nodes. They are dropped
+        from the ranked list before scoring, so a short entity name can't match
+        inside the evidence and only message text fills the scored slots.
 
     :return: (recall, details_dict)
     """
@@ -301,28 +313,36 @@ def retrieve_for_item(
             db_path=kg_dir / "graph.sqlite",
             vectors_path=kg_dir / "vectors.sqlite",
             chunk_strategy="heading",
-            enable_topics=False,
-            enable_entities=False,
-            enable_keywords=False,
+            enable_topics=semantic,
+            enable_entities=semantic,
+            enable_keywords=semantic,
             emit_cooccur=False,
             embedder=embedder,
         )
         with open(os.devnull, "w") as devnull, contextlib.redirect_stdout(devnull):
             kg.build(wipe=True, batch_size=512, discover_similar=False, n_workers=1)
 
-        result = kg.query(question, k=top_k, hop=hop, rels=rels)
+        # Seed on message nodes only: topic and entity names are embedded too
+        # and would otherwise take seed slots from the messages.
+        seed_kinds = ("document", "section", "chunk") if semantic else None
+        result = kg.query(question, k=top_k, hop=hop, rels=rels, seed_kinds=seed_kinds)
 
+        ranked = [n for n in result.nodes if n.get("kind") not in _SEMANTIC_KINDS]
+        scored = ranked if score_top is None else ranked[:score_top]
         found = 0
         for ev_text in evidence_texts:
-            for node in result.nodes:
+            for node in scored:
                 node_text = (node.get("text") or "").strip().lower()
-                if node_text and (ev_text in node_text or node_text in ev_text):
+                if not node_text:
+                    continue
+                if ev_text in node_text or node_text in ev_text:
                     found += 1
                     break
 
         recall = found / len(evidence_texts) if evidence_texts else 1.0
         return recall, {
             "retrieved_nodes": result.returned_nodes,
+            "scored_nodes": len(scored),
             "evidence_count": len(evidence_texts),
             "found": found,
         }
@@ -346,6 +366,8 @@ def run_benchmark(
     out_file: str | None,
     model: str,
     tier: int = 1,
+    score_top: int | None = None,
+    semantic: bool = False,
 ) -> None:
     """Run the ConvoMem retrieval benchmark."""
 
@@ -356,6 +378,8 @@ def run_benchmark(
     print(f"  Limit/cat:   {limit_per_cat}")
     print(f"  Tier:        {tier}_evidence")
     print(f"  Top-k:       {top_k}")
+    print(f"  Score top:   {score_top or 'all returned nodes'}")
+    print(f"  Semantic:    {'topics, entities, keywords' if semantic else 'off'}")
     print(f"  Hop:         {hop}")
     print(f"  Model:       {model}")
     print(f"{'─' * 60}")
@@ -379,7 +403,15 @@ def run_benchmark(
         answer = item.get("answer", "")
         cat_key = item.get("_category_key", "unknown")
 
-        recall, details = retrieve_for_item(item, embedder, top_k=top_k, hop=hop, rels=rels)
+        recall, details = retrieve_for_item(
+            item,
+            embedder,
+            top_k=top_k,
+            hop=hop,
+            rels=rels,
+            score_top=score_top,
+            semantic=semantic,
+        )
         all_recall.append(recall)
         per_category[cat_key].append(recall)
 
@@ -465,6 +497,17 @@ if __name__ == "__main__":
         help="Evidence tier (1–6; changing_evidence starts at 2; default: 1)",
     )
     parser.add_argument("--cache-dir", default="/tmp/convomem_cache", help="Cache directory")
+    parser.add_argument(
+        "--score-top",
+        type=int,
+        default=None,
+        help="Score only the top N ranked nodes, as MemPalace scores its top 10",
+    )
+    parser.add_argument(
+        "--semantic",
+        action="store_true",
+        help="Build topic, entity and keyword nodes (scored on message nodes only)",
+    )
     parser.add_argument("--out", default=None, help="Output JSON file")
     args = parser.parse_args()
 
@@ -481,7 +524,9 @@ if __name__ == "__main__":
     if not args.out:
         args.out = (
             f"benchmarks/convomem/results_convomem_tier{args.tier}_top{args.k}_hop{args.hop}"
-            f"_{datetime.now().strftime('%Y%m%d_%H%M')}.json"
+            + (f"_score{args.score_top}" if args.score_top else "")
+            + ("_semantic" if args.semantic else "")
+            + f"_{datetime.now().strftime('%Y%m%d_%H%M')}.json"
         )
 
     run_benchmark(
@@ -494,4 +539,6 @@ if __name__ == "__main__":
         args.out,
         args.model,
         tier=args.tier,
+        score_top=args.score_top,
+        semantic=args.semantic,
     )
