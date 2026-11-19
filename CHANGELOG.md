@@ -27,6 +27,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Poetry 2.4.3; no package version changes. `tests/test_lock_markers.py` now
   fails when the lock would install two versions of a package on Linux
   x86_64, macOS arm64 or Windows.
+- **README images show on PyPI.** The README's images used repository-relative
+  paths, which PyPI cannot resolve, so its project page showed broken images.
+  They now use absolute `raw.githubusercontent.com` URLs pinned to `main`.
 
 ## [0.13.1] - 2026-11-09
 
