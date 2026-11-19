@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **An Art Techno logo.** The memory array: a memory chip's cell grid, where
+  a query lights three cells and their bit lines carry them into the die, with
+  the tagline RECALL WITHOUT INFERENCE. `scripts/build_logo.py` draws the
+  mark, a 64 px icon and a banner as SVG under `assets/` and writes the PNGs.
+  The README header shows the banner. It also writes `src/logo.png` for the
+  pdoc task and `assets/logo-md-256x256.png` for `scripts/generate_wiki.py`,
+  which both expected and neither found.
+
 ### Fixed
 
 - **The lock installs one cuBLAS on Linux x86_64.** It was written by Poetry
