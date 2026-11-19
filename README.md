@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/memorykg_banner.png" alt="MemoryKG" width="720"/>
+  <img src="https://raw.githubusercontent.com/Flux-Frontiers/memory_kg/main/assets/memorykg_banner.png" alt="MemoryKG" width="720"/>
 </p>
 
 [![CI](https://github.com/Flux-Frontiers/memory_kg/actions/workflows/ci.yml/badge.svg)](https://github.com/Flux-Frontiers/memory_kg/actions/workflows/ci.yml)
