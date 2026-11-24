@@ -1295,14 +1295,14 @@ referencing = ">=0.31.0"
 
 [[package]]
 name = "kgmodule-utils"
-version = "0.30.0"
+version = "0.31.0"
 description = "Shared types, graph store, semantic index, and pipeline base for the KGModule SDK"
 optional = false
 python-versions = "<3.14,>=3.12"
 groups = ["main"]
 files = [
-    {file = "kgmodule_utils-0.30.0-py3-none-any.whl", hash = "sha256:3c691e6de21720feca3172ee0d0051157bc50e68b55a288a862857e6fdca8692"},
-    {file = "kgmodule_utils-0.30.0.tar.gz", hash = "sha256:58ba360412701e405d80e28533522ca8c13961b5cd544c18a3cd858da6259260"},
+    {file = "kgmodule_utils-0.31.0-py3-none-any.whl", hash = "sha256:81011c2ea5b9f5821753ce1198ce265e195dfb1fc9e6fc09b22d8e8625c3e3ff"},
+    {file = "kgmodule_utils-0.31.0.tar.gz", hash = "sha256:c398733ec30631f2ce711094e9f367dda43f797b679701d10d01df447996b903"},
 ]
 
 [package.dependencies]
